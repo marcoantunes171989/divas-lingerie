@@ -45,7 +45,7 @@ const TAMANHOS = [
 const LOOKBOOK = [
   { titulo:"Inverno Íntimo",  sub:"Editorial 2026",    grad:"linear-gradient(135deg,#5c1a28,#8b3a4a)", icone:"✦", imagem:"https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&h=680&fit=crop&q=80" },
   { titulo:"Noite & Desejo",  sub:"Coleção Noturna",   grad:"linear-gradient(135deg,#3d1235,#5c2a50)", icone:"◆", imagem:"https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=600&h=680&fit=crop&q=80" },
-  { titulo:"Seda & Rendas",   sub:"Look Premium",      grad:"linear-gradient(135deg,#4a0e1e,#7a2040)", icone:"❋", imagem:"https://images.unsplash.com/photo-1488161731578-19453af3b64d?w=600&h=680&fit=crop&q=80" },
+  { titulo:"Seda & Rendas",   sub:"Look Premium",      grad:"linear-gradient(135deg,#4a0e1e,#7a2040)", icone:"❋", imagem:"https://images.unsplash.com/photo-1572804013427-4d7ca7268217?w=600&h=680&fit=crop&q=80" },
   { titulo:"Veludo Bordô",    sub:"Edição Limitada",   grad:"linear-gradient(135deg,#2d1a3d,#3d2550)", icone:"✧", imagem:"https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=600&h=680&fit=crop&q=80" },
 ];
 
