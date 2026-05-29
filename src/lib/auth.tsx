@@ -18,21 +18,30 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const u = session?.user ?? null;
-      setUser(u);
-      setLoading(false);
-      if (u) ensureUsuarioRecord(u);
-    });
+    let sub: { unsubscribe: () => void } | null = null;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const u = session?.user ?? null;
-      setUser(u);
-      setLoading(false);
-      if (u) ensureUsuarioRecord(u);
-    });
+    try {
+      supabase.auth.getSession()
+        .then(({ data: { session } }) => {
+          const u = session?.user ?? null;
+          setUser(u);
+          setLoading(false);
+          if (u) ensureUsuarioRecord(u);
+        })
+        .catch(() => setLoading(false));
 
-    return () => subscription.unsubscribe();
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const u = session?.user ?? null;
+        setUser(u);
+        setLoading(false);
+        if (u) ensureUsuarioRecord(u);
+      });
+      sub = subscription;
+    } catch {
+      setLoading(false);
+    }
+
+    return () => sub?.unsubscribe();
   }, []);
 
   const signOut = async () => {

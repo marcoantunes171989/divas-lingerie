@@ -30,7 +30,7 @@ const COLECAO = [
   { nome:"Primavera Sensual",     itens:"18 peças", grad:"linear-gradient(135deg,#5c1a28,#7a2540)", imagem:"https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&h=560&fit=crop&q=80" },
   { nome:"Noite de Veludo",       itens:"12 peças", grad:"linear-gradient(135deg,#2d1235,#4a1a3d)", imagem:"https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&h=560&fit=crop&q=80" },
   { nome:"Renda & Cetim",         itens:"24 peças", grad:"linear-gradient(135deg,#4a0e1e,#5c203a)", imagem:"https://images.unsplash.com/photo-1550614000-4895a10e1bfd?w=600&h=560&fit=crop&q=80" },
-  { nome:"Básicos Sofisticados",  itens:"30 peças", grad:"linear-gradient(135deg,#3d1520,#5a1e2e)", imagem:"https://images.unsplash.com/photo-1485231183945-fffde7f16cb3?w=600&h=560&fit=crop&q=80" },
+  { nome:"Básicos Sofisticados",  itens:"30 peças", grad:"linear-gradient(135deg,#3d1520,#5a1e2e)", imagem:"https://images.unsplash.com/photo-1617019114583-affb34d1b3cd?w=600&h=560&fit=crop&q=80" },
 ];
 
 const TAMANHOS = [
