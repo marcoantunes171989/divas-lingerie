@@ -83,7 +83,7 @@ export function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-dvh bg-white text-neutral-900 antialiased">
+    <div className="min-h-dvh bg-background text-foreground antialiased">
       <style>{`
         [data-reveal] {
           opacity: 0;
@@ -98,7 +98,7 @@ export function LandingPage() {
       `}</style>
 
       {/* ══ HEADER ══ */}
-      <header className="sticky top-0 z-50 border-b border-neutral-200/70 bg-white/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <img src="/logo.png" alt={COMPANY_NAME} className="h-9 w-auto object-contain" />
 
@@ -107,7 +107,7 @@ export function LandingPage() {
               <button
                 key={id}
                 onClick={() => scrollTo(id)}
-                className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 transition-colors hover:text-primary"
+                className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-primary"
               >
                 {label}
               </button>
@@ -116,7 +116,7 @@ export function LandingPage() {
 
           <Link
             to="/login"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-neutral-300 text-neutral-700 transition-colors hover:border-primary hover:text-primary"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground/70 transition-colors hover:border-primary hover:text-primary"
             aria-label="Acessar sistema"
           >
             <UserIcon className="h-[18px] w-[18px]" />
@@ -126,25 +126,25 @@ export function LandingPage() {
 
       {/* ══ HERO ══ */}
       <section className="mx-auto max-w-6xl px-5 pb-24 pt-20 text-center sm:px-8 sm:pt-28">
-        <span data-reveal className="mb-6 block text-[0.65rem] font-semibold uppercase tracking-[0.32em] text-primary">
+        <span data-reveal className="mb-6 inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-primary">
           Outono · Inverno 2026
         </span>
         <h1 data-reveal data-delay="1" className="mx-auto max-w-3xl font-serif text-5xl font-light leading-[1.05] tracking-tight sm:text-7xl">
           Você merece <span className="italic text-primary">sentir-se única</span>
         </h1>
-        <p data-reveal data-delay="2" className="mx-auto mt-7 max-w-md text-base leading-relaxed text-neutral-500">
+        <p data-reveal data-delay="2" className="mx-auto mt-7 max-w-md text-base leading-relaxed text-muted-foreground">
           Peças exclusivas que unem luxo, conforto e sensualidade — criadas para a mulher que sabe o que merece.
         </p>
         <div data-reveal data-delay="3" className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <button
             onClick={() => scrollTo("novidades")}
-            className="rounded-full bg-primary px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground transition-transform hover:scale-[1.03]"
+            className="rounded-full bg-primary px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground shadow-[var(--shadow-elegant)] transition-transform hover:scale-[1.03]"
           >
             Ver novidades
           </button>
           <Link
             to="/login"
-            className="rounded-full border border-neutral-300 px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-neutral-700 transition-colors hover:border-primary hover:text-primary"
+            className="rounded-full border border-border px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-foreground transition-colors hover:border-primary hover:text-primary"
           >
             Acessar sistema
           </Link>
@@ -152,12 +152,12 @@ export function LandingPage() {
       </section>
 
       {/* ══ BENEFÍCIOS ══ */}
-      <section className="border-y border-neutral-200/70 bg-neutral-50/60">
+      <section className="border-y border-border bg-muted/40">
         <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 px-5 py-10 text-center sm:grid-cols-3 sm:px-8">
           {BENEFICIOS.map((b, i) => (
             <div key={b.label} data-reveal data-delay={String(i + 1)}>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{b.label}</div>
-              <div className="mt-1.5 text-sm text-neutral-500">{b.sub}</div>
+              <div className="mt-1.5 text-sm text-muted-foreground">{b.sub}</div>
             </div>
           ))}
         </div>
@@ -172,9 +172,9 @@ export function LandingPage() {
               key={item.id}
               data-reveal
               data-delay={String((i % 3) + 1)}
-              className="group overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-shadow hover:shadow-xl hover:shadow-neutral-200/60"
+              className="group overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-elegant)]"
             >
-              <div className="relative aspect-[5/4] overflow-hidden bg-neutral-100">
+              <div className="relative aspect-[5/4] overflow-hidden bg-muted">
                 <img
                   src={item.imagem}
                   alt={item.titulo}
@@ -182,15 +182,15 @@ export function LandingPage() {
                   className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                 />
-                <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-primary backdrop-blur">
+                <span className="absolute left-3 top-3 rounded-full bg-card/90 px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-primary backdrop-blur">
                   {item.badge}
                 </span>
               </div>
               <div className="p-5">
                 <span className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-primary">{item.cat}</span>
-                <h3 className="mt-1.5 font-serif text-lg font-normal">{item.titulo}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-neutral-500">{item.desc}</p>
-                <button className="mt-4 w-full rounded-full bg-neutral-900 py-2.5 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-primary">
+                <h3 className="mt-1.5 font-serif text-lg font-normal text-card-foreground">{item.titulo}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.desc}</p>
+                <button className="mt-4 w-full rounded-full bg-primary py-2.5 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-primary-foreground transition-opacity hover:opacity-90">
                   Ver peça
                 </button>
               </div>
@@ -200,7 +200,7 @@ export function LandingPage() {
       </section>
 
       {/* ══ COLEÇÃO ══ */}
-      <section id="colecao" className="border-t border-neutral-200/70 bg-neutral-50/60">
+      <section id="colecao" className="border-t border-border bg-muted/40">
         <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
           <SectionLabel eyebrow="Exclusividade" titulo="Nossa" italico="Coleção" desc="Cada linha foi pensada para diferentes momentos e estilos de vida." />
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -209,7 +209,7 @@ export function LandingPage() {
                 key={col.nome}
                 data-reveal
                 data-delay={String((i % 4) + 1)}
-                className="group relative aspect-[4/5] overflow-hidden rounded-2xl bg-neutral-200"
+                className="group relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted"
               >
                 <img
                   src={col.imagem}
@@ -238,22 +238,22 @@ export function LandingPage() {
               key={t.label}
               data-reveal
               data-delay={String((i % 4) + 1)}
-              className="flex items-center gap-4 rounded-xl border border-neutral-200 bg-white p-4 transition-colors hover:border-primary"
+              className="flex items-center gap-4 rounded-xl border border-border/60 bg-card p-4 shadow-[var(--shadow-soft)] transition-colors hover:border-primary"
             >
               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                 {t.label}
               </div>
-              <p className="text-sm text-neutral-500">{t.desc}</p>
+              <p className="text-sm text-muted-foreground">{t.desc}</p>
             </div>
           ))}
         </div>
-        <p data-reveal className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-center text-sm text-neutral-500">
+        <p data-reveal className="mt-5 rounded-xl border border-border/60 bg-accent/40 p-4 text-center text-sm text-muted-foreground">
           <span className="font-semibold text-primary">Dica:</span> em caso de dúvida entre dois tamanhos, opte pelo maior. Modelos em renda têm menos elasticidade.
         </p>
       </section>
 
       {/* ══ LOOKBOOK ══ */}
-      <section id="lookbook" className="border-t border-neutral-200/70 bg-neutral-50/60">
+      <section id="lookbook" className="border-t border-border bg-muted/40">
         <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
           <SectionLabel eyebrow="Inspiração" titulo="Lookbook" italico="2026" desc="Editorials e looks para você se inspirar e montar seus conjuntos favoritos." />
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -262,7 +262,7 @@ export function LandingPage() {
                 key={lk.titulo}
                 data-reveal
                 data-delay={String((i % 4) + 1)}
-                className="group relative aspect-[4/5] overflow-hidden rounded-2xl bg-neutral-200"
+                className="group relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted"
               >
                 <img
                   src={lk.imagem}
@@ -281,13 +281,13 @@ export function LandingPage() {
           </div>
 
           {/* Banner cupom */}
-          <div data-reveal className="mx-auto mt-16 max-w-xl rounded-3xl border border-neutral-200 bg-white p-10 text-center">
+          <div data-reveal className="mx-auto mt-16 max-w-xl rounded-3xl border border-border/60 bg-card p-10 text-center shadow-[var(--shadow-soft)]">
             <span className="text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-primary">Oferta especial</span>
-            <h2 className="mt-3 font-serif text-3xl font-light">15% OFF na primeira compra</h2>
-            <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-neutral-500">
+            <h2 className="mt-3 font-serif text-3xl font-light text-card-foreground">15% OFF na primeira compra</h2>
+            <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
               Use o cupom <strong className="text-primary">NOVIDADE15</strong> e ganhe 15% de desconto na sua primeira peça.
             </p>
-            <button className="mt-6 rounded-full bg-primary px-8 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground transition-transform hover:scale-[1.03]">
+            <button className="mt-6 rounded-full bg-primary px-8 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground shadow-[var(--shadow-elegant)] transition-transform hover:scale-[1.03]">
               Usar cupom
             </button>
           </div>
@@ -295,8 +295,8 @@ export function LandingPage() {
       </section>
 
       {/* ══ FOOTER ══ */}
-      <footer className="border-t border-neutral-200/70 py-8 text-center">
-        <p className="text-xs uppercase tracking-[0.14em] text-neutral-400">
+      <footer className="border-t border-border py-8 text-center">
+        <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
           © {new Date().getFullYear()} {COMPANY_NAME} · Todos os direitos reservados
         </p>
       </footer>
@@ -308,11 +308,11 @@ export function LandingPage() {
 function SectionLabel({ eyebrow, titulo, italico, desc }: { eyebrow: string; titulo: string; italico: string; desc: string }) {
   return (
     <div data-reveal className="mx-auto mb-14 max-w-md text-center">
-      <span className="block text-[0.6rem] font-semibold uppercase tracking-[0.32em] text-primary">{eyebrow}</span>
-      <h2 className="mt-3 font-serif text-3xl font-light tracking-tight sm:text-4xl">
+      <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.28em] text-primary">{eyebrow}</span>
+      <h2 className="mt-3 font-serif text-3xl font-light tracking-tight text-foreground sm:text-4xl">
         {titulo} <span className="italic text-primary">{italico}</span>
       </h2>
-      <p className="mt-3 text-sm leading-relaxed text-neutral-500">{desc}</p>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{desc}</p>
     </div>
   );
 }
