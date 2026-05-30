@@ -864,7 +864,7 @@ export function PDVPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 flex flex-col">
       {/* Header with Search */}
       <header className="sticky top-0 z-30 bg-slate-900 text-white px-4 py-4 shadow-lg">
         <div className="flex items-center justify-between mb-4">
