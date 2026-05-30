@@ -26,9 +26,6 @@ import { useAuth } from "@/lib/auth";
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -47,47 +44,27 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-const menuGroups = [
-  {
-    label: "Operacional",
-    items: [
-      { title: "Dashboard", url: "/", icon: LayoutDashboard },
-      { title: "Vendas", url: "/vendas", icon: ShoppingBag },
-      { title: "Visitas", url: "/visitas", icon: MapPin },
-    ]
-  },
-  {
-    label: "Gestão Comercial",
-    items: [
-      { title: "Consignação", url: "/sacoleira", icon: HandCoins },
-      { title: "Comissão", url: "/comissao", icon: Calculator },
-      { title: "CRM", url: "/crm", icon: UserCheck },
-    ]
-  },
-  {
-    label: "Cadastros & Estoque",
-    items: [
-      { title: "Produtos", url: "/produtos", icon: Package },
-      { title: "Categorias", url: "/categorias", icon: Tag },
-      { title: "Tamanhos", url: "/tamanhos", icon: Ruler },
-      { title: "Cores", url: "/cores", icon: Palette },
-      { title: "Clientes", url: "/clientes", icon: Users },
-      { title: "Fornecedor", url: "/fornecedor", icon: Truck },
-      { title: "Finalizadoras", url: "/finalizadoras", icon: WalletCards },
-      { title: "Mot. Cancelamento", url: "/motivos-cancelamento", icon: XCircle },
-    ]
-  },
-  {
-    label: "Sistema & Análise",
-    items: [
-      { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
-      { title: "Cancelamentos", url: "/relatorio-cancelamentos", icon: XCircle },
-      { title: "Auditoria", url: "/auditoria", icon: ShieldCheck },
-      { title: "Usuários", url: "/usuarios", icon: UserCog },
-      { title: "Cargos", url: "/cargos", icon: ShieldCheck },
-      { title: "Painel Admin", url: "/admin", icon: Settings },
-    ]
-  }
+const menuItems = [
+  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Vendas", url: "/vendas", icon: ShoppingBag },
+  { title: "Visitas", url: "/visitas", icon: MapPin },
+  { title: "Consignação", url: "/sacoleira", icon: HandCoins },
+  { title: "Comissão", url: "/comissao", icon: Calculator },
+  { title: "CRM", url: "/crm", icon: UserCheck },
+  { title: "Produtos", url: "/produtos", icon: Package },
+  { title: "Categorias", url: "/categorias", icon: Tag },
+  { title: "Tamanhos", url: "/tamanhos", icon: Ruler },
+  { title: "Cores", url: "/cores", icon: Palette },
+  { title: "Clientes", url: "/clientes", icon: Users },
+  { title: "Fornecedor", url: "/fornecedor", icon: Truck },
+  { title: "Finalizadoras", url: "/finalizadoras", icon: WalletCards },
+  { title: "Mot. Cancelamento", url: "/motivos-cancelamento", icon: XCircle },
+  { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
+  { title: "Cancelamentos", url: "/relatorio-cancelamentos", icon: XCircle },
+  { title: "Auditoria", url: "/auditoria", icon: ShieldCheck },
+  { title: "Usuários", url: "/usuarios", icon: UserCog },
+  { title: "Cargos", url: "/cargos", icon: ShieldCheck },
+  { title: "Painel Admin", url: "/admin", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -113,11 +90,10 @@ export function AppSidebar() {
   };
 
   const classes = {
-    title: "text-sm font-semibold",
+    title: "text-sm font-medium tracking-normal",
     icon: "h-4 w-4",
-    button: "py-3 px-4",
-    groupLabel: "text-[0.7rem] mb-1.5 mt-3",
-    menuGap: "gap-1"
+    button: "py-2 px-3",
+    menuGap: "gap-0.5"
   };
 
   return (
@@ -138,33 +114,24 @@ export function AppSidebar() {
 
       <SidebarContent className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div className="px-2 py-4">
-            {menuGroups.map((group) => (
-              <SidebarGroup key={group.label} className="p-0">
-                <SidebarGroupLabel className={`${classes.groupLabel} px-4 uppercase tracking-wider font-extrabold text-sidebar-foreground/50`}>
-                  {group.label}
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu className={classes.menuGap}>
-                    {group.items.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton 
-                          asChild 
-                          isActive={isActive(item.url)} 
-                          tooltip={item.title} 
-                          className={`${classes.button} h-auto rounded-xl transition-all duration-200 hover:bg-sidebar-accent/50`}
-                        >
-                          <Link to={item.url} onClick={handleLinkClick} className="flex items-center gap-4">
-                            <item.icon className={`${classes.icon} shrink-0 transition-transform duration-200 group-hover:scale-110`} />
-                            <span className={`${classes.title} truncate`}>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            ))}
+          <div className="px-2 py-3">
+            <SidebarMenu className={classes.menuGap}>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                    className={`${classes.button} h-auto rounded-lg transition-all duration-200 hover:bg-sidebar-accent/50`}
+                  >
+                    <Link to={item.url} onClick={handleLinkClick} className="flex items-center gap-3">
+                      <item.icon className={`${classes.icon} shrink-0 transition-transform duration-200 group-hover:scale-110`} />
+                      <span className={`${classes.title} truncate`}>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
           </div>
         </ScrollArea>
       </SidebarContent>
