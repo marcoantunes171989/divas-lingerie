@@ -1252,7 +1252,7 @@ export function PDVPage() {
 
       {/* Checkout Dialog */}
       <Dialog open={isFinishing} onOpenChange={setIsFinishing}>
-        <DialogContent className="w-[95vw] sm:max-w-[450px] p-0 overflow-hidden bg-slate-50 border-none rounded-[2.5rem] h-[90vh] sm:h-auto max-h-[95vh] flex flex-col">
+        <DialogContent className="w-[95vw] sm:max-w-[450px] p-0 overflow-hidden bg-slate-50 border-none rounded-[2.5rem] h-[90vh] max-h-[90vh] flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
             <div className="p-5 bg-slate-900 text-white shrink-0">
               <div className="flex justify-between items-center mb-4">
@@ -1403,7 +1403,7 @@ export function PDVPage() {
                 {pagamentos.length > 0 && (
                   <div>
                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Valores Recebidos</h3>
-                    <div className="space-y-3">
+                    <div className="space-y-3 max-h-[34vh] overflow-y-auto pr-1">
                       {pagamentos.map((p, idx) => {
                         const fin = finalizadorasAtivas.find(f => f.fin_descricao.toLowerCase() === p.forma.toLowerCase());
                         const permiteTroco = fin?.fin_permite_troco ?? (p.forma.toLowerCase() === 'dinheiro');
