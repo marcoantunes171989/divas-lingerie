@@ -654,6 +654,18 @@ export function PDVPage() {
 
       if (rpcError) throw rpcError;
 
+      // Persiste o número do cupom fiscal na venda (usado no reenvio de recibo e relatórios)
+      if (vendaId && cupomFiscal) {
+        try {
+          await supabase.rpc('definir_cupom_fiscal' as any, {
+            p_venda_id: vendaId as string,
+            p_cupom_fiscal: String(cupomFiscal),
+          });
+        } catch (e) {
+          console.warn('[VENDA] Falha ao salvar cupom fiscal na venda', e);
+        }
+      }
+
       // Se veio de uma consignação, marcar como vendida e salvar a referência da venda
       if (currentConsignacaoId) {
         await supabase
