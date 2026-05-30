@@ -40,27 +40,27 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
      </div>`;
 
   const dashedLine = `<div style="border-top:1px dashed #aaa;margin:5px 0;"></div>`;
-  const solidLine  = `<div style="border-top:1px solid #000;margin:5px 0;"></div>`;
+  const solidLine = `<div style="border-top:1px solid #000;margin:5px 0;"></div>`;
 
-  const itensHTML = data.itens.map(it => `
+  const itensHTML = data.itens
+    .map(
+      (it) => `
     <div style="display:flex;font-size:10px;margin:2px 0;align-items:flex-start;">
       <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;">${it.descricao.toUpperCase()}</span>
       <span style="width:22px;text-align:center;">${it.quantidade}</span>
       <span style="width:58px;text-align:right;">${brl(it.valor)}</span>
       <span style="width:58px;text-align:right;">${brl(it.total)}</span>
-    </div>`).join("");
+    </div>`,
+    )
+    .join("");
 
-  const pagamentosHTML = data.pagamentos.map(p =>
-    row(p.forma.toUpperCase(), brl(p.valor))
-  ).join("");
+  const pagamentosHTML = data.pagamentos
+    .map((p) => row(p.forma.toUpperCase(), brl(p.valor)))
+    .join("");
 
-  const descontoHTML = data.desconto > 0
-    ? row("DESCONTO", `- ${brl(data.desconto)}`)
-    : "";
+  const descontoHTML = data.desconto > 0 ? row("DESCONTO", `- ${brl(data.desconto)}`) : "";
 
-  const trocoHTML = data.troco > 0
-    ? row("TROCO", brl(data.troco), true)
-    : "";
+  const trocoHTML = data.troco > 0 ? row("TROCO", brl(data.troco), true) : "";
 
   return `
     <div style="text-align:center;margin-bottom:12px;">
@@ -121,8 +121,7 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
 
 async function renderReceiptToCanvas(data: ReciboVendaData, scale = 3): Promise<HTMLCanvasElement> {
   const wrapper = document.createElement("div");
-  wrapper.style.cssText =
-    "position:absolute;left:-9999px;top:0;background:#fff;";
+  wrapper.style.cssText = "position:absolute;left:-9999px;top:0;background:#fff;";
 
   const receipt = document.createElement("div");
   receipt.style.cssText = `
@@ -154,10 +153,10 @@ async function renderReceiptToCanvas(data: ReciboVendaData, scale = 3): Promise<
 // ─── PDF via jsPDF puro (sem html2canvas) ────────────────────────────────────
 
 export async function gerarReciboVendaPDF(
-  data: ReciboVendaData
+  data: ReciboVendaData,
 ): Promise<{ blob: Blob; url: string }> {
-  const W = 80;   // largura página mm
-  const L = 4;    // margem esquerda
+  const W = 80; // largura página mm
+  const L = 4; // margem esquerda
   const R = W - 4; // margem direita
   const MID = W / 2;
 
@@ -297,7 +296,7 @@ export async function gerarReciboVendaPDF(
 // ─── PNG (idêntico ao preview visual) ────────────────────────────────────────
 
 export async function gerarReciboVendaPNG(
-  data: ReciboVendaData
+  data: ReciboVendaData,
 ): Promise<{ blob: Blob; url: string }> {
   const canvas = await renderReceiptToCanvas(data, 2);
 

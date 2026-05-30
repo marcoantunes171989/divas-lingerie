@@ -4,8 +4,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { XCircle, Search, Loader2, ChevronDown, ChevronUp, Package, TrendingDown } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  XCircle,
+  Search,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  Package,
+  TrendingDown,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
@@ -58,12 +73,15 @@ function RelatorioCancelamentosPage() {
     }
   };
 
-  useEffect(() => { fetchCancelamentos(); }, []);
+  useEffect(() => {
+    fetchCancelamentos();
+  }, []);
 
-  const filtered = cancelamentos.filter(c =>
-    (c.can_motivo?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-    (c.can_cupom_fiscal || "").includes(searchTerm) ||
-    (c.can_venda_id || "").includes(searchTerm)
+  const filtered = cancelamentos.filter(
+    (c) =>
+      (c.can_motivo?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (c.can_cupom_fiscal || "").includes(searchTerm) ||
+      (c.can_venda_id || "").includes(searchTerm),
   );
 
   const totalCancelado = filtered.reduce((s, c) => s + (c.can_valor_cancelado || 0), 0);
@@ -75,7 +93,9 @@ function RelatorioCancelamentosPage() {
     <div className="space-y-6 p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">Relatório de Cancelamentos</h1>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">
+            Relatório de Cancelamentos
+          </h1>
           <p className="text-slate-500 mt-1 flex items-center gap-2 text-sm italic">
             <XCircle className="w-4 h-4 text-red-400" /> Histórico completo de vendas canceladas
           </p>
@@ -115,7 +135,7 @@ function RelatorioCancelamentosPage() {
           <Input
             placeholder="Pesquise por motivo ou ID da venda..."
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-12 h-14 text-lg bg-slate-50 border-none rounded-2xl"
           />
         </div>
@@ -148,84 +168,117 @@ function RelatorioCancelamentosPage() {
                     Nenhum cancelamento registrado.
                   </TableCell>
                 </TableRow>
-              ) : filtered.map(c => (
-                <>
-                  <TableRow
-                    key={c.id}
-                    className="hover:bg-slate-50 cursor-pointer transition-colors"
-                    onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
-                  >
-                    <TableCell>
-                      {expandedId === c.id
-                        ? <ChevronUp className="w-4 h-4 text-slate-400" />
-                        : <ChevronDown className="w-4 h-4 text-slate-400" />}
-                    </TableCell>
-                    <TableCell>
-                      {c.can_cupom_fiscal
-                        ? <Badge variant="outline" className="font-mono rounded-full">Nº {c.can_cupom_fiscal}</Badge>
-                        : <span className="text-slate-300 italic text-xs">—</span>}
-                    </TableCell>
-                    <TableCell className="font-medium text-slate-700 whitespace-nowrap">
-                      {formatDate(c.created_at)}
-                    </TableCell>
-                    <TableCell>
-                      {c.can_motivo
-                        ? <span className="text-slate-700">{c.can_motivo}</span>
-                        : <span className="text-slate-300 italic text-xs">Sem motivo</span>}
-                    </TableCell>
-                    <TableCell>
-                      {c.tab_vendas?.ven_forma_pagamento
-                        ? <Badge variant="secondary" className="capitalize rounded-full">{c.tab_vendas.ven_forma_pagamento}</Badge>
-                        : <span className="text-slate-400 text-xs">—</span>}
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-red-600 whitespace-nowrap">
-                      {brl(c.can_valor_cancelado)}
-                    </TableCell>
-                  </TableRow>
-
-                  {/* Linha expandida: snapshot de estoque */}
-                  {expandedId === c.id && (
-                    <TableRow key={`${c.id}-detail`} className="bg-slate-50/80">
-                      <TableCell colSpan={6} className="p-0">
-                        <div className="p-4">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
-                            <Package className="w-3 h-3" /> Estoque no momento do cancelamento
-                          </p>
-                          {!c.can_estoque_snapshot || c.can_estoque_snapshot.length === 0 ? (
-                            <p className="text-xs text-slate-400 italic">Sem dados de estoque registrados.</p>
-                          ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                              {c.can_estoque_snapshot.map((item, idx) => {
-                                const estoqueAntes = item.estoque_no_cancelamento;
-                                const estoqueDepois = estoqueAntes + item.quantidade_cancelada;
-                                return (
-                                  <div key={idx} className="bg-white rounded-xl p-3 border border-slate-100 text-xs">
-                                    <p className="font-bold text-slate-800 truncate">{item.descricao}</p>
-                                    <div className="mt-2 grid grid-cols-3 gap-2 text-center">
-                                      <div className="rounded-lg bg-slate-50 py-1.5">
-                                        <p className="text-[9px] uppercase tracking-wide text-slate-400">Antes</p>
-                                        <p className="font-black text-slate-700">{estoqueAntes}</p>
-                                      </div>
-                                      <div className="rounded-lg bg-red-50 py-1.5">
-                                        <p className="text-[9px] uppercase tracking-wide text-red-400">Cancelada</p>
-                                        <p className="font-black text-red-500">+{item.quantidade_cancelada}</p>
-                                      </div>
-                                      <div className="rounded-lg bg-emerald-50 py-1.5">
-                                        <p className="text-[9px] uppercase tracking-wide text-emerald-500">Depois</p>
-                                        <p className="font-black text-emerald-600">{estoqueDepois}</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
+              ) : (
+                filtered.map((c) => (
+                  <>
+                    <TableRow
+                      key={c.id}
+                      className="hover:bg-slate-50 cursor-pointer transition-colors"
+                      onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
+                    >
+                      <TableCell>
+                        {expandedId === c.id ? (
+                          <ChevronUp className="w-4 h-4 text-slate-400" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-slate-400" />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {c.can_cupom_fiscal ? (
+                          <Badge variant="outline" className="font-mono rounded-full">
+                            Nº {c.can_cupom_fiscal}
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-300 italic text-xs">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium text-slate-700 whitespace-nowrap">
+                        {formatDate(c.created_at)}
+                      </TableCell>
+                      <TableCell>
+                        {c.can_motivo ? (
+                          <span className="text-slate-700">{c.can_motivo}</span>
+                        ) : (
+                          <span className="text-slate-300 italic text-xs">Sem motivo</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {c.tab_vendas?.ven_forma_pagamento ? (
+                          <Badge variant="secondary" className="capitalize rounded-full">
+                            {c.tab_vendas.ven_forma_pagamento}
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-400 text-xs">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-red-600 whitespace-nowrap">
+                        {brl(c.can_valor_cancelado)}
                       </TableCell>
                     </TableRow>
-                  )}
-                </>
-              ))}
+
+                    {/* Linha expandida: snapshot de estoque */}
+                    {expandedId === c.id && (
+                      <TableRow key={`${c.id}-detail`} className="bg-slate-50/80">
+                        <TableCell colSpan={6} className="p-0">
+                          <div className="p-4">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
+                              <Package className="w-3 h-3" /> Estoque no momento do cancelamento
+                            </p>
+                            {!c.can_estoque_snapshot || c.can_estoque_snapshot.length === 0 ? (
+                              <p className="text-xs text-slate-400 italic">
+                                Sem dados de estoque registrados.
+                              </p>
+                            ) : (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                {c.can_estoque_snapshot.map((item, idx) => {
+                                  const estoqueAntes = item.estoque_no_cancelamento;
+                                  const estoqueDepois = estoqueAntes + item.quantidade_cancelada;
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="bg-white rounded-xl p-3 border border-slate-100 text-xs"
+                                    >
+                                      <p className="font-bold text-slate-800 truncate">
+                                        {item.descricao}
+                                      </p>
+                                      <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+                                        <div className="rounded-lg bg-slate-50 py-1.5">
+                                          <p className="text-[9px] uppercase tracking-wide text-slate-400">
+                                            Antes
+                                          </p>
+                                          <p className="font-black text-slate-700">
+                                            {estoqueAntes}
+                                          </p>
+                                        </div>
+                                        <div className="rounded-lg bg-red-50 py-1.5">
+                                          <p className="text-[9px] uppercase tracking-wide text-red-400">
+                                            Cancelada
+                                          </p>
+                                          <p className="font-black text-red-500">
+                                            +{item.quantidade_cancelada}
+                                          </p>
+                                        </div>
+                                        <div className="rounded-lg bg-emerald-50 py-1.5">
+                                          <p className="text-[9px] uppercase tracking-wide text-emerald-500">
+                                            Depois
+                                          </p>
+                                          <p className="font-black text-emerald-600">
+                                            {estoqueDepois}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>

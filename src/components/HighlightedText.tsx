@@ -19,12 +19,15 @@ export function HighlightedText({ text, highlight, className }: HighlightedTextP
     <span className={className}>
       {parts.map((part, i) =>
         regex.test(part) ? (
-          <mark key={i} className="bg-primary/20 text-primary-foreground font-semibold rounded-sm px-0.5">
+          <mark
+            key={i}
+            className="bg-primary/20 text-primary-foreground font-semibold rounded-sm px-0.5"
+          >
             {part}
           </mark>
         ) : (
           <span key={i}>{part}</span>
-        )
+        ),
       )}
     </span>
   );

@@ -44,7 +44,10 @@ export function CupomFiscalPreview({ open, onClose, data, onDownloadPDF }: Props
 </html>`);
     printWin.document.close();
     printWin.focus();
-    setTimeout(() => { printWin.print(); printWin.close(); }, 400);
+    setTimeout(() => {
+      printWin.print();
+      printWin.close();
+    }, 400);
   };
 
   if (!data) return null;
@@ -74,9 +77,13 @@ export function CupomFiscalPreview({ open, onClose, data, onDownloadPDF }: Props
         <div className="bg-slate-100 p-5 overflow-y-auto max-h-[60vh]">
           <div
             className="bg-white shadow-xl mx-auto rounded-sm"
-            style={{ width: "280px", padding: "16px 14px 20px",
+            style={{
+              width: "280px",
+              padding: "16px 14px 20px",
               fontFamily: "'Courier New', Courier, monospace",
-              fontSize: "11px", color: "#000" }}
+              fontSize: "11px",
+              color: "#000",
+            }}
             dangerouslySetInnerHTML={{ __html: buildReceiptInnerHTML(data) }}
           />
         </div>

@@ -151,24 +151,38 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     letter-spacing: -0.02em;
   }
 }
 
 @layer utilities {
   @keyframes scan-line {
-    0% { top: 0; }
-    100% { top: 100%; }
+    0% {
+      top: 0;
+    }
+    100% {
+      top: 100%;
+    }
   }
   .animate-scan-line {
     animation: scan-line 2s linear infinite;
   }
   @keyframes bounce-short {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
   }
   .animate-bounce-short {
     animation: bounce-short 1s ease-in-out infinite;
@@ -213,13 +227,18 @@
       break-after: page;
       page-break-after: always;
     }
-    
+
     .no-print {
       display: none !important;
     }
 
     /* Limpeza de estilos de tela para evitar cortes e sombras indesejadas */
-    .shadow-xl, .shadow-lg, .shadow-md, .shadow-sm, .ring-1, .ring-black\/5 {
+    .shadow-xl,
+    .shadow-lg,
+    .shadow-md,
+    .shadow-sm,
+    .ring-1,
+    .ring-black\/5 {
       box-shadow: none !important;
       border: none !important;
       ring: none !important;

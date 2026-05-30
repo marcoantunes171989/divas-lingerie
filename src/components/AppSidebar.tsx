@@ -20,7 +20,7 @@ import {
   LogOut,
   WalletCards,
   Settings,
-  XCircle
+  XCircle,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
@@ -76,7 +76,7 @@ export function AppSidebar() {
   });
   const isActive = (path: string) =>
     path === "/" ? currentPath === "/" : currentPath.startsWith(path);
- 
+
   const handleLinkClick = () => {
     if (isMobile) {
       setOpenMobile(false);
@@ -93,7 +93,7 @@ export function AppSidebar() {
     title: "text-sm font-medium tracking-normal",
     icon: "h-4 w-4",
     button: "py-2 px-3",
-    menuGap: "gap-0.5"
+    menuGap: "gap-0.5",
   };
 
   return (
@@ -124,8 +124,14 @@ export function AppSidebar() {
                     tooltip={item.title}
                     className={`${classes.button} h-auto rounded-lg transition-all duration-200 hover:bg-sidebar-accent/50`}
                   >
-                    <Link to={item.url} onClick={handleLinkClick} className="flex items-center gap-3">
-                      <item.icon className={`${classes.icon} shrink-0 transition-transform duration-200 group-hover:scale-110`} />
+                    <Link
+                      to={item.url}
+                      onClick={handleLinkClick}
+                      className="flex items-center gap-3"
+                    >
+                      <item.icon
+                        className={`${classes.icon} shrink-0 transition-transform duration-200 group-hover:scale-110`}
+                      />
                       <span className={`${classes.title} truncate`}>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -138,9 +144,8 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border p-4 bg-sidebar/30 backdrop-blur-sm">
         <SidebarMenu className="gap-4">
-
           <SidebarMenuItem>
-            <SidebarMenuButton 
+            <SidebarMenuButton
               onClick={() => setShowLogoutDialog(true)}
               className={`text-destructive hover:text-destructive hover:bg-destructive/10 ${classes.button} h-auto rounded-xl transition-colors`}
               tooltip="Sair do sistema"
@@ -162,16 +167,16 @@ export function AppSidebar() {
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-6">
-              <Button 
-                variant="outline" 
-                className="w-full sm:flex-1 h-12 rounded-2xl font-bold border-slate-200" 
+              <Button
+                variant="outline"
+                className="w-full sm:flex-1 h-12 rounded-2xl font-bold border-slate-200"
                 onClick={() => setShowLogoutDialog(false)}
               >
                 Cancelar
               </Button>
-              <Button 
-                variant="destructive" 
-                className="w-full sm:flex-1 h-12 rounded-2xl font-bold bg-destructive hover:bg-destructive/90" 
+              <Button
+                variant="destructive"
+                className="w-full sm:flex-1 h-12 rounded-2xl font-bold bg-destructive hover:bg-destructive/90"
                 onClick={handleSignOut}
               >
                 Sair

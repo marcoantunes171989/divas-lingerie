@@ -25,28 +25,51 @@ export function StatCard({ title, value, hint, icon: Icon, accent = "primary", t
       <CardContent className="p-3 sm:p-5">
         <div className="flex items-start justify-between gap-2 sm:gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-medium truncate">{title}</p>
-            <p className="mt-1 sm:mt-2 text-base sm:text-2xl font-bold tracking-tight truncate">{value}</p>
+            <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-medium truncate">
+              {title}
+            </p>
+            <p className="mt-1 sm:mt-2 text-base sm:text-2xl font-bold tracking-tight truncate">
+              {value}
+            </p>
             {hint && (
               <div className="mt-1 flex items-center gap-1 min-w-0">
                 {trend && (
-                  <div className={cn(
-                    "flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full shrink-0",
-                    trend === "up" ? "bg-success/20 text-success" : "bg-destructive/10 text-destructive"
-                  )}>
-                    {trend === "up" ? <ArrowUpRight className="h-2 w-2 sm:h-2.5 sm:w-2.5" /> : <ArrowDownRight className="h-2 w-2 sm:h-2.5 sm:w-2.5" />}
+                  <div
+                    className={cn(
+                      "flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full shrink-0",
+                      trend === "up"
+                        ? "bg-success/20 text-success"
+                        : "bg-destructive/10 text-destructive",
+                    )}
+                  >
+                    {trend === "up" ? (
+                      <ArrowUpRight className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                    ) : (
+                      <ArrowDownRight className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                    )}
                   </div>
                 )}
-                <span className={cn(
-                  "text-[9px] sm:text-xs truncate font-medium",
-                  trend === "up" ? "text-success" : trend === "down" ? "text-destructive" : "text-muted-foreground"
-                )}>
+                <span
+                  className={cn(
+                    "text-[9px] sm:text-xs truncate font-medium",
+                    trend === "up"
+                      ? "text-success"
+                      : trend === "down"
+                        ? "text-destructive"
+                        : "text-muted-foreground",
+                  )}
+                >
                   {hint}
                 </span>
               </div>
             )}
           </div>
-          <div className={cn("flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl shrink-0", accentMap[accent])}>
+          <div
+            className={cn(
+              "flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl shrink-0",
+              accentMap[accent],
+            )}
+          >
             <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>

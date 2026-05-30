@@ -3,7 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 import { LogIn, Loader2, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { COMPANY_NAME } from "@/lib/constants";
@@ -17,7 +24,7 @@ export function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -44,11 +51,7 @@ export function LoginPage() {
     <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-muted/30 px-6 py-12 sm:px-8">
       <div className="w-full max-w-md space-y-10">
         <div className="text-center space-y-4">
-          <img
-            src="/logo.png"
-            alt={COMPANY_NAME}
-            className="mx-auto h-24 w-auto object-contain"
-          />
+          <img src="/logo.png" alt={COMPANY_NAME} className="mx-auto h-24 w-auto object-contain" />
           <p className="text-base text-muted-foreground sm:text-lg">
             Acesse sua conta para gerenciar o sistema
           </p>
@@ -64,51 +67,51 @@ export function LoginPage() {
           <form onSubmit={handleLogin}>
             <CardContent className="space-y-6">
               <div className="space-y-3">
-                <Label htmlFor="email" className="text-base font-semibold sm:text-lg">E-mail</Label>
+                <Label htmlFor="email" className="text-base font-semibold sm:text-lg">
+                  E-mail
+                </Label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="exemplo@gmail.com" 
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="exemplo@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-12 h-14 text-base sm:text-lg rounded-2xl border-muted-foreground/20 focus:border-primary"
-                    required 
+                    required
                   />
                 </div>
               </div>
               <div className="space-y-3">
-                <Label htmlFor="password" className="text-base font-semibold sm:text-lg">Senha</Label>
+                <Label htmlFor="password" className="text-base font-semibold sm:text-lg">
+                  Senha
+                </Label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input 
-                    id="password" 
-                    type={showPassword ? "text" : "password"} 
-                    placeholder="••••••••" 
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-12 pr-12 h-14 text-base sm:text-lg rounded-2xl border-muted-foreground/20 focus:border-primary"
-                    required 
+                    required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
             </CardContent>
             <CardFooter className="pt-4 pb-8">
-              <Button 
-                type="submit" 
-                className="w-full h-14 text-lg font-bold rounded-2xl gap-3 shadow-xl shadow-primary/20 hover:scale-[1.01] transition-transform" 
+              <Button
+                type="submit"
+                className="w-full h-14 text-lg font-bold rounded-2xl gap-3 shadow-xl shadow-primary/20 hover:scale-[1.01] transition-transform"
                 disabled={loading}
               >
                 {loading ? (
@@ -121,7 +124,7 @@ export function LoginPage() {
             </CardFooter>
           </form>
         </Card>
-        
+
         <p className="text-center text-sm text-muted-foreground pt-4">
           &copy; {new Date().getFullYear()} {COMPANY_NAME}. Todos os direitos reservados.
         </p>

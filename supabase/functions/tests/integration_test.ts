@@ -3,8 +3,8 @@ import { assertEquals, assertGreater } from "https://deno.land/std@0.192.0/testi
 // Note: These tests are designed to be run via Deno against the live Supabase project
 // using the credentials available in the environment.
 
-const PRODUCT_ID = '00000000-0000-0000-0000-000000000001';
-const CLIENT_ID = '00000000-0000-0000-0000-000000000002';
+const PRODUCT_ID = "00000000-0000-0000-0000-000000000001";
+const CLIENT_ID = "00000000-0000-0000-0000-000000000002";
 
 async function queryDB(sql: string) {
   // This is a helper that would normally use a Postgres client in a real Deno test environment

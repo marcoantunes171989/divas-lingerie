@@ -25,15 +25,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -47,7 +47,7 @@ const DICAS_CATEGORIAS = [
   "Use nomes curtos e objetivos para facilitar a leitura no PDV.",
   "Você pode filtrar seus relatórios de vendas por categoria para ver o que mais sai.",
   "Agrupe produtos similares para facilitar a gestão de inventário.",
-  "Descrições ajudam novos funcionários a entenderem onde classificar cada produto."
+  "Descrições ajudam novos funcionários a entenderem onde classificar cada produto.",
 ];
 
 type Categoria = {
@@ -58,7 +58,10 @@ type Categoria = {
 };
 
 function CategoriasPage() {
-  const dicaAleatoria = useMemo(() => DICAS_CATEGORIAS[Math.floor(Math.random() * DICAS_CATEGORIAS.length)], []);
+  const dicaAleatoria = useMemo(
+    () => DICAS_CATEGORIAS[Math.floor(Math.random() * DICAS_CATEGORIAS.length)],
+    [],
+  );
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -74,10 +77,7 @@ function CategoriasPage() {
   const fetchCategorias = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("tab_categorias")
-        .select("*")
-        .order("cat_nome");
+      const { data, error } = await supabase.from("tab_categorias").select("*").order("cat_nome");
 
       if (error) throw error;
       setCategorias(data || []);
@@ -94,7 +94,7 @@ function CategoriasPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.cat_nome.trim()) {
       return toast.error("O nome da categoria é obrigatório");
     }
@@ -114,9 +114,7 @@ function CategoriasPage() {
         if (error) throw error;
         toast.success("Categoria atualizada com sucesso");
       } else {
-        const { error } = await supabase
-          .from("tab_categorias")
-          .insert([data]);
+        const { error } = await supabase.from("tab_categorias").insert([data]);
         if (error) throw error;
         toast.success("Categoria criada com sucesso");
       }
@@ -133,17 +131,19 @@ function CategoriasPage() {
     if (!selectedCategoria) return;
     try {
       setSubmitting(true);
-      
+
       // Verificar se existem produtos vinculados
       const { count, error: countError } = await supabase
         .from("tab_produtos")
-        .select("*", { count: 'exact', head: true })
+        .select("*", { count: "exact", head: true })
         .eq("pro_categoria_id", selectedCategoria.id);
 
       if (countError) throw countError;
 
       if (count && count > 0) {
-        toast.error(`Não é possível excluir: existem ${count} produto(s) vinculados a esta categoria.`);
+        toast.error(
+          `Não é possível excluir: existem ${count} produto(s) vinculados a esta categoria.`,
+        );
         setIsDeleteDialogOpenConfirm(false);
         return;
       }
@@ -208,12 +208,18 @@ function CategoriasPage() {
             description="Organize seus produtos por grupos para facilitar a gestão."
           />
           <div className="flex items-center gap-2 mt-2">
-            <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-none rounded-lg px-3 py-1">
-              {categorias.length} {categorias.length === 1 ? 'Categoria' : 'Categorias'}
+            <Badge
+              variant="secondary"
+              className="bg-slate-100 text-slate-600 border-none rounded-lg px-3 py-1"
+            >
+              {categorias.length} {categorias.length === 1 ? "Categoria" : "Categorias"}
             </Badge>
           </div>
         </div>
-        <Button onClick={openAddDialog} className="w-full sm:w-auto rounded-2xl bg-slate-900 hover:bg-slate-800 h-12 px-6 shadow-lg shadow-slate-900/10 transition-all hover:scale-[1.02] active:scale-[0.98]">
+        <Button
+          onClick={openAddDialog}
+          className="w-full sm:w-auto rounded-2xl bg-slate-900 hover:bg-slate-800 h-12 px-6 shadow-lg shadow-slate-900/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+        >
           <Plus className="mr-2 h-5 w-5" /> Nova Categoria
         </Button>
       </div>
@@ -232,7 +238,7 @@ function CategoriasPage() {
                 />
               </div>
             </div>
-            
+
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
@@ -240,16 +246,24 @@ function CategoriasPage() {
                     <TableRow className="hover:bg-transparent border-none">
                       <TableHead className="w-[40%] font-bold text-slate-500 h-12">NOME</TableHead>
                       <TableHead className="font-bold text-slate-500 h-12">DESCRIÇÃO</TableHead>
-                      <TableHead className="text-right font-bold text-slate-500 h-12">AÇÕES</TableHead>
+                      <TableHead className="text-right font-bold text-slate-500 h-12">
+                        AÇÕES
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {loading ? (
                       Array.from({ length: 5 }).map((_, i) => (
                         <TableRow key={i} className="border-slate-50">
-                          <TableCell><div className="h-5 w-40 bg-slate-100 animate-pulse rounded-lg" /></TableCell>
-                          <TableCell><div className="h-5 w-64 bg-slate-100 animate-pulse rounded-lg" /></TableCell>
-                          <TableCell><div className="h-9 w-20 ml-auto bg-slate-100 animate-pulse rounded-lg" /></TableCell>
+                          <TableCell>
+                            <div className="h-5 w-40 bg-slate-100 animate-pulse rounded-lg" />
+                          </TableCell>
+                          <TableCell>
+                            <div className="h-5 w-64 bg-slate-100 animate-pulse rounded-lg" />
+                          </TableCell>
+                          <TableCell>
+                            <div className="h-9 w-20 ml-auto bg-slate-100 animate-pulse rounded-lg" />
+                          </TableCell>
                         </TableRow>
                       ))
                     ) : paginatedCategorias.length === 0 ? (
@@ -260,17 +274,24 @@ function CategoriasPage() {
                               <Tag className="h-8 w-8 text-slate-400" />
                             </div>
                             <p className="text-slate-500 font-medium text-lg">
-                              {searchTerm ? "Nenhuma categoria encontrada." : "Sua lista está vazia."}
+                              {searchTerm
+                                ? "Nenhuma categoria encontrada."
+                                : "Sua lista está vazia."}
                             </p>
                             <p className="text-slate-400 text-sm max-w-[250px] mx-auto italic">
-                              {searchTerm ? "Tente buscar por termos diferentes ou verifique a ortografia." : "Comece criando sua primeira categoria de produtos clicando no botão acima."}
+                              {searchTerm
+                                ? "Tente buscar por termos diferentes ou verifique a ortografia."
+                                : "Comece criando sua primeira categoria de produtos clicando no botão acima."}
                             </p>
                           </div>
                         </TableCell>
                       </TableRow>
                     ) : (
                       paginatedCategorias.map((cat) => (
-                        <TableRow key={cat.id} className="group hover:bg-slate-50/50 transition-colors border-slate-50">
+                        <TableRow
+                          key={cat.id}
+                          className="group hover:bg-slate-50/50 transition-colors border-slate-50"
+                        >
                           <TableCell className="py-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-slate-900 group-hover:text-white transition-all">
@@ -296,7 +317,10 @@ function CategoriasPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-9 w-9 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
-                                onClick={() => { setSelectedCategoria(cat); setIsDeleteDialogOpenConfirm(true); }}
+                                onClick={() => {
+                                  setSelectedCategoria(cat);
+                                  setIsDeleteDialogOpenConfirm(true);
+                                }}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -318,7 +342,8 @@ function CategoriasPage() {
                   <span className="text-slate-900 font-bold">
                     {Math.min(startIndex + itemsPerPage, filteredCategorias.length)}
                   </span>{" "}
-                  de <span className="text-slate-900 font-bold">{filteredCategorias.length}</span> registros
+                  de <span className="text-slate-900 font-bold">{filteredCategorias.length}</span>{" "}
+                  registros
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -338,8 +363,8 @@ function CategoriasPage() {
                         size="sm"
                         onClick={() => setCurrentPage(page)}
                         className={`h-8 w-8 p-0 rounded-lg text-xs font-bold ${
-                          currentPage === page 
-                            ? "bg-slate-900 text-white shadow-md shadow-slate-900/10" 
+                          currentPage === page
+                            ? "bg-slate-900 text-white shadow-md shadow-slate-900/10"
                             : "text-slate-500"
                         }`}
                       >
@@ -375,7 +400,9 @@ function CategoriasPage() {
             </p>
             <div className="mt-6 pt-6 border-t border-white/10 flex items-center justify-between">
               <div className="space-y-0.5">
-                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Categorias Ativas</p>
+                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                  Categorias Ativas
+                </p>
                 <p className="text-2xl font-black">{categorias.length}</p>
               </div>
               <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
@@ -387,8 +414,8 @@ function CategoriasPage() {
           <Card className="rounded-3xl border-none shadow-sm bg-white p-6">
             <h3 className="font-bold text-slate-800 mb-4">Ações Rápidas</h3>
             <div className="space-y-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start h-12 rounded-2xl border-slate-100 hover:bg-slate-50 group"
                 onClick={openAddDialog}
               >
@@ -397,8 +424,8 @@ function CategoriasPage() {
                 </div>
                 Cadastrar Categoria
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start h-12 rounded-2xl border-slate-100 hover:bg-slate-50 group"
                 onClick={() => toast.info("Relatório de categorias em breve")}
               >
@@ -424,29 +451,36 @@ function CategoriasPage() {
                   {selectedCategoria ? "Editar Categoria" : "Nova Categoria"}
                 </DialogTitle>
                 <DialogDescription className="text-slate-500 font-medium">
-                  {selectedCategoria 
-                    ? "Atualize as informações da categoria selecionada." 
+                  {selectedCategoria
+                    ? "Atualize as informações da categoria selecionada."
                     : "Preencha os campos abaixo para criar um novo grupo de produtos."}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-6 py-2">
                 <div className="space-y-2">
-                  <Label htmlFor="cat_nome" className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <Label
+                    htmlFor="cat_nome"
+                    className="text-sm font-bold text-slate-700 flex items-center gap-2"
+                  >
                     Nome da Categoria <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="cat_nome"
                     placeholder="Ex: MODA ÍNTIMA, ACESSÓRIOS..."
                     value={formData.cat_nome}
-                    onChange={(e) => setFormData({ ...formData, cat_nome: e.target.value.toUpperCase() })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, cat_nome: e.target.value.toUpperCase() })
+                    }
                     className="rounded-2xl h-14 bg-slate-50 border-slate-100 focus:bg-white focus:ring-slate-200 transition-all font-bold text-slate-900 placeholder:font-normal"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="cat_descricao" className="text-sm font-bold text-slate-700">Descrição (Opcional)</Label>
+                  <Label htmlFor="cat_descricao" className="text-sm font-bold text-slate-700">
+                    Descrição (Opcional)
+                  </Label>
                   <Textarea
                     id="cat_descricao"
                     placeholder="Descreva o tipo de produtos que compõem esta categoria..."
@@ -459,17 +493,17 @@ function CategoriasPage() {
             </div>
 
             <DialogFooter className="p-8 bg-slate-50 flex flex-col-reverse sm:flex-row gap-3 border-t mt-4">
-              <Button 
-                type="button" 
-                variant="ghost" 
+              <Button
+                type="button"
+                variant="ghost"
                 onClick={() => setIsDialogOpen(false)}
                 className="rounded-2xl h-14 px-8 font-bold text-slate-500 hover:text-slate-900 transition-all"
               >
                 Cancelar
               </Button>
-              <Button 
-                type="submit" 
-                disabled={submitting} 
+              <Button
+                type="submit"
+                disabled={submitting}
                 className="rounded-2xl bg-slate-900 hover:bg-slate-800 h-14 px-10 font-bold shadow-lg shadow-slate-900/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 {submitting ? (
@@ -477,8 +511,10 @@ function CategoriasPage() {
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Salvando...
                   </>
+                ) : selectedCategoria ? (
+                  "Salvar Alterações"
                 ) : (
-                  selectedCategoria ? "Salvar Alterações" : "Criar Categoria"
+                  "Criar Categoria"
                 )}
               </Button>
             </DialogFooter>
@@ -492,16 +528,25 @@ function CategoriasPage() {
             <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
               <Trash2 className="h-8 w-8 text-red-500" />
             </div>
-            <AlertDialogTitle className="font-black text-2xl text-slate-900">Excluir Categoria</AlertDialogTitle>
+            <AlertDialogTitle className="font-black text-2xl text-slate-900">
+              Excluir Categoria
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-500 text-base leading-relaxed">
-              Você tem certeza que deseja remover a categoria <span className="font-bold text-slate-900">"{selectedCategoria?.cat_nome}"</span>? 
-              <br/><br/>
-              Esta ação é <span className="text-red-500 font-bold underline decoration-red-200 underline-offset-4">permanente</span> e não poderá ser desfeita. 
-              Certifique-se de que não existem produtos vinculados a ela.
+              Você tem certeza que deseja remover a categoria{" "}
+              <span className="font-bold text-slate-900">"{selectedCategoria?.cat_nome}"</span>?
+              <br />
+              <br />
+              Esta ação é{" "}
+              <span className="text-red-500 font-bold underline decoration-red-200 underline-offset-4">
+                permanente
+              </span>{" "}
+              e não poderá ser desfeita. Certifique-se de que não existem produtos vinculados a ela.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-8 gap-3 sm:gap-0">
-            <AlertDialogCancel className="rounded-2xl h-14 px-8 font-bold text-slate-500 border-none hover:bg-slate-50">Voltar</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-2xl h-14 px-8 font-bold text-slate-500 border-none hover:bg-slate-50">
+              Voltar
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="rounded-2xl bg-red-600 hover:bg-red-700 h-14 px-8 font-bold text-white shadow-lg shadow-red-600/20"

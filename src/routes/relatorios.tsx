@@ -71,7 +71,14 @@ function paymentColor(forma: string) {
 function PaymentIcon({ forma, className }: { forma: string; className?: string }) {
   const f = (forma || "").toLowerCase();
   if (f === "dinheiro") return <Banknote className={className} />;
-  if (f.includes("cartao") || f.includes("cartão") || f.includes("crédito") || f.includes("credito") || f.includes("débito") || f.includes("debito"))
+  if (
+    f.includes("cartao") ||
+    f.includes("cartão") ||
+    f.includes("crédito") ||
+    f.includes("credito") ||
+    f.includes("débito") ||
+    f.includes("debito")
+  )
     return <CreditCard className={className} />;
   if (f === "pix") return <QrCode className={className} />;
   return null;
@@ -80,7 +87,12 @@ function PaymentIcon({ forma, className }: { forma: string; className?: string }
 function DeltaBadge({ value }: { value: number }) {
   const positive = value >= 0;
   return (
-    <span className={cn("inline-flex items-center gap-0.5 text-[10px] font-bold", positive ? "text-emerald-600" : "text-rose-500")}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-0.5 text-[10px] font-bold",
+        positive ? "text-emerald-600" : "text-rose-500",
+      )}
+    >
       {positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
       {Math.abs(value).toFixed(1)}%
     </span>
@@ -88,14 +100,22 @@ function DeltaBadge({ value }: { value: number }) {
 }
 
 function VendaCard({ venda }: { venda: any }) {
-  const hora = new Date(venda.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const hora = new Date(venda.created_at).toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   const cliente = venda.tab_clientes?.cli_nome || "Consumidor Final";
   const itens: any[] = venda.tab_itens_venda || [];
   const isCancelled = venda.ven_status === "cancelada";
   const hasDesc = Number(venda.ven_desconto || 0) > 0;
 
   return (
-    <Card className={cn("rounded-2xl border-none shadow-sm overflow-hidden transition-shadow hover:shadow-md", isCancelled && "opacity-55")}>
+    <Card
+      className={cn(
+        "rounded-2xl border-none shadow-sm overflow-hidden transition-shadow hover:shadow-md",
+        isCancelled && "opacity-55",
+      )}
+    >
       <div className="p-4">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1 mr-3">
@@ -112,18 +132,34 @@ function VendaCard({ venda }: { venda: any }) {
             <p className="font-black text-slate-900 text-sm leading-tight truncate">{cliente}</p>
             <div className="flex items-center gap-2 mt-1.5">
               <span className="text-[10px] text-muted-foreground font-medium">{hora}</span>
-              <span className={cn("inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full", paymentColor(venda.ven_forma_pagamento))}>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full",
+                  paymentColor(venda.ven_forma_pagamento),
+                )}
+              >
                 <PaymentIcon forma={venda.ven_forma_pagamento} className="h-2.5 w-2.5" />
                 {venda.ven_forma_pagamento}
               </span>
             </div>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Total</p>
-            <p className={cn("text-xl font-black", isCancelled ? "text-muted-foreground line-through" : "text-primary")}>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
+              Total
+            </p>
+            <p
+              className={cn(
+                "text-xl font-black",
+                isCancelled ? "text-muted-foreground line-through" : "text-primary",
+              )}
+            >
               {brl(venda.ven_valor_total)}
             </p>
-            {hasDesc && <p className="text-[10px] text-rose-500 font-bold mt-0.5">-{brl(venda.ven_desconto)} desc</p>}
+            {hasDesc && (
+              <p className="text-[10px] text-rose-500 font-bold mt-0.5">
+                -{brl(venda.ven_desconto)} desc
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -131,8 +167,19 @@ function VendaCard({ venda }: { venda: any }) {
       {itens.length > 0 && (
         <div className="border-t border-dashed border-slate-100 px-4 py-3 bg-slate-50/50 space-y-1.5">
           {itens.map((item: any) => (
-            <div key={item.id} className={cn("flex justify-between items-center text-[11px]", item.itv_status === "cancelado" && "opacity-40")}>
-              <span className={cn("font-medium text-slate-700", item.itv_status === "cancelado" && "line-through")}>
+            <div
+              key={item.id}
+              className={cn(
+                "flex justify-between items-center text-[11px]",
+                item.itv_status === "cancelado" && "opacity-40",
+              )}
+            >
+              <span
+                className={cn(
+                  "font-medium text-slate-700",
+                  item.itv_status === "cancelado" && "line-through",
+                )}
+              >
                 {item.itv_quantidade}× {item.tab_produtos?.pro_descricao || "Produto"}
               </span>
               <span className="font-bold text-slate-900">{brl(item.itv_valor_total)}</span>
@@ -161,20 +208,28 @@ function RelatoriosPage() {
 
   // ── Queries ────────────────────────────────────────────────────────────────
 
-  const { data: resumoVendas = [], isLoading: loadingResumo, error: errorResumo } = useQuery({
+  const {
+    data: resumoVendas = [],
+    isLoading: loadingResumo,
+    error: errorResumo,
+  } = useQuery({
     queryKey: ["relatorio-vendas-resumo", periodo, startDate, endDate],
     queryFn: async ({ signal }) => {
       let query = supabase.from("view_resumo_vendas_diario").select("*");
       if (periodo === "7d") {
-        const d = new Date(); d.setDate(d.getDate() - 7);
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
         query = query.gte("data_referencia", d.toISOString().split("T")[0]);
       } else if (periodo === "30d") {
-        const d = new Date(); d.setDate(d.getDate() - 30);
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
         query = query.gte("data_referencia", d.toISOString().split("T")[0]);
       } else if (periodo === "custom" && startDate && endDate) {
         query = query.gte("data_referencia", startDate).lte("data_referencia", endDate);
       }
-      const { data, error } = await query.order("data_referencia", { ascending: true }).abortSignal(signal);
+      const { data, error } = await query
+        .order("data_referencia", { ascending: true })
+        .abortSignal(signal);
       if (error) throw error;
       return data;
     },
@@ -185,21 +240,35 @@ function RelatoriosPage() {
     queryFn: async () => {
       let start: string, end: string;
       if (periodo === "7d") {
-        const d1 = new Date(); d1.setDate(d1.getDate() - 14);
-        const d2 = new Date(); d2.setDate(d2.getDate() - 7);
-        start = d1.toISOString().split("T")[0]; end = d2.toISOString().split("T")[0];
+        const d1 = new Date();
+        d1.setDate(d1.getDate() - 14);
+        const d2 = new Date();
+        d2.setDate(d2.getDate() - 7);
+        start = d1.toISOString().split("T")[0];
+        end = d2.toISOString().split("T")[0];
       } else if (periodo === "30d") {
-        const d1 = new Date(); d1.setDate(d1.getDate() - 60);
-        const d2 = new Date(); d2.setDate(d2.getDate() - 30);
-        start = d1.toISOString().split("T")[0]; end = d2.toISOString().split("T")[0];
+        const d1 = new Date();
+        d1.setDate(d1.getDate() - 60);
+        const d2 = new Date();
+        d2.setDate(d2.getDate() - 30);
+        start = d1.toISOString().split("T")[0];
+        end = d2.toISOString().split("T")[0];
       } else if (periodo === "custom" && startDate && endDate) {
-        const s = new Date(startDate); const e = new Date(endDate);
+        const s = new Date(startDate);
+        const e = new Date(endDate);
         const diff = e.getTime() - s.getTime();
         const s2 = new Date(s.getTime() - diff - 86400000);
         const e2 = new Date(s.getTime() - 86400000);
-        start = s2.toISOString().split("T")[0]; end = e2.toISOString().split("T")[0];
-      } else { return []; }
-      const { data, error } = await supabase.from("view_resumo_vendas_diario").select("*").gte("data_referencia", start).lte("data_referencia", end);
+        start = s2.toISOString().split("T")[0];
+        end = e2.toISOString().split("T")[0];
+      } else {
+        return [];
+      }
+      const { data, error } = await supabase
+        .from("view_resumo_vendas_diario")
+        .select("*")
+        .gte("data_referencia", start)
+        .lte("data_referencia", end);
       if (error) throw error;
       return data;
     },
@@ -208,7 +277,11 @@ function RelatoriosPage() {
   const { data: topProdutos = [], isLoading: loadingProdutos } = useQuery({
     queryKey: ["relatorio-top-produtos"],
     queryFn: async ({ signal }) => {
-      const { data, error } = await supabase.from("view_top_produtos").select("*").limit(6).abortSignal(signal);
+      const { data, error } = await supabase
+        .from("view_top_produtos")
+        .select("*")
+        .limit(6)
+        .abortSignal(signal);
       if (error) throw error;
       return data;
     },
@@ -222,13 +295,17 @@ function RelatoriosPage() {
         .select("ven_forma_pagamento, ven_valor_total")
         .neq("ven_status", "cancelada");
       if (periodo === "7d") {
-        const d = new Date(); d.setDate(d.getDate() - 7);
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
         query = query.gte("created_at", d.toISOString());
       } else if (periodo === "30d") {
-        const d = new Date(); d.setDate(d.getDate() - 30);
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
         query = query.gte("created_at", d.toISOString());
       } else if (periodo === "custom" && startDate && endDate) {
-        query = query.gte("created_at", `${startDate}T00:00:00`).lte("created_at", `${endDate}T23:59:59`);
+        query = query
+          .gte("created_at", `${startDate}T00:00:00`)
+          .lte("created_at", `${endDate}T23:59:59`);
       }
       const { data, error } = await query;
       if (error) throw new Error(error.message || JSON.stringify(error));
@@ -236,22 +313,32 @@ function RelatoriosPage() {
     },
   });
 
-  const { data: newVendas = [], isLoading: loadingVendas, isFetching: fetchingVendas } = useQuery({
+  const {
+    data: newVendas = [],
+    isLoading: loadingVendas,
+    isFetching: fetchingVendas,
+  } = useQuery({
     queryKey: ["relatorio-vendas-detalhado", periodo, startDate, endDate, page],
     queryFn: async ({ signal }) => {
       let query = supabase
         .from("tab_vendas")
-        .select("*, tab_clientes!ven_cliente_id(cli_nome), tab_itens_venda!itv_venda_id(*, tab_produtos(pro_descricao))")
+        .select(
+          "*, tab_clientes!ven_cliente_id(cli_nome), tab_itens_venda!itv_venda_id(*, tab_produtos(pro_descricao))",
+        )
         .order("created_at", { ascending: false })
         .range(page * pageSize, (page + 1) * pageSize - 1);
       if (periodo === "7d") {
-        const d = new Date(); d.setDate(d.getDate() - 7);
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
         query = query.gte("created_at", d.toISOString());
       } else if (periodo === "30d") {
-        const d = new Date(); d.setDate(d.getDate() - 30);
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
         query = query.gte("created_at", d.toISOString());
       } else if (periodo === "custom" && startDate && endDate) {
-        query = query.gte("created_at", `${startDate}T00:00:00`).lte("created_at", `${endDate}T23:59:59`);
+        query = query
+          .gte("created_at", `${startDate}T00:00:00`)
+          .lte("created_at", `${endDate}T23:59:59`);
       }
       const { data, error } = await query.abortSignal(signal);
       if (error) throw error;
@@ -262,7 +349,9 @@ function RelatoriosPage() {
   // ── Pagination ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    setAllVendas([]); setPage(0); setHasMore(true);
+    setAllVendas([]);
+    setPage(0);
+    setHasMore(true);
   }, [periodo, startDate, endDate]);
 
   useEffect(() => {
@@ -294,7 +383,11 @@ function RelatoriosPage() {
     const calcVar = (a: number, b: number) => (b === 0 ? (a > 0 ? 100 : 0) : ((a - b) / b) * 100);
 
     return {
-      totalVendas, totalLucro, totalItens, margemMedia, ticketMedio,
+      totalVendas,
+      totalLucro,
+      totalItens,
+      margemMedia,
+      ticketMedio,
       variacaoVendas: calcVar(totalVendas, anteriorVendas),
       variacaoLucro: calcVar(totalLucro, anteriorLucro),
       variacaoItens: calcVar(totalItens, anteriorItens),
@@ -302,16 +395,17 @@ function RelatoriosPage() {
     };
   }, [resumoVendas, resumoAnterior]);
 
-  const chartData = useMemo(() =>
-    resumoVendas.map((v) => {
-      const parts = dateBR(v.data_referencia || "").split("/");
-      return {
-        data: parts.length >= 2 ? `${parts[0]}/${parts[1]}` : "—",
-        vendas: Number(v.volume_vendas || 0),
-        lucro: Number(v.lucro_total || 0),
-      };
-    }),
-    [resumoVendas]
+  const chartData = useMemo(
+    () =>
+      resumoVendas.map((v) => {
+        const parts = dateBR(v.data_referencia || "").split("/");
+        return {
+          data: parts.length >= 2 ? `${parts[0]}/${parts[1]}` : "—",
+          vendas: Number(v.volume_vendas || 0),
+          lucro: Number(v.lucro_total || 0),
+        };
+      }),
+    [resumoVendas],
   );
 
   const paymentBreakdown = useMemo(() => {
@@ -329,10 +423,11 @@ function RelatoriosPage() {
   const filteredVendas = useMemo(() => {
     if (!buscaVenda) return allVendas;
     const term = buscaVenda.toLowerCase();
-    return allVendas.filter((v) =>
-      v.ven_cupom_fiscal?.toLowerCase().includes(term) ||
-      v.tab_clientes?.cli_nome?.toLowerCase().includes(term) ||
-      v.ven_forma_pagamento?.toLowerCase().includes(term)
+    return allVendas.filter(
+      (v) =>
+        v.ven_cupom_fiscal?.toLowerCase().includes(term) ||
+        v.tab_clientes?.cli_nome?.toLowerCase().includes(term) ||
+        v.ven_forma_pagamento?.toLowerCase().includes(term),
     );
   }, [allVendas, buscaVenda]);
 
@@ -355,7 +450,12 @@ function RelatoriosPage() {
     try {
       await new Promise((r) => setTimeout(r, 500));
       const headers = ["Data", "Qtd Pedidos", "Volume Vendas", "Lucro Total"];
-      const rows = resumoVendas.map((v) => [v.data_referencia, v.total_vendas, v.volume_vendas, v.lucro_total]);
+      const rows = resumoVendas.map((v) => [
+        v.data_referencia,
+        v.total_vendas,
+        v.volume_vendas,
+        v.lucro_total,
+      ]);
       const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const a = document.createElement("a");
@@ -380,22 +480,32 @@ function RelatoriosPage() {
       const doc = new SafejsPDF();
       const pw = doc.internal.pageSize.getWidth();
       const periodLabel =
-        periodo === "7d" ? "Últimos 7 dias" :
-        periodo === "30d" ? "Últimos 30 dias" :
-        `De ${dateBR(startDate)} até ${dateBR(endDate)}`;
+        periodo === "7d"
+          ? "Últimos 7 dias"
+          : periodo === "30d"
+            ? "Últimos 30 dias"
+            : `De ${dateBR(startDate)} até ${dateBR(endDate)}`;
 
-      doc.setFontSize(22); doc.setTextColor(219, 39, 119);
+      doc.setFontSize(22);
+      doc.setTextColor(219, 39, 119);
       doc.text(COMPANY_NAME, pw / 2, 20, { align: "center" });
-      doc.setFontSize(14); doc.setTextColor(51, 51, 51);
+      doc.setFontSize(14);
+      doc.setTextColor(51, 51, 51);
       doc.text("Relatório de Desempenho", pw / 2, 28, { align: "center" });
-      doc.setFontSize(9); doc.setTextColor(120, 120, 120);
+      doc.setFontSize(9);
+      doc.setTextColor(120, 120, 120);
       doc.text(`Período: ${periodLabel}`, pw / 2, 35, { align: "center" });
 
-      doc.setDrawColor(240, 240, 240); doc.setFillColor(252, 252, 252);
+      doc.setDrawColor(240, 240, 240);
+      doc.setFillColor(252, 252, 252);
       doc.roundedRect(14, 42, 182, 22, 3, 3, "FD");
-      doc.setFontSize(9); doc.setTextColor(100, 100, 100);
-      doc.text("Faturamento", 20, 50); doc.text("Lucro", 80, 50); doc.text("Pedidos", 140, 50);
-      doc.setFontSize(13); doc.setTextColor(0, 0, 0);
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Faturamento", 20, 50);
+      doc.text("Lucro", 80, 50);
+      doc.text("Pedidos", 140, 50);
+      doc.setFontSize(13);
+      doc.setTextColor(0, 0, 0);
       doc.text(brl(stats.totalVendas), 20, 58);
       doc.text(brl(stats.totalLucro), 80, 58);
       doc.text(String(stats.totalItens), 140, 58);
@@ -403,7 +513,12 @@ function RelatoriosPage() {
       (doc as any).autoTable({
         startY: 72,
         head: [["Data", "Pedidos", "Volume", "Lucro"]],
-        body: resumoVendas.map((v) => [dateBR(v.data_referencia || ""), v.total_vendas ?? 0, brl(v.volume_vendas || 0), brl(v.lucro_total || 0)]),
+        body: resumoVendas.map((v) => [
+          dateBR(v.data_referencia || ""),
+          v.total_vendas ?? 0,
+          brl(v.volume_vendas || 0),
+          brl(v.lucro_total || 0),
+        ]),
         theme: "striped",
         headStyles: { fillColor: [219, 39, 119], textColor: [255, 255, 255] },
         styles: { fontSize: 9 },
@@ -432,12 +547,17 @@ function RelatoriosPage() {
         />
         <div className="flex items-center gap-2 shrink-0">
           <Button
-            variant="outline" size="sm"
+            variant="outline"
+            size="sm"
             onClick={exportCSV}
             disabled={isExporting || isLoading}
             className="rounded-2xl h-10 text-[10px] font-black uppercase tracking-widest border-none bg-card shadow-sm hover:bg-slate-50"
           >
-            {isExporting ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1.5 h-3.5 w-3.5" />}
+            {isExporting ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+            )}
             CSV
           </Button>
           <Button
@@ -446,7 +566,11 @@ function RelatoriosPage() {
             disabled={isExporting || isLoading}
             className="rounded-2xl h-10 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20"
           >
-            {isExporting ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1.5 h-3.5 w-3.5" />}
+            {isExporting ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+            )}
             PDF
           </Button>
         </div>
@@ -465,7 +589,9 @@ function RelatoriosPage() {
               onClick={() => setPeriodo(p.value)}
               className={cn(
                 "px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
-                periodo === p.value ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+                periodo === p.value
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {p.label}
@@ -476,13 +602,15 @@ function RelatoriosPage() {
         {periodo === "custom" && (
           <div className="flex items-center gap-2">
             <Input
-              type="date" value={startDate}
+              type="date"
+              value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               className="w-auto h-10 rounded-2xl border-none bg-card shadow-sm text-xs font-bold"
             />
             <span className="text-[10px] font-black text-muted-foreground">até</span>
             <Input
-              type="date" value={endDate}
+              type="date"
+              value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               className="w-auto h-10 rounded-2xl border-none bg-card shadow-sm text-xs font-bold"
             />
@@ -494,7 +622,9 @@ function RelatoriosPage() {
             onClick={() => setActiveTab("graficos")}
             className={cn(
               "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
-              activeTab === "graficos" ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              activeTab === "graficos"
+                ? "bg-white text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <BarChart3 className="h-3 w-3" /> Análise
@@ -503,7 +633,9 @@ function RelatoriosPage() {
             onClick={() => setActiveTab("vendas")}
             className={cn(
               "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
-              activeTab === "vendas" ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              activeTab === "vendas"
+                ? "bg-white text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <TableIcon className="h-3 w-3" /> Extrato
@@ -516,13 +648,19 @@ function RelatoriosPage() {
         <Card className="rounded-3xl border-none shadow-sm bg-gradient-to-br from-primary/10 to-primary/5 overflow-hidden">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-black uppercase tracking-widest text-primary/70">Faturamento</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary/70">
+                Faturamento
+              </span>
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <DollarSign className="h-3.5 w-3.5 text-primary" />
               </div>
             </div>
-            {isLoading ? <Skeleton className="h-8 w-24 mb-2" /> : (
-              <p className="text-2xl font-black text-primary leading-none mb-2">{brl(stats.totalVendas)}</p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 mb-2" />
+            ) : (
+              <p className="text-2xl font-black text-primary leading-none mb-2">
+                {brl(stats.totalVendas)}
+              </p>
             )}
             <div className="flex items-center justify-between">
               <p className="text-[10px] text-primary/50 font-medium">Total no período</p>
@@ -534,16 +672,24 @@ function RelatoriosPage() {
         <Card className="rounded-3xl border-none shadow-sm bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 overflow-hidden">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700/70">Lucro Estimado</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700/70">
+                Lucro Estimado
+              </span>
               <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
                 <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
               </div>
             </div>
-            {isLoading ? <Skeleton className="h-8 w-24 mb-2" /> : (
-              <p className="text-2xl font-black text-emerald-700 leading-none mb-2">{brl(stats.totalLucro)}</p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 mb-2" />
+            ) : (
+              <p className="text-2xl font-black text-emerald-700 leading-none mb-2">
+                {brl(stats.totalLucro)}
+              </p>
             )}
             <div className="flex items-center justify-between">
-              <p className="text-[10px] text-emerald-600/50 font-medium">Margem {stats.margemMedia.toFixed(1)}%</p>
+              <p className="text-[10px] text-emerald-600/50 font-medium">
+                Margem {stats.margemMedia.toFixed(1)}%
+              </p>
               {!isLoading && <DeltaBadge value={stats.variacaoLucro} />}
             </div>
           </CardContent>
@@ -552,13 +698,19 @@ function RelatoriosPage() {
         <Card className="rounded-3xl border-none shadow-sm bg-gradient-to-br from-slate-100 to-slate-50 overflow-hidden">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Pedidos</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                Pedidos
+              </span>
               <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
                 <ShoppingBag className="h-3.5 w-3.5 text-slate-600" />
               </div>
             </div>
-            {isLoading ? <Skeleton className="h-8 w-16 mb-2" /> : (
-              <p className="text-2xl font-black text-slate-900 leading-none mb-2">{stats.totalItens}</p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16 mb-2" />
+            ) : (
+              <p className="text-2xl font-black text-slate-900 leading-none mb-2">
+                {stats.totalItens}
+              </p>
             )}
             <div className="flex items-center justify-between">
               <p className="text-[10px] text-slate-400 font-medium">Vendas realizadas</p>
@@ -570,13 +722,19 @@ function RelatoriosPage() {
         <Card className="rounded-3xl border-none shadow-sm bg-gradient-to-br from-blue-500/10 to-blue-500/5 overflow-hidden">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-black uppercase tracking-widest text-blue-700/70">Ticket Médio</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-blue-700/70">
+                Ticket Médio
+              </span>
               <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                 <History className="h-3.5 w-3.5 text-blue-600" />
               </div>
             </div>
-            {isLoading ? <Skeleton className="h-8 w-24 mb-2" /> : (
-              <p className="text-2xl font-black text-blue-700 leading-none mb-2">{brl(stats.ticketMedio)}</p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 mb-2" />
+            ) : (
+              <p className="text-2xl font-black text-blue-700 leading-none mb-2">
+                {brl(stats.ticketMedio)}
+              </p>
             )}
             <div className="flex items-center justify-between">
               <p className="text-[10px] text-blue-600/50 font-medium">Média por venda</p>
@@ -595,14 +753,18 @@ function RelatoriosPage() {
               <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-700">
                 <BarChart3 className="h-4 w-4 text-primary" /> Tendência de Vendas vs Lucro
               </CardTitle>
-              <CardDescription className="text-[10px]">Evolução financeira diária no período selecionado</CardDescription>
+              <CardDescription className="text-[10px]">
+                Evolução financeira diária no período selecionado
+              </CardDescription>
             </CardHeader>
             <CardContent className="px-6 pb-6">
               {errorResumo ? (
                 <ErrorState
                   title="Erro nos dados"
                   description="Não foi possível carregar os dados financeiros."
-                  onRetry={() => queryClient.invalidateQueries({ queryKey: ["relatorio-vendas-resumo"] })}
+                  onRetry={() =>
+                    queryClient.invalidateQueries({ queryKey: ["relatorio-vendas-resumo"] })
+                  }
                 />
               ) : isLoading ? (
                 <ChartSkeleton height={300} />
@@ -612,10 +774,18 @@ function RelatoriosPage() {
                     title="Sem movimentação"
                     description="Não houve vendas no período selecionado."
                     icon={History}
-                    action={periodo !== "7d" ? {
-                      label: "Ver últimos 7 dias",
-                      onClick: () => { setPeriodo("7d"); setStartDate(""); setEndDate(""); }
-                    } : undefined}
+                    action={
+                      periodo !== "7d"
+                        ? {
+                            label: "Ver últimos 7 dias",
+                            onClick: () => {
+                              setPeriodo("7d");
+                              setStartDate("");
+                              setEndDate("");
+                            },
+                          }
+                        : undefined
+                    }
                   />
                 </div>
               ) : (
@@ -633,20 +803,64 @@ function RelatoriosPage() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
-                      <XAxis dataKey="data" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 600 }} />
+                      <XAxis
+                        dataKey="data"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fontWeight: 600 }}
+                      />
                       <YAxis
-                        axisLine={false} tickLine={false}
+                        axisLine={false}
+                        tickLine={false}
                         tick={{ fontSize: 10 }}
-                        tickFormatter={(v) => v >= 1000 ? `R$${(v / 1000).toFixed(0)}k` : `R$${v}`}
+                        tickFormatter={(v) =>
+                          v >= 1000 ? `R$${(v / 1000).toFixed(0)}k` : `R$${v}`
+                        }
                         width={52}
                       />
                       <ChartTooltip
                         formatter={(v) => [brl(Number(v)), ""]}
-                        contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 10px 40px -8px rgba(0,0,0,0.15)", fontSize: 11 }}
+                        contentStyle={{
+                          borderRadius: "16px",
+                          border: "none",
+                          boxShadow: "0 10px 40px -8px rgba(0,0,0,0.15)",
+                          fontSize: 11,
+                        }}
                       />
-                      <Legend formatter={(v) => <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>{v}</span>} />
-                      <Area type="monotone" dataKey="vendas" stroke="rgb(219,39,119)" strokeWidth={2.5} fill="url(#gradVendas)" dot={{ r: 3, fill: "rgb(219,39,119)" }} activeDot={{ r: 5 }} name="Vendas" />
-                      <Area type="monotone" dataKey="lucro" stroke="rgb(22,163,74)" strokeWidth={2.5} fill="url(#gradLucro)" dot={{ r: 3, fill: "rgb(22,163,74)" }} activeDot={{ r: 5 }} name="Lucro" />
+                      <Legend
+                        formatter={(v) => (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.05em",
+                            }}
+                          >
+                            {v}
+                          </span>
+                        )}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="vendas"
+                        stroke="rgb(219,39,119)"
+                        strokeWidth={2.5}
+                        fill="url(#gradVendas)"
+                        dot={{ r: 3, fill: "rgb(219,39,119)" }}
+                        activeDot={{ r: 5 }}
+                        name="Vendas"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="lucro"
+                        stroke="rgb(22,163,74)"
+                        strokeWidth={2.5}
+                        fill="url(#gradLucro)"
+                        dot={{ r: 3, fill: "rgb(22,163,74)" }}
+                        activeDot={{ r: 5 }}
+                        name="Lucro"
+                      />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -661,7 +875,9 @@ function RelatoriosPage() {
                 <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-700">
                   <Package className="h-4 w-4 text-primary" /> Top Produtos
                 </CardTitle>
-                <CardDescription className="text-[10px]">Mais vendidos por receita acumulada</CardDescription>
+                <CardDescription className="text-[10px]">
+                  Mais vendidos por receita acumulada
+                </CardDescription>
               </CardHeader>
               <CardContent className="px-6 pb-6">
                 {loadingProdutos ? (
@@ -673,21 +889,38 @@ function RelatoriosPage() {
                 ) : (
                   <div className="h-[240px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={topProdutos} layout="vertical" margin={{ left: 0, right: 10, top: 0, bottom: 0 }}>
+                      <BarChart
+                        data={topProdutos}
+                        layout="vertical"
+                        margin={{ left: 0, right: 10, top: 0, bottom: 0 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.2} />
                         <XAxis type="number" hide />
                         <YAxis
-                          dataKey="descricao" type="category" width={130}
-                          axisLine={false} tickLine={false}
+                          dataKey="descricao"
+                          type="category"
+                          width={130}
+                          axisLine={false}
+                          tickLine={false}
                           tick={{ fontSize: 10, fontWeight: 600 }}
-                          tickFormatter={(v: string) => v.length > 18 ? v.slice(0, 18) + "…" : v}
+                          tickFormatter={(v: string) => (v.length > 18 ? v.slice(0, 18) + "…" : v)}
                         />
                         <ChartTooltip
                           cursor={{ fill: "rgba(219,39,119,0.04)" }}
                           formatter={(v) => [brl(Number(v)), "Receita"]}
-                          contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 10px 40px -8px rgba(0,0,0,0.15)", fontSize: 11 }}
+                          contentStyle={{
+                            borderRadius: "12px",
+                            border: "none",
+                            boxShadow: "0 10px 40px -8px rgba(0,0,0,0.15)",
+                            fontSize: 11,
+                          }}
                         />
-                        <Bar dataKey="receita_total" fill="rgb(219,39,119)" radius={[0, 6, 6, 0]} name="Receita" />
+                        <Bar
+                          dataKey="receita_total"
+                          fill="rgb(219,39,119)"
+                          radius={[0, 6, 6, 0]}
+                          name="Receita"
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -700,7 +933,9 @@ function RelatoriosPage() {
                 <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-700">
                   <CreditCard className="h-4 w-4 text-primary" /> Formas de Pagamento
                 </CardTitle>
-                <CardDescription className="text-[10px]">Distribuição por volume financeiro no período</CardDescription>
+                <CardDescription className="text-[10px]">
+                  Distribuição por volume financeiro no período
+                </CardDescription>
               </CardHeader>
               <CardContent className="px-6 pb-6">
                 {loadingFormas ? (
@@ -719,13 +954,22 @@ function RelatoriosPage() {
                       return (
                         <div key={p.forma}>
                           <div className="flex items-center justify-between mb-1.5">
-                            <span className={cn("inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full", paymentColor(p.forma))}>
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full",
+                                paymentColor(p.forma),
+                              )}
+                            >
                               <PaymentIcon forma={p.forma} className="h-2.5 w-2.5" />
                               {p.forma}
                             </span>
                             <div className="text-right">
-                              <span className="text-xs font-black text-slate-900">{brl(p.volume)}</span>
-                              <span className="text-[10px] text-muted-foreground ml-1.5">{p.count} venda{p.count !== 1 ? "s" : ""}</span>
+                              <span className="text-xs font-black text-slate-900">
+                                {brl(p.volume)}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground ml-1.5">
+                                {p.count} venda{p.count !== 1 ? "s" : ""}
+                              </span>
                             </div>
                           </div>
                           <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -779,7 +1023,9 @@ function RelatoriosPage() {
                   <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-2">
                       <CalendarDays className="h-3.5 w-3.5 text-primary/50" />
-                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-600">{group.label}</span>
+                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-600">
+                        {group.label}
+                      </span>
                       <span className="text-[10px] text-muted-foreground">
                         — {group.vendas.length} venda{group.vendas.length !== 1 ? "s" : ""}
                       </span>
@@ -803,7 +1049,11 @@ function RelatoriosPage() {
               onClick={() => setPage((p) => p + 1)}
               disabled={fetchingVendas}
             >
-              {fetchingVendas ? <Loader2 className="h-4 w-4 animate-spin" /> : "Carregar mais registros"}
+              {fetchingVendas ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Carregar mais registros"
+              )}
             </Button>
           )}
         </div>

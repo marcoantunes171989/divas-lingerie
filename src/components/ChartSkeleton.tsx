@@ -7,15 +7,11 @@ interface ChartSkeletonProps {
   showLegend?: boolean;
 }
 
-export function ChartSkeleton({ 
-  height = 350, 
-  className,
-  showLegend = true 
-}: ChartSkeletonProps) {
+export function ChartSkeleton({ height = 350, className, showLegend = true }: ChartSkeletonProps) {
   return (
-    <div 
-      className={cn("w-full flex flex-col space-y-4 animate-in fade-in duration-500", className)} 
-      style={{ height: typeof height === 'number' ? `${height}px` : height }}
+    <div
+      className={cn("w-full flex flex-col space-y-4 animate-in fade-in duration-500", className)}
+      style={{ height: typeof height === "number" ? `${height}px` : height }}
     >
       {/* Legend Area */}
       {showLegend && (
@@ -44,11 +40,11 @@ export function ChartSkeleton({
         <div className="flex-1 h-full flex items-end justify-around pb-6 relative z-10">
           {[...Array(7)].map((_, i) => (
             <div key={i} className="flex flex-col items-center gap-2 w-full max-w-[40px]">
-              <Skeleton 
+              <Skeleton
                 className={cn(
                   "w-full rounded-t-lg bg-primary/10",
-                  i % 2 === 0 ? "h-[60%]" : i % 3 === 0 ? "h-[40%]" : "h-[80%]"
-                )} 
+                  i % 2 === 0 ? "h-[60%]" : i % 3 === 0 ? "h-[40%]" : "h-[80%]",
+                )}
               />
               <Skeleton className="h-2 w-8" />
             </div>

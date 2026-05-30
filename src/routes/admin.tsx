@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,14 +20,19 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
-  const { data: testData, isLoading, error, refetch } = useQuery({
+  const {
+    data: testData,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["test-connection"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tab_teste_conexao")
         .select("*")
         .order("created_at", { ascending: false });
-      
+
       if (error) throw error;
       return data;
     },
@@ -37,10 +42,15 @@ function AdminPage() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="px-2 py-0.5 border-primary/30 bg-primary/5 text-primary font-bold uppercase tracking-wider text-[10px]">
+          <Badge
+            variant="outline"
+            className="px-2 py-0.5 border-primary/30 bg-primary/5 text-primary font-bold uppercase tracking-wider text-[10px]"
+          >
             Sistema
           </Badge>
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Painel Admin</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
+            Painel Admin
+          </span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -56,12 +66,12 @@ function AdminPage() {
               </p>
             </div>
           </div>
-          <button 
-            onClick={() => refetch()} 
+          <button
+            onClick={() => refetch()}
             className="p-2 hover:bg-slate-100 rounded-full transition-colors"
             title="Atualizar dados"
           >
-            <RefreshCw className={`h-5 w-5 text-slate-500 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-5 w-5 text-slate-500 ${isLoading ? "animate-spin" : ""}`} />
           </button>
         </div>
       </div>
@@ -92,10 +102,18 @@ function AdminPage() {
           <Table>
             <TableHeader className="bg-slate-50/30">
               <TableRow>
-                <TableHead className="font-black uppercase tracking-widest text-[10px] py-4 px-8">ID</TableHead>
-                <TableHead className="font-black uppercase tracking-widest text-[10px] py-4">Nome</TableHead>
-                <TableHead className="font-black uppercase tracking-widest text-[10px] py-4">Descrição</TableHead>
-                <TableHead className="font-black uppercase tracking-widest text-[10px] py-4 px-8 text-right">Criado em</TableHead>
+                <TableHead className="font-black uppercase tracking-widest text-[10px] py-4 px-8">
+                  ID
+                </TableHead>
+                <TableHead className="font-black uppercase tracking-widest text-[10px] py-4">
+                  Nome
+                </TableHead>
+                <TableHead className="font-black uppercase tracking-widest text-[10px] py-4">
+                  Descrição
+                </TableHead>
+                <TableHead className="font-black uppercase tracking-widest text-[10px] py-4 px-8 text-right">
+                  Criado em
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -115,7 +133,7 @@ function AdminPage() {
                 testData?.map((item) => (
                   <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors">
                     <TableCell className="font-mono text-[10px] text-slate-400 py-4 px-8">
-                      {item.id.split('-')[0]}...
+                      {item.id.split("-")[0]}...
                     </TableCell>
                     <TableCell className="font-bold text-slate-700">{item.nome}</TableCell>
                     <TableCell className="text-slate-500 font-medium">{item.descricao}</TableCell>
@@ -137,9 +155,12 @@ function AdminPage() {
               <CheckCircle2 className="h-6 w-6 text-emerald-600" />
             </div>
             <div>
-              <h4 className="font-black uppercase tracking-tight text-emerald-900">Status da Integração</h4>
+              <h4 className="font-black uppercase tracking-tight text-emerald-900">
+                Status da Integração
+              </h4>
               <p className="text-sm text-emerald-700/80 leading-relaxed mt-1">
-                Se os dados acima estão visíveis, significa que o Lovable está lendo corretamente do seu banco Supabase externo (ID: gknvynbcmrtyjyyzhyov).
+                Se os dados acima estão visíveis, significa que o Lovable está lendo corretamente do
+                seu banco Supabase externo (ID: gknvynbcmrtyjyyzhyov).
               </p>
             </div>
           </CardContent>
@@ -151,9 +172,12 @@ function AdminPage() {
               <Database className="h-6 w-6 text-slate-600" />
             </div>
             <div>
-              <h4 className="font-black uppercase tracking-tight text-slate-900">Banco de Produção</h4>
+              <h4 className="font-black uppercase tracking-tight text-slate-900">
+                Banco de Produção
+              </h4>
               <p className="text-sm text-slate-600 leading-relaxed mt-1">
-                Toda nova tabela ou registro criado a partir de agora será salvo automaticamente neste mesmo ambiente.
+                Toda nova tabela ou registro criado a partir de agora será salvo automaticamente
+                neste mesmo ambiente.
               </p>
             </div>
           </CardContent>

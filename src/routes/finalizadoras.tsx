@@ -167,7 +167,11 @@ function FinalizadorasPage() {
     const base = [...finalizadoras];
     if (sortBy === "descricao") base.sort((a, b) => a.fin_descricao.localeCompare(b.fin_descricao));
     else if (sortBy === "status")
-      base.sort((a, b) => Number(b.fin_ativa) - Number(a.fin_ativa) || a.fin_descricao.localeCompare(b.fin_descricao));
+      base.sort(
+        (a, b) =>
+          Number(b.fin_ativa) - Number(a.fin_ativa) ||
+          a.fin_descricao.localeCompare(b.fin_descricao),
+      );
     else if (sortBy === "uso")
       base.sort((a, b) => (usageMap[b.id]?.count || 0) - (usageMap[a.id]?.count || 0));
     else base.sort((a, b) => a.fin_ordem - b.fin_ordem);
@@ -200,11 +204,16 @@ function FinalizadorasPage() {
         fin_codigo_atalho: data.fin_codigo_atalho?.trim() || null,
       };
       if (editingId) {
-        const { error } = await supabase.from("tab_finalizadoras").update(payload).eq("id", editingId);
+        const { error } = await supabase
+          .from("tab_finalizadoras")
+          .update(payload)
+          .eq("id", editingId);
         if (error) throw error;
       } else {
         const nextOrder = (finalizadoras.reduce((m, f) => Math.max(m, f.fin_ordem), 0) || 0) + 1;
-        const { error } = await supabase.from("tab_finalizadoras").insert([{ ...payload, fin_ordem: nextOrder }]);
+        const { error } = await supabase
+          .from("tab_finalizadoras")
+          .insert([{ ...payload, fin_ordem: nextOrder }]);
         if (error) throw error;
       }
     },
@@ -218,7 +227,10 @@ function FinalizadorasPage() {
 
   const toggleStatusMutation = useMutation({
     mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
-      const { error } = await supabase.from("tab_finalizadoras").update({ fin_ativa: active }).eq("id", id);
+      const { error } = await supabase
+        .from("tab_finalizadoras")
+        .update({ fin_ativa: active })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["finalizadoras"] }),
@@ -244,8 +256,11 @@ function FinalizadorasPage() {
       // Atualiza individualmente pra não depender de upsert
       await Promise.all(
         items.map((item, idx) =>
-          supabase.from("tab_finalizadoras").update({ fin_ordem: idx + 1 }).eq("id", item.id)
-        )
+          supabase
+            .from("tab_finalizadoras")
+            .update({ fin_ordem: idx + 1 })
+            .eq("id", item.id),
+        ),
       );
     },
     onSuccess: () => {
@@ -259,7 +274,7 @@ function FinalizadorasPage() {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   function handleDragEnd(event: DragEndEvent) {
@@ -301,7 +316,12 @@ function FinalizadorasPage() {
   };
 
   const fmtBRL = (v: number) =>
-    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    v.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
 
   return (
     <div className="min-h-screen bg-background">
@@ -310,7 +330,9 @@ function FinalizadorasPage() {
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Finalizadoras</h1>
-            <p className="text-muted-foreground text-xs sm:text-sm">Configure as formas de pagamento do seu PDV.</p>
+            <p className="text-muted-foreground text-xs sm:text-sm">
+              Configure as formas de pagamento do seu PDV.
+            </p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
@@ -322,8 +344,8 @@ function FinalizadorasPage() {
               <ChevronLeft className="w-3.5 h-3.5" />
               Voltar
             </Button>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               className="flex-1 sm:flex-none h-9 rounded-xl shadow-lg shadow-primary/20 text-xs font-bold"
               onClick={() => handleOpenDialog()}
             >
@@ -392,7 +414,9 @@ function FinalizadorasPage() {
                 }}
                 disabled={reorderMutation.isPending}
                 className={`h-8 rounded-xl text-[11px] font-bold uppercase tracking-wider ${
-                  reorderMode ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" : "bg-background"
+                  reorderMode
+                    ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+                    : "bg-background"
                 }`}
               >
                 <ArrowUpDown className="w-3 h-3 mr-1.5" />
@@ -416,7 +440,9 @@ function FinalizadorasPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Carregando</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+              Carregando
+            </p>
           </div>
         ) : filteredList.length === 0 ? (
           <Card className="flex flex-col items-center justify-center py-16 gap-3 border-dashed border-2 border-muted bg-muted/5">
@@ -432,14 +458,24 @@ function FinalizadorasPage() {
               </p>
             </div>
             {!searchTerm && (
-              <Button onClick={() => handleOpenDialog()} className="mt-2 rounded-xl shadow-lg shadow-primary/20">
+              <Button
+                onClick={() => handleOpenDialog()}
+                className="mt-2 rounded-xl shadow-lg shadow-primary/20"
+              >
                 <Plus className="w-4 h-4 mr-1.5" /> Cadastrar
               </Button>
             )}
           </Card>
         ) : reorderMode ? (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={filteredList.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={filteredList.map((f) => f.id)}
+              strategy={verticalListSortingStrategy}
+            >
               <div className="flex flex-col gap-2">
                 {filteredList.map((fin) => (
                   <SortableRow key={fin.id} fin={fin} />
@@ -497,7 +533,9 @@ function FinalizadorasPage() {
                       </div>
                       <Switch
                         checked={fin.fin_ativa}
-                        onCheckedChange={(checked) => toggleStatusMutation.mutate({ id: fin.id, active: checked })}
+                        onCheckedChange={(checked) =>
+                          toggleStatusMutation.mutate({ id: fin.id, active: checked })
+                        }
                         className="data-[state=checked]:bg-primary scale-90"
                       />
                     </div>
@@ -505,13 +543,19 @@ function FinalizadorasPage() {
                     {/* Usage stats */}
                     <div className="mt-5 flex items-center justify-between bg-muted/20 rounded-xl px-3 py-2.5">
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Vendas</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Vendas
+                        </p>
                         <p className="text-sm font-bold text-foreground">{uso?.count || 0}</p>
                       </div>
                       <div className="h-8 w-px bg-border" />
                       <div className="text-right">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total</p>
-                        <p className="text-sm font-bold text-foreground">{fmtBRL(uso?.total || 0)}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Total
+                        </p>
+                        <p className="text-sm font-bold text-foreground">
+                          {fmtBRL(uso?.total || 0)}
+                        </p>
                       </div>
                     </div>
 
@@ -560,7 +604,9 @@ function FinalizadorasPage() {
 
           <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Descrição</Label>
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Descrição
+              </Label>
               <Input
                 placeholder="Ex: Cartão de Débito"
                 className="h-10 rounded-xl border-input bg-muted/20 font-semibold focus-visible:ring-primary focus-visible:bg-background transition-all"
@@ -571,7 +617,9 @@ function FinalizadorasPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Ícone</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Ícone
+                </Label>
                 <Select
                   value={formData.fin_icone || "CreditCard"}
                   onValueChange={(v) => setFormData({ ...formData, fin_icone: v })}
@@ -592,13 +640,17 @@ function FinalizadorasPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Atalho</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Atalho
+                </Label>
                 <Input
                   placeholder="Ex: F1"
                   maxLength={4}
                   className="h-10 rounded-xl border-input bg-muted/20 font-semibold uppercase focus-visible:ring-primary focus-visible:bg-background transition-all"
                   value={formData.fin_codigo_atalho}
-                  onChange={(e) => setFormData({ ...formData, fin_codigo_atalho: e.target.value.toUpperCase() })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fin_codigo_atalho: e.target.value.toUpperCase() })
+                  }
                 />
               </div>
             </div>
@@ -654,7 +706,9 @@ function FinalizadorasPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="grid grid-cols-2 gap-2 mt-6">
-            <AlertDialogCancel className="h-11 rounded-xl font-bold border-slate-200 mt-0">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="h-11 rounded-xl font-bold border-slate-200 mt-0">
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
               className="h-11 rounded-xl bg-red-500 hover:bg-red-600 font-bold text-white"
               onClick={() => deletingId && deleteMutation.mutate(deletingId)}
@@ -688,10 +742,14 @@ function StatPill({
     indigo: "from-indigo-100 to-indigo-50 text-indigo-900 border-indigo-200/60",
   }[accent];
   return (
-    <div className={`relative bg-gradient-to-br ${palette} border rounded-xl px-3 py-2.5 md:px-4 md:py-3`}>
+    <div
+      className={`relative bg-gradient-to-br ${palette} border rounded-xl px-3 py-2.5 md:px-4 md:py-3`}
+    >
       <div className="flex items-center gap-1.5">
         {Icon && <Icon className="w-3 h-3 opacity-60" />}
-        <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider opacity-70">{label}</p>
+        <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider opacity-70">
+          {label}
+        </p>
       </div>
       <p className="text-xl md:text-2xl font-extrabold mt-0.5 leading-none">{value}</p>
     </div>
@@ -719,18 +777,24 @@ function ToggleRow({
         <p className="text-sm font-bold text-slate-900">{label}</p>
         <p className="text-[11px] font-medium text-slate-500 truncate">{hint}</p>
       </div>
-      <Switch checked={checked} onCheckedChange={onChange} className="data-[state=checked]:bg-primary scale-90" />
+      <Switch
+        checked={checked}
+        onCheckedChange={onChange}
+        className="data-[state=checked]:bg-primary scale-90"
+      />
     </div>
   );
 }
 
 function SortableRow({ fin }: { fin: Finalizadora }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: fin.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: fin.id,
+  });
   const Icon = iconMap[fin.fin_icone || "CreditCard"] || CreditCard;
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 50 : "auto" as any,
+    zIndex: isDragging ? 50 : ("auto" as any),
   };
   return (
     <div

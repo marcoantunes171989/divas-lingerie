@@ -4,11 +4,11 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  MapPin, 
-  Search, 
-  Plus, 
-  Package, 
+import {
+  MapPin,
+  Search,
+  Plus,
+  Package,
   CheckCircle2,
   Filter,
   ReceiptText,
@@ -27,14 +27,10 @@ import {
   Zap,
   ChevronRight,
   MoreHorizontal,
-  Clock
+  Clock,
 } from "lucide-react";
 import { dateBR, brl, formatPhone } from "@/lib/format";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import {
   Dialog,
   DialogContent,
@@ -75,7 +71,7 @@ const DICAS_VISITAS = [
   "Mantenha as observações atualizadas para lembrar do que a cliente mais gostou na última vez.",
   "O roteiro de visitas otimizado economiza tempo e combustível.",
   "Demonstrar peças que combinam com o que a cliente já tem aumenta as vendas casadas.",
-  "Um pós-visita via WhatsApp reforça o relacionamento e pode fechar vendas pendentes."
+  "Um pós-visita via WhatsApp reforça o relacionamento e pode fechar vendas pendentes.",
 ];
 
 function VisitasPage() {
@@ -105,9 +101,9 @@ function VisitasPage() {
   const [printMargin, setPrintMargin] = useState<number>(15);
   const printContentRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
-  
+
   const [selectedClienteId, setSelectedClienteId] = useState("");
-  const [dataPrevista, setDataPrevista] = useState(new Date().toISOString().split('T')[0]);
+  const [dataPrevista, setDataPrevista] = useState(new Date().toISOString().split("T")[0]);
   const [dataReal, setDataReal] = useState("");
   const [dataReagendada, setDataReagendada] = useState("");
   const [selectedProdutos, setSelectedProdutos] = useState<string[]>([]);
@@ -127,20 +123,18 @@ function VisitasPage() {
   const { data: produtos = [] } = useQuery({
     queryKey: ["produtos-visitas-detalhado"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tab_produtos")
-        .select(`
+      const { data, error } = await supabase.from("tab_produtos").select(`
           *,
           tab_cores(cor_nome),
           tab_categorias(cat_nome),
           tab_tamanhos(tam_nome)
         `);
       if (error) throw error;
-      return data.map(p => ({
+      return data.map((p) => ({
         ...p,
         cor_nome: p.tab_cores?.cor_nome,
         categoria_nome: p.tab_categorias?.cat_nome,
-        tamanho_nome: p.tab_tamanhos?.tam_nome
+        tamanho_nome: p.tab_tamanhos?.tam_nome,
       })) as (Produto & { cor_nome?: string; categoria_nome?: string; tamanho_nome?: string })[];
     },
   });
@@ -179,22 +173,24 @@ function VisitasPage() {
         vis_status: v.vis_status,
         vis_motivo_cancelamento: v.vis_motivo_cancelamento,
         produtos_demonstrados: v.produtos_detalhes || [],
-        observacoes: v.vis_observacoes
+        observacoes: v.vis_observacoes,
       }));
     },
   });
 
   const addVisitaMutation = useMutation({
     mutationFn: async (newVisita: any) => {
-      const { error } = await supabase.from("tab_visitas").insert([{
-        vis_cliente_id: newVisita.cliente_id,
-        vis_data_prevista: newVisita.data_prevista,
-        vis_data_real: newVisita.data_real || null,
-        vis_data_reagendada: newVisita.data_reagendada || null,
-        vis_produtos_ids: newVisita.produtos_demonstrados,
-        vis_observacoes: newVisita.observacoes,
-        vis_status: newVisita.vis_status
-      }]);
+      const { error } = await supabase.from("tab_visitas").insert([
+        {
+          vis_cliente_id: newVisita.cliente_id,
+          vis_data_prevista: newVisita.data_prevista,
+          vis_data_real: newVisita.data_real || null,
+          vis_data_reagendada: newVisita.data_reagendada || null,
+          vis_produtos_ids: newVisita.produtos_demonstrados,
+          vis_observacoes: newVisita.observacoes,
+          vis_status: newVisita.vis_status,
+        },
+      ]);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -206,12 +202,14 @@ function VisitasPage() {
       toast.success("Visita registrada com sucesso!");
     },
     onError: (error: any) => {
-      if (error.code === '23505') {
-        toast.error("Já existe uma visita registrada para esta cliente nesta data com as mesmas observações.");
+      if (error.code === "23505") {
+        toast.error(
+          "Já existe uma visita registrada para esta cliente nesta data com as mesmas observações.",
+        );
       } else {
         toast.error(`Erro ao registrar: ${error.message}`);
       }
-    }
+    },
   });
 
   const updateVisitaMutation = useMutation({
@@ -225,7 +223,7 @@ function VisitasPage() {
           vis_data_reagendada: updatedVisita.data_reagendada || null,
           vis_produtos_ids: updatedVisita.produtos_demonstrados,
           vis_observacoes: updatedVisita.observacoes,
-          vis_status: updatedVisita.vis_status
+          vis_status: updatedVisita.vis_status,
         })
         .eq("id", updatedVisita.id);
       if (error) throw error;
@@ -238,7 +236,7 @@ function VisitasPage() {
     },
     onError: (error: any) => {
       toast.error(`Erro ao atualizar: ${error.message}`);
-    }
+    },
   });
 
   const cancelVisitaMutation = useMutation({
@@ -246,8 +244,8 @@ function VisitasPage() {
       const { error } = await supabase
         .from("tab_visitas")
         .update({
-          vis_status: 'cancelada',
-          vis_motivo_cancelamento: reason
+          vis_status: "cancelada",
+          vis_motivo_cancelamento: reason,
         })
         .eq("id", id);
       if (error) throw error;
@@ -261,7 +259,7 @@ function VisitasPage() {
     },
     onError: (error: any) => {
       toast.error(`Erro ao cancelar: ${error.message}`);
-    }
+    },
   });
 
   const deleteVisitaMutation = useMutation({
@@ -280,12 +278,12 @@ function VisitasPage() {
     },
     onError: (error: any) => {
       toast.error(`Erro ao excluir: ${error.message}`);
-    }
+    },
   });
 
   const filteredVisitas = useMemo(() => {
-    return visitas.filter(v => {
-      const cliente = clientes.find(c => c.id === v.cliente_id);
+    return visitas.filter((v) => {
+      const cliente = clientes.find((c) => c.id === v.cliente_id);
       const matchesSearch = cliente?.cli_nome.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === "todos" || v.vis_status === statusFilter;
       return matchesSearch && matchesStatus;
@@ -294,7 +292,7 @@ function VisitasPage() {
 
   const resetForm = () => {
     setSelectedClienteId("");
-    setDataPrevista(new Date().toISOString().split('T')[0]);
+    setDataPrevista(new Date().toISOString().split("T")[0]);
     setDataReal("");
     setDataReagendada("");
     setSelectedProdutos([]);
@@ -313,10 +311,10 @@ function VisitasPage() {
       toast.error("A observação deve ter no máximo 100 caracteres");
       return;
     }
-    let status = 'agendada';
-    if (dataReal) status = 'realizada';
-    else if (dataReagendada) status = 'reagendada';
-    
+    let status = "agendada";
+    if (dataReal) status = "realizada";
+    else if (dataReagendada) status = "reagendada";
+
     addVisitaMutation.mutate({
       cliente_id: selectedClienteId,
       data_prevista: dataPrevista,
@@ -324,20 +322,23 @@ function VisitasPage() {
       data_reagendada: dataReagendada || null,
       produtos_demonstrados: selectedProdutos,
       observacoes: normalizedObs || null,
-      vis_status: status
+      vis_status: status,
     });
   };
 
   const filteredProducts = useMemo(() => {
     return produtos
-      .filter(p => {
+      .filter((p) => {
         const searchStr = [
           p.pro_descricao,
           p.pro_codigo,
           p.categoria_nome,
           p.cor_nome,
-          p.tamanho_nome
-        ].filter(Boolean).join(" ").toLowerCase();
+          p.tamanho_nome,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
         const matchesSearch = searchStr.includes(productSearch.toLowerCase());
         const matchesCategory = !selectedCategory || p.pro_categoria_id === selectedCategory;
         return matchesSearch && matchesCategory;
@@ -377,9 +378,9 @@ function VisitasPage() {
       toast.error("A observação deve ter no máximo 100 caracteres");
       return;
     }
-    let status = 'agendada';
-    if (dataReal) status = 'realizada';
-    else if (dataReagendada) status = 'reagendada';
+    let status = "agendada";
+    if (dataReal) status = "realizada";
+    else if (dataReagendada) status = "reagendada";
 
     updateVisitaMutation.mutate({
       id: visitaToEdit.id,
@@ -389,7 +390,7 @@ function VisitasPage() {
       data_reagendada: dataReagendada || null,
       produtos_demonstrados: selectedProdutos,
       observacoes: normalizedObs || null,
-      vis_status: status
+      vis_status: status,
     });
   };
 
@@ -410,9 +411,9 @@ function VisitasPage() {
       return;
     }
     if (visitaToCancelId) {
-      cancelVisitaMutation.mutate({ 
-        id: visitaToCancelId, 
-        reason
+      cancelVisitaMutation.mutate({
+        id: visitaToCancelId,
+        reason,
       });
     }
   };
@@ -445,20 +446,25 @@ function VisitasPage() {
 
   const handleDownloadPDF = async () => {
     if (!printContentRef.current) return;
-    
+
     setIsDownloading(true);
     const element = printContentRef.current;
-    
+
     const opt = {
-      margin: [printMargin, printMargin, printMargin, printMargin] as [number, number, number, number],
-      filename: `visitas-${new Date().toISOString().split('T')[0]}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { 
-        scale: 2, 
+      margin: [printMargin, printMargin, printMargin, printMargin] as [
+        number,
+        number,
+        number,
+        number,
+      ],
+      filename: `visitas-${new Date().toISOString().split("T")[0]}.pdf`,
+      image: { type: "jpeg" as const, quality: 0.98 },
+      html2canvas: {
+        scale: 2,
         useCORS: true,
         letterRendering: true,
       },
-      jsPDF: { unit: 'mm' as const, format: 'a4', orientation: 'portrait' as const }
+      jsPDF: { unit: "mm" as const, format: "a4", orientation: "portrait" as const },
     };
 
     try {
@@ -488,58 +494,66 @@ function VisitasPage() {
 
     const v = currentVisitaForWhatsApp;
     const totalProdutos = v.produtos_demonstrados?.length || 0;
-    const valorTotal = v.produtos_demonstrados?.reduce((acc: number, p: any) => acc + (p.valor_unitario || 0), 0) || 0;
+    const valorTotal =
+      v.produtos_demonstrados?.reduce((acc: number, p: any) => acc + (p.valor_unitario || 0), 0) ||
+      0;
 
     let message = `*RELATÓRIO DE VISITA*\n\n`;
     message += `*Cliente:* ${v.cliente_nome}\n`;
     message += `*Data:* ${dateBR(v.data_prevista || "")}\n`;
-    message += `*Status:* ${v.data_real ? 'Concluída' : 'Agendada'}\n\n`;
+    message += `*Status:* ${v.data_real ? "Concluída" : "Agendada"}\n\n`;
     message += `*PRODUTOS DEMONSTRADOS:*\n`;
 
     v.produtos_demonstrados.forEach((p: any) => {
-      message += `- ${p.descricao} (${p.cor || 'N/A'}, ${p.tamanho || 'N/A'}) - ${brl(p.valor_unitario || 0)}\n`;
+      message += `- ${p.descricao} (${p.cor || "N/A"}, ${p.tamanho || "N/A"}) - ${brl(p.valor_unitario || 0)}\n`;
     });
 
     message += `\n*TOTAL DE ITENS:* ${totalProdutos}\n`;
     message += `*VALOR TOTAL:* ${brl(valorTotal)}\n\n`;
-    
+
     if (v.observacoes) {
       message += `*OBS:* ${v.observacoes}\n\n`;
     }
 
     message += `Obrigado pela atenção!`;
     const encodedMessage = encodeURIComponent(message);
-    const cleanNumber = whatsAppNumber.replace(/\D/g, '');
-    const whatsappUrl = `https://wa.me/${cleanNumber.startsWith('55') ? cleanNumber : '55' + cleanNumber}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
+    const cleanNumber = whatsAppNumber.replace(/\D/g, "");
+    const whatsappUrl = `https://wa.me/${cleanNumber.startsWith("55") ? cleanNumber : "55" + cleanNumber}?text=${encodedMessage}`;
+    window.open(whatsappUrl, "_blank");
     setIsWhatsAppOpen(false);
   };
 
   const toggleSelectVisita = (id: string) => {
-    setSelectedVisitas(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    setSelectedVisitas((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
-  const VisitaReceipt = ({ v, isPrint = false }: { v: any, isPrint?: boolean }) => {
+  const VisitaReceipt = ({ v, isPrint = false }: { v: any; isPrint?: boolean }) => {
     const totalProdutos = v.produtos_demonstrados?.length || 0;
-    const valorTotal = v.produtos_demonstrados?.reduce((acc: number, p: any) => acc + (p.valor_unitario || 0), 0) || 0;
-    
+    const valorTotal =
+      v.produtos_demonstrados?.reduce((acc: number, p: any) => acc + (p.valor_unitario || 0), 0) ||
+      0;
+
     return (
-      <div 
-        className={`bg-white font-mono text-slate-900 mx-auto px-4 sm:px-0 ${isPrint ? 'w-full border-none shadow-none p-0' : 'py-8 w-full max-w-[400px] text-[11px] leading-tight'}`}
-        style={!isPrint ? undefined : { 
-          paddingLeft: '0', 
-          paddingRight: '0',
-          paddingTop: '0',
-          paddingBottom: '0'
-        }}
+      <div
+        className={`bg-white font-mono text-slate-900 mx-auto px-4 sm:px-0 ${isPrint ? "w-full border-none shadow-none p-0" : "py-8 w-full max-w-[400px] text-[11px] leading-tight"}`}
+        style={
+          !isPrint
+            ? undefined
+            : {
+                paddingLeft: "0",
+                paddingRight: "0",
+                paddingTop: "0",
+                paddingBottom: "0",
+              }
+        }
       >
         <div className="text-center border-b-2 border-dashed border-black pb-3 mb-4 relative">
           {/* Cabeçalho removido a pedido do usuário */}
-          <CancelationNotice 
-            status={v.vis_status} 
-            reason={v.vis_motivo_cancelamento} 
+          <CancelationNotice
+            status={v.vis_status}
+            reason={v.vis_motivo_cancelamento}
             className="mb-4"
             isPrint={isPrint}
           />
@@ -547,7 +561,9 @@ function VisitasPage() {
             <ReceiptText className="h-5 w-5" />
             Relatório de Visita
           </h3>
-          <p className="text-[10px] font-bold mt-1 tracking-tighter">CONTROLE Nº: {v.id.split('-')[0].toUpperCase()}</p>
+          <p className="text-[10px] font-bold mt-1 tracking-tighter">
+            CONTROLE Nº: {v.id.split("-")[0].toUpperCase()}
+          </p>
         </div>
 
         {/* Motivo já exibido pelo componente CancelationNotice acima */}
@@ -584,9 +600,13 @@ function VisitasPage() {
             {v.cliente_documento && <p>CPF/CNPJ: {v.cliente_documento}</p>}
             <p className="flex items-start gap-1">
               <MapPin className="h-2 w-2 mt-0.5 shrink-0" />
-              <span>{v.cliente_endereco}, {v.cliente_numero}</span>
+              <span>
+                {v.cliente_endereco}, {v.cliente_numero}
+              </span>
             </p>
-            <p className="pl-3">{v.cliente_bairro} - {v.cliente_cidade}</p>
+            <p className="pl-3">
+              {v.cliente_bairro} - {v.cliente_cidade}
+            </p>
             {v.cliente_telefone && (
               <p className="flex items-center gap-1">
                 <Phone className="h-2 w-2 shrink-0" />
@@ -602,29 +622,43 @@ function VisitasPage() {
             <span className="col-span-1 text-center">Qtd</span>
             <span className="col-span-3 text-right">Valor</span>
           </div>
-          <div className={`${isPrint ? '' : 'max-h-[350px] overflow-y-auto pr-2 custom-scrollbar'} space-y-3`}>
+          <div
+            className={`${isPrint ? "" : "max-h-[350px] overflow-y-auto pr-2 custom-scrollbar"} space-y-3`}
+          >
             {[...v.produtos_demonstrados]
               .sort((a: any, b: any) => a.descricao.localeCompare(b.descricao))
               .map((p: any) => (
-              <div key={p.id} className="grid grid-cols-12 gap-y-1 border-b border-slate-200 pb-2 last:border-0">
-                <div className="col-span-8 flex flex-col min-w-0">
-                  <span className="font-black uppercase text-[11px] leading-tight text-slate-900">{p.descricao}</span>
-                  <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 mt-1 text-[8px] font-bold text-slate-500 uppercase">
-                    {p.categoria && <span className="bg-slate-200 px-1 rounded text-slate-700">{p.categoria}</span>}
-                    {p.cor && <span>• COR: {p.cor}</span>}{p.tamanho && <span>• TAM: {p.tamanho}</span>}
+                <div
+                  key={p.id}
+                  className="grid grid-cols-12 gap-y-1 border-b border-slate-200 pb-2 last:border-0"
+                >
+                  <div className="col-span-8 flex flex-col min-w-0">
+                    <span className="font-black uppercase text-[11px] leading-tight text-slate-900">
+                      {p.descricao}
+                    </span>
+                    <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 mt-1 text-[8px] font-bold text-slate-500 uppercase">
+                      {p.categoria && (
+                        <span className="bg-slate-200 px-1 rounded text-slate-700">
+                          {p.categoria}
+                        </span>
+                      )}
+                      {p.cor && <span>• COR: {p.cor}</span>}
+                      {p.tamanho && <span>• TAM: {p.tamanho}</span>}
+                    </div>
                   </div>
+                  <span className="col-span-1 text-center font-bold pt-0.5 text-[10px]">01</span>
+                  <span className="col-span-3 text-right font-black text-[11px] pt-0.5">
+                    {brl(p.valor_unitario || 0)}
+                  </span>
                 </div>
-                <span className="col-span-1 text-center font-bold pt-0.5 text-[10px]">01</span>
-                <span className="col-span-3 text-right font-black text-[11px] pt-0.5">{brl(p.valor_unitario || 0)}</span>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 
         <div className="border-t-2 border-slate-800 pt-3 mt-4 space-y-1">
           <div className="flex justify-between font-black text-[11px] uppercase">
             <span>Total de Itens:</span>
-            <span>{String(totalProdutos).padStart(2, '0')}</span>
+            <span>{String(totalProdutos).padStart(2, "0")}</span>
           </div>
           <div className="flex justify-between font-black text-[13px] uppercase">
             <span>Valor Total:</span>
@@ -634,7 +668,9 @@ function VisitasPage() {
 
         <div className="text-center mt-8 pt-4 border-t border-dashed border-slate-300">
           <p className="uppercase text-[9px] font-bold opacity-40">*** Fim do Relatório ***</p>
-          <p className="text-[8px] mt-1 text-slate-400">Emissão: {new Date().toLocaleString('pt-BR')}</p>
+          <p className="text-[8px] mt-1 text-slate-400">
+            Emissão: {new Date().toLocaleString("pt-BR")}
+          </p>
         </div>
       </div>
     );
@@ -642,141 +678,191 @@ function VisitasPage() {
 
   const VisitaFormFields = () => {
     const [localSearch, setLocalSearch] = useState("");
-    
+
     return (
-    <div className="grid gap-6 py-4">
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4">
-          <div className="space-y-2">
-            <Label>Cliente</Label>
-            <Select onValueChange={setSelectedClienteId} value={selectedClienteId}>
-              <SelectTrigger className="h-14 rounded-xl bg-muted/20 border-none px-4">
-                <SelectValue placeholder="Selecione a cliente..." />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl max-h-[300px]">
-                <div className="p-2 sticky top-0 bg-popover z-10 border-b">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Filtrar clientes..."
-                      className="h-9 pl-8 rounded-lg"
-                      autoFocus
-                      onChange={(e) => {
-                        const search = e.target.value.toLowerCase();
-                        const items = document.querySelectorAll('[role="option"]');
-                        items.forEach((item) => {
-                          const text = item.textContent?.toLowerCase() || "";
-                          (item as HTMLElement).style.display = text.includes(search) ? "flex" : "none";
-                        });
-                      }}
-                    />
-                  </div>
-                </div>
-                {clientes.map(c => (
-                  <SelectItem key={c.id} value={c.id} className="rounded-lg py-3">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-bold text-sm">{c.cli_nome}</span>
-                      <span className="text-[10px] text-muted-foreground leading-tight">
-                        {[c.cli_endereco, c.cli_numero, c.cli_bairro, c.cli_cidade, c.cli_telefone].filter(Boolean).join(", ")}
-                      </span>
+      <div className="grid gap-6 py-4">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-2">
+              <Label>Cliente</Label>
+              <Select onValueChange={setSelectedClienteId} value={selectedClienteId}>
+                <SelectTrigger className="h-14 rounded-xl bg-muted/20 border-none px-4">
+                  <SelectValue placeholder="Selecione a cliente..." />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl max-h-[300px]">
+                  <div className="p-2 sticky top-0 bg-popover z-10 border-b">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Filtrar clientes..."
+                        className="h-9 pl-8 rounded-lg"
+                        autoFocus
+                        onChange={(e) => {
+                          const search = e.target.value.toLowerCase();
+                          const items = document.querySelectorAll('[role="option"]');
+                          items.forEach((item) => {
+                            const text = item.textContent?.toLowerCase() || "";
+                            (item as HTMLElement).style.display = text.includes(search)
+                              ? "flex"
+                              : "none";
+                          });
+                        }}
+                      />
                     </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Data Prevista</Label>
-              <Input type="date" value={dataPrevista} onChange={e => setDataPrevista(e.target.value)} className="h-11 rounded-xl bg-muted/20 border-none" />
+                  </div>
+                  {clientes.map((c) => (
+                    <SelectItem key={c.id} value={c.id} className="rounded-lg py-3">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-bold text-sm">{c.cli_nome}</span>
+                        <span className="text-[10px] text-muted-foreground leading-tight">
+                          {[
+                            c.cli_endereco,
+                            c.cli_numero,
+                            c.cli_bairro,
+                            c.cli_cidade,
+                            c.cli_telefone,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Visita Realizada</Label>
-              <Input type="date" value={dataReal} onChange={e => setDataReal(e.target.value)} className="h-11 rounded-xl bg-muted/20 border-none" />
-            </div>
-            <div className="space-y-2">
-              <Label>Visita Reagendada</Label>
-              <Input type="date" value={dataReagendada} onChange={e => setDataReagendada(e.target.value)} className="h-11 rounded-xl bg-muted/20 border-none" />
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Data Prevista</Label>
+                <Input
+                  type="date"
+                  value={dataPrevista}
+                  onChange={(e) => setDataPrevista(e.target.value)}
+                  className="h-11 rounded-xl bg-muted/20 border-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Visita Realizada</Label>
+                <Input
+                  type="date"
+                  value={dataReal}
+                  onChange={(e) => setDataReal(e.target.value)}
+                  className="h-11 rounded-xl bg-muted/20 border-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Visita Reagendada</Label>
+                <Input
+                  type="date"
+                  value={dataReagendada}
+                  onChange={(e) => setDataReagendada(e.target.value)}
+                  className="h-11 rounded-xl bg-muted/20 border-none"
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div className="space-y-4">
-        <div className="flex flex-col gap-3">
-          <Label>Produtos Demonstrados</Label>
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Pesquisar produto..." 
-              value={productSearch}
-              onChange={e => setProductSearch(e.target.value.slice(0, 32))}
-              maxLength={32}
-              className="h-11 pl-10 rounded-xl bg-muted/20 border-none w-full"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={selectedCategory === null ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory(null)}
-              className="rounded-full h-8 text-xs"
-            >
-              Tudo
-            </Button>
-            {categorias.map(cat => (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3">
+            <Label>Produtos Demonstrados</Label>
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar produto..."
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value.slice(0, 32))}
+                maxLength={32}
+                className="h-11 pl-10 rounded-xl bg-muted/20 border-none w-full"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
               <Button
-                key={cat.id}
-                variant={selectedCategory === cat.id ? "default" : "outline"}
+                variant={selectedCategory === null ? "default" : "outline"}
                 size="sm"
-                onClick={() => setSelectedCategory(cat.id)}
+                onClick={() => setSelectedCategory(null)}
                 className="rounded-full h-8 text-xs"
               >
-                {cat.cat_nome}
+                Tudo
               </Button>
-            ))}
+              {categorias.map((cat) => (
+                <Button
+                  key={cat.id}
+                  variant={selectedCategory === cat.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className="rounded-full h-8 text-xs"
+                >
+                  {cat.cat_nome}
+                </Button>
+              ))}
+            </div>
           </div>
+          <ScrollArea className="h-64 border rounded-2xl p-4 bg-muted/5">
+            <div className="grid grid-cols-1 gap-2">
+              {filteredProducts.map((p) => (
+                <div
+                  key={p.id}
+                  className={`flex items-center gap-3 text-sm p-3 hover:bg-muted/50 rounded-xl cursor-pointer transition-colors border ${selectedProdutos.includes(p.id) ? "border-primary/50 bg-primary/5" : "border-transparent"}`}
+                  onClick={() =>
+                    setSelectedProdutos((prev) =>
+                      prev.includes(p.id) ? prev.filter((id) => id !== p.id) : [...prev, p.id],
+                    )
+                  }
+                >
+                  <div
+                    className={`h-5 w-5 shrink-0 rounded-md border flex items-center justify-center transition-all ${selectedProdutos.includes(p.id) ? "bg-primary border-primary text-white scale-110" : "border-muted-foreground/30"}`}
+                  >
+                    {selectedProdutos.includes(p.id) && <CheckCircle2 className="h-3.5 w-3.5" />}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-foreground">{p.pro_descricao}</span>
+                      {p.categoria_nome && (
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] h-4 px-1 bg-primary/5 text-primary border-primary/20"
+                        >
+                          {p.categoria_nome}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap mt-0.5">
+                      <Badge variant="secondary" className="px-1 py-0 h-4 text-[9px] font-normal">
+                        {p.pro_codigo || "S/C"}
+                      </Badge>
+                      {p.cor_nome && (
+                        <span className="flex items-center gap-1">
+                          <span className="opacity-50">•</span>
+                          <span className="font-medium">Cor: {p.cor_nome}</span>
+                        </span>
+                      )}
+                      {p.tamanho_nome && (
+                        <span className="flex items-center gap-1">
+                          <span className="opacity-50">•</span>
+                          <span className="font-medium">Tam: {p.tamanho_nome}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
-        <ScrollArea className="h-64 border rounded-2xl p-4 bg-muted/5">
-          <div className="grid grid-cols-1 gap-2">
-            {filteredProducts.map(p => (
-              <div 
-                key={p.id} 
-                className={`flex items-center gap-3 text-sm p-3 hover:bg-muted/50 rounded-xl cursor-pointer transition-colors border ${selectedProdutos.includes(p.id) ? 'border-primary/50 bg-primary/5' : 'border-transparent'}`} 
-                onClick={() => setSelectedProdutos(prev => prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id])}
-              >
-                <div className={`h-5 w-5 shrink-0 rounded-md border flex items-center justify-center transition-all ${selectedProdutos.includes(p.id) ? 'bg-primary border-primary text-white scale-110' : 'border-muted-foreground/30'}`}>
-                  {selectedProdutos.includes(p.id) && <CheckCircle2 className="h-3.5 w-3.5" />}
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-foreground">{p.pro_descricao}</span>
-                    {p.categoria_nome && <Badge variant="outline" className="text-[9px] h-4 px-1 bg-primary/5 text-primary border-primary/20">{p.categoria_nome}</Badge>}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap mt-0.5">
-                    <Badge variant="secondary" className="px-1 py-0 h-4 text-[9px] font-normal">{p.pro_codigo || 'S/C'}</Badge>
-                    {p.cor_nome && <span className="flex items-center gap-1"><span className="opacity-50">•</span><span className="font-medium">Cor: {p.cor_nome}</span></span>}
-                    {p.tamanho_nome && <span className="flex items-center gap-1"><span className="opacity-50">•</span><span className="font-medium">Tam: {p.tamanho_nome}</span></span>}
-                  </div>
-                </div>
-              </div>
-            ))}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label>Observações</Label>
+            <span className="text-[10px] text-muted-foreground">{obs.length}/100</span>
           </div>
-        </ScrollArea>
-      </div>
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <Label>Observações</Label>
-          <span className="text-[10px] text-muted-foreground">{obs.length}/100</span>
+          <Input
+            value={obs}
+            onChange={(e) => setObs(e.target.value.slice(0, 100))}
+            maxLength={100}
+            placeholder="Ex: Demonstrou interesse na nova coleção"
+            className="h-11 rounded-xl bg-muted/20 border-none"
+          />
         </div>
-        <Input 
-          value={obs} 
-          onChange={e => setObs(e.target.value.slice(0, 100))} 
-          maxLength={100}
-          placeholder="Ex: Demonstrou interesse na nova coleção" 
-          className="h-11 rounded-xl bg-muted/20 border-none" 
-        />
       </div>
-    </div>
     );
   };
 
@@ -834,7 +920,7 @@ function VisitasPage() {
           }
         `}
       </style>
-      
+
       {/* Header Section */}
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between no-print">
         <div className="space-y-2">
@@ -857,14 +943,18 @@ function VisitasPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-none shadow-2xl">
-                  <SelectItem value="A4" className="rounded-xl font-bold text-xs uppercase">A4</SelectItem>
-                  <SelectItem value="LETTER" className="rounded-xl font-bold text-xs uppercase">Carta</SelectItem>
+                  <SelectItem value="A4" className="rounded-xl font-bold text-xs uppercase">
+                    A4
+                  </SelectItem>
+                  <SelectItem value="LETTER" className="rounded-xl font-bold text-xs uppercase">
+                    Carta
+                  </SelectItem>
                 </SelectContent>
               </Select>
-              <Button 
-                onClick={handlePrintSelected} 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                onClick={handlePrintSelected}
+                variant="ghost"
+                size="sm"
                 className="h-9 px-4 rounded-xl text-xs font-bold border-l border-border/40 text-primary hover:bg-primary/5"
               >
                 <Printer className="mr-2 h-3.5 w-3.5" />
@@ -873,9 +963,18 @@ function VisitasPage() {
             </div>
           )}
 
-          <Dialog open={isAddOpen} onOpenChange={(open) => { if (open) resetForm(); setIsAddOpen(open); }}>
+          <Dialog
+            open={isAddOpen}
+            onOpenChange={(open) => {
+              if (open) resetForm();
+              setIsAddOpen(open);
+            }}
+          >
             <DialogTrigger asChild>
-              <Button size="sm" className="h-11 px-6 rounded-2xl shadow-xl shadow-primary/20 bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all font-black uppercase tracking-widest text-[10px]">
+              <Button
+                size="sm"
+                className="h-11 px-6 rounded-2xl shadow-xl shadow-primary/20 bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all font-black uppercase tracking-widest text-[10px]"
+              >
                 <Plus className="mr-2 h-4 w-4" /> Novo Agendamento
               </Button>
             </DialogTrigger>
@@ -898,15 +997,15 @@ function VisitasPage() {
                   </div>
                 </DialogHeader>
               </div>
-              
+
               <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
                 <VisitaFormFields />
               </div>
 
               <div className="p-6 bg-slate-50 border-t shrink-0">
-                <Button 
-                  onClick={handleAddVisita} 
-                  disabled={addVisitaMutation.isPending} 
+                <Button
+                  onClick={handleAddVisita}
+                  disabled={addVisitaMutation.isPending}
                   className="w-full h-12 rounded-2xl bg-slate-900 text-white font-black uppercase tracking-widest text-xs shadow-xl shadow-slate-900/20 active:scale-95 transition-all"
                 >
                   {addVisitaMutation.isPending ? "Processando..." : "Confirmar Agendamento"}
@@ -924,7 +1023,9 @@ function VisitasPage() {
             <Calendar className="h-6 w-6 text-blue-500" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">Total</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">
+              Total
+            </p>
             <p className="text-xl font-black text-slate-900 leading-none">{visitas.length}</p>
           </div>
         </Card>
@@ -933,8 +1034,12 @@ function VisitasPage() {
             <CheckCircle2 className="h-6 w-6 text-emerald-500" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">Realizadas</p>
-            <p className="text-xl font-black text-slate-900 leading-none">{visitas.filter(v => v.vis_status === 'realizada').length}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">
+              Realizadas
+            </p>
+            <p className="text-xl font-black text-slate-900 leading-none">
+              {visitas.filter((v) => v.vis_status === "realizada").length}
+            </p>
           </div>
         </Card>
         <Card className="rounded-3xl border-none shadow-sm bg-card/50 backdrop-blur-sm p-5 flex items-center gap-4">
@@ -942,8 +1047,12 @@ function VisitasPage() {
             <Clock className="h-6 w-6 text-amber-500" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">Pendentes</p>
-            <p className="text-xl font-black text-slate-900 leading-none">{visitas.filter(v => v.vis_status === 'agendada').length}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">
+              Pendentes
+            </p>
+            <p className="text-xl font-black text-slate-900 leading-none">
+              {visitas.filter((v) => v.vis_status === "agendada").length}
+            </p>
           </div>
         </Card>
         <Card className="rounded-3xl border-none shadow-sm bg-card/50 backdrop-blur-sm p-5 flex items-center gap-4">
@@ -951,7 +1060,9 @@ function VisitasPage() {
             <Package className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">Itens em Campo</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">
+              Itens em Campo
+            </p>
             <p className="text-xl font-black text-slate-900 leading-none">
               {visitas.reduce((acc, v) => acc + (v.produtos_demonstrados?.length || 0), 0)}
             </p>
@@ -964,11 +1075,11 @@ function VisitasPage() {
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div className="relative flex-1 group w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
-            <Input 
-              placeholder="Pesquisar por nome da cliente..." 
-              className="pl-12 h-14 bg-white/80 border-none shadow-sm rounded-2xl text-base font-medium placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-primary/20" 
-              value={searchTerm} 
-              onChange={e => setSearchTerm(e.target.value)} 
+            <Input
+              placeholder="Pesquisar por nome da cliente..."
+              className="pl-12 h-14 bg-white/80 border-none shadow-sm rounded-2xl text-base font-medium placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-primary/20"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="w-full sm:w-64">
@@ -977,11 +1088,30 @@ function VisitasPage() {
                 <SelectValue placeholder="Filtrar Status" />
               </SelectTrigger>
               <SelectContent className="rounded-2xl border-none shadow-2xl">
-                <SelectItem value="todos" className="rounded-xl font-bold text-xs uppercase">Todos os Status</SelectItem>
-                <SelectItem value="agendada" className="rounded-xl font-bold text-xs uppercase">Agendada</SelectItem>
-                <SelectItem value="realizada" className="rounded-xl font-bold text-xs uppercase text-emerald-600">Realizada</SelectItem>
-                <SelectItem value="reagendada" className="rounded-xl font-bold text-xs uppercase text-blue-600">Reagendada</SelectItem>
-                <SelectItem value="cancelada" className="rounded-xl font-bold text-xs uppercase text-red-600">Cancelada</SelectItem>
+                <SelectItem value="todos" className="rounded-xl font-bold text-xs uppercase">
+                  Todos os Status
+                </SelectItem>
+                <SelectItem value="agendada" className="rounded-xl font-bold text-xs uppercase">
+                  Agendada
+                </SelectItem>
+                <SelectItem
+                  value="realizada"
+                  className="rounded-xl font-bold text-xs uppercase text-emerald-600"
+                >
+                  Realizada
+                </SelectItem>
+                <SelectItem
+                  value="reagendada"
+                  className="rounded-xl font-bold text-xs uppercase text-blue-600"
+                >
+                  Reagendada
+                </SelectItem>
+                <SelectItem
+                  value="cancelada"
+                  className="rounded-xl font-bold text-xs uppercase text-red-600"
+                >
+                  Cancelada
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -989,98 +1119,202 @@ function VisitasPage() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-20 text-muted-foreground animate-pulse no-print">Carregando visitas...</div>
+        <div className="text-center py-20 text-muted-foreground animate-pulse no-print">
+          Carregando visitas...
+        </div>
       ) : filteredVisitas.length === 0 ? (
         <Card className="border-dashed py-20 text-center rounded-3xl bg-muted/5 no-print">
           <CardContent className="flex flex-col items-center">
-            <div className="mb-4 rounded-full bg-muted p-4"><Search className="h-8 w-8 text-muted-foreground/30" /></div>
+            <div className="mb-4 rounded-full bg-muted p-4">
+              <Search className="h-8 w-8 text-muted-foreground/30" />
+            </div>
             <h3 className="text-lg font-bold">Nenhuma visita encontrada</h3>
           </CardContent>
         </Card>
       ) : (
         <div id="print-area" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredVisitas.map(v => {
+          {filteredVisitas.map((v) => {
             const isSelected = selectedVisitas.includes(v.id);
             return (
-              <div key={v.id} className={!isSelected && selectedVisitas.length > 0 ? "no-print" : ""}>
+              <div
+                key={v.id}
+                className={!isSelected && selectedVisitas.length > 0 ? "no-print" : ""}
+              >
                 <div className="hidden print:block w-full">
                   <VisitaReceipt v={v} isPrint={true} />
                 </div>
                 <div className="no-print h-full">
                   <HoverCard openDelay={200}>
                     <HoverCardTrigger asChild>
-                    <Card className={`hover:shadow-xl transition-all group overflow-hidden border-none shadow-sm cursor-help relative h-full flex flex-col rounded-[2rem] ${isSelected ? 'ring-2 ring-primary bg-primary/5' : 'bg-card/40 backdrop-blur-sm'} ${v.vis_status === 'cancelada' ? 'opacity-75 grayscale-[0.5]' : ''}`}>
-                      <div className={`h-1.5 w-full shrink-0 ${v.vis_status === 'cancelada' ? 'bg-red-400/50' : 'bg-primary/20'}`} />
-                      <CardContent className="p-6 flex-1 flex flex-col">
-                        <div className="flex justify-between items-start mb-6">
-                          <div className="flex items-start gap-3 min-w-0 pr-2">
-                            <Checkbox checked={isSelected} onCheckedChange={() => toggleSelectVisita(v.id)} className="mt-1.5 no-print rounded-lg border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="font-black text-slate-900 truncate tracking-tight">{v.cliente_nome}</h4>
-                                {v.vis_status === 'reagendada' && <Badge variant="outline" className="h-5 text-[8px] px-2 font-black uppercase border-blue-500 text-blue-600 bg-blue-50 rounded-full">Reagendada</Badge>}
-                                {v.vis_status === 'realizada' && <Badge variant="outline" className="h-5 text-[8px] px-2 font-black uppercase border-emerald-500 text-emerald-600 bg-emerald-50 rounded-full">Realizada</Badge>}
+                      <Card
+                        className={`hover:shadow-xl transition-all group overflow-hidden border-none shadow-sm cursor-help relative h-full flex flex-col rounded-[2rem] ${isSelected ? "ring-2 ring-primary bg-primary/5" : "bg-card/40 backdrop-blur-sm"} ${v.vis_status === "cancelada" ? "opacity-75 grayscale-[0.5]" : ""}`}
+                      >
+                        <div
+                          className={`h-1.5 w-full shrink-0 ${v.vis_status === "cancelada" ? "bg-red-400/50" : "bg-primary/20"}`}
+                        />
+                        <CardContent className="p-6 flex-1 flex flex-col">
+                          <div className="flex justify-between items-start mb-6">
+                            <div className="flex items-start gap-3 min-w-0 pr-2">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleSelectVisita(v.id)}
+                                className="mt-1.5 no-print rounded-lg border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                              />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="font-black text-slate-900 truncate tracking-tight">
+                                    {v.cliente_nome}
+                                  </h4>
+                                  {v.vis_status === "reagendada" && (
+                                    <Badge
+                                      variant="outline"
+                                      className="h-5 text-[8px] px-2 font-black uppercase border-blue-500 text-blue-600 bg-blue-50 rounded-full"
+                                    >
+                                      Reagendada
+                                    </Badge>
+                                  )}
+                                  {v.vis_status === "realizada" && (
+                                    <Badge
+                                      variant="outline"
+                                      className="h-5 text-[8px] px-2 font-black uppercase border-emerald-500 text-emerald-600 bg-emerald-50 rounded-full"
+                                    >
+                                      Realizada
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1.5 mt-1 text-slate-500 font-bold uppercase text-[9px] tracking-widest">
+                                  <Calendar className="h-3 w-3 text-primary" />
+                                  <span>{dateBR(v.data_prevista || "")}</span>
+                                  {v.data_reagendada && (
+                                    <span className="text-blue-600 ml-1">
+                                      → {dateBR(v.data_reagendada)}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              <div className="flex items-center gap-1.5 mt-1 text-slate-500 font-bold uppercase text-[9px] tracking-widest">
-                                <Calendar className="h-3 w-3 text-primary" />
-                                <span>{dateBR(v.data_prevista || "")}</span>
-                                {v.data_reagendada && <span className="text-blue-600 ml-1">→ {dateBR(v.data_reagendada)}</span>}
+                            </div>
+                            <Badge
+                              variant="secondary"
+                              className="bg-white shadow-sm border border-slate-100 text-slate-900 font-black text-[10px] h-7 px-3 rounded-full shrink-0"
+                            >
+                              {v.produtos_demonstrados?.length || 0} Itens
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-3 mb-6">
+                            <div className="flex items-start gap-3 text-slate-600 bg-slate-50/80 p-3 rounded-2xl">
+                              <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary/40" />
+                              <span className="text-[11px] font-medium leading-tight line-clamp-2">
+                                {[
+                                  v.cliente_endereco,
+                                  v.cliente_numero,
+                                  v.cliente_bairro,
+                                  v.cliente_cidade,
+                                ]
+                                  .filter(Boolean)
+                                  .join(", ")}
+                              </span>
+                            </div>
+                            {v.cliente_telefone && (
+                              <div className="flex items-center gap-3 text-slate-600 px-3">
+                                <Phone className="h-4 w-4 shrink-0 text-primary/40" />
+                                <span className="text-[11px] font-bold tracking-tight">
+                                  {formatPhone(v.cliente_telefone)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mt-auto">
+                            <CancelationNotice
+                              status={v.vis_status}
+                              reason={v.vis_motivo_cancelamento}
+                              className="mb-4 no-print"
+                            />
+
+                            <div className="flex items-center justify-between pt-4 border-t border-dashed border-slate-200 no-print">
+                              <div className="flex gap-1">
+                                {v.vis_status !== "cancelada" && (
+                                  <>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-9 w-9 rounded-xl hover:bg-blue-50 text-blue-600 transition-colors"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenEdit(v);
+                                      }}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-9 w-9 rounded-xl hover:bg-red-50 text-red-500 transition-colors"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenCancel(v.id);
+                                      }}
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-9 w-9 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-red-600 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenDelete(v.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+
+                              <div className="flex gap-1">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-9 w-9 rounded-xl hover:bg-emerald-50 text-emerald-600 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleShareWhatsApp(v);
+                                  }}
+                                >
+                                  <svg
+                                    viewBox="0 0 24 24"
+                                    className="h-4 w-4 fill-current"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                                  </svg>
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-9 w-9 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.print();
+                                  }}
+                                >
+                                  <Printer className="h-4 w-4" />
+                                </Button>
                               </div>
                             </div>
                           </div>
-                          <Badge variant="secondary" className="bg-white shadow-sm border border-slate-100 text-slate-900 font-black text-[10px] h-7 px-3 rounded-full shrink-0">{v.produtos_demonstrados?.length || 0} Itens</Badge>
-                        </div>
-
-                        <div className="space-y-3 mb-6">
-                          <div className="flex items-start gap-3 text-slate-600 bg-slate-50/80 p-3 rounded-2xl">
-                            <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary/40" />
-                            <span className="text-[11px] font-medium leading-tight line-clamp-2">
-                              {[v.cliente_endereco, v.cliente_numero, v.cliente_bairro, v.cliente_cidade].filter(Boolean).join(", ")}
-                            </span>
+                          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-20 transition-opacity no-print">
+                            <Info className="h-3 w-3 text-slate-900" />
                           </div>
-                          {v.cliente_telefone && (
-                            <div className="flex items-center gap-3 text-slate-600 px-3">
-                              <Phone className="h-4 w-4 shrink-0 text-primary/40" />
-                              <span className="text-[11px] font-bold tracking-tight">{formatPhone(v.cliente_telefone)}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="mt-auto">
-                          <CancelationNotice 
-                            status={v.vis_status} 
-                            reason={v.vis_motivo_cancelamento} 
-                            className="mb-4 no-print"
-                          />
-                          
-                          <div className="flex items-center justify-between pt-4 border-t border-dashed border-slate-200 no-print">
-                            <div className="flex gap-1">
-                              {v.vis_status !== 'cancelada' && (
-                                <>
-                                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-blue-50 text-blue-600 transition-colors" onClick={(e) => { e.stopPropagation(); handleOpenEdit(v); }}><Edit className="h-4 w-4" /></Button>
-                                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-red-50 text-red-500 transition-colors" onClick={(e) => { e.stopPropagation(); handleOpenCancel(v.id); }}><XCircle className="h-4 w-4" /></Button>
-                                </>
-                              )}
-                              <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-red-600 transition-colors" onClick={(e) => { e.stopPropagation(); handleOpenDelete(v.id); }}><Trash2 className="h-4 w-4" /></Button>
-                            </div>
-                            
-                            <div className="flex gap-1">
-                              <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-emerald-50 text-emerald-600 transition-colors" onClick={(e) => { e.stopPropagation(); handleShareWhatsApp(v); }}>
-                                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                              </Button>
-                              <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors" onClick={(e) => { e.stopPropagation(); window.print(); }}><Printer className="h-4 w-4" /></Button>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-20 transition-opacity no-print"><Info className="h-3 w-3 text-slate-900" /></div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
                     </HoverCardTrigger>
-                    <HoverCardContent 
-                      side="right" 
-                      align="start" 
-                      sideOffset={15} 
+                    <HoverCardContent
+                      side="right"
+                      align="start"
+                      sideOffset={15}
                       className="p-0 rounded-2xl overflow-hidden border-2 border-primary/10 shadow-2xl z-50 w-auto max-w-[90vw] lg:max-w-[450px] max-h-[85vh] overflow-y-auto"
                     >
                       <div className="relative">
@@ -1102,8 +1336,13 @@ function VisitasPage() {
             <DialogHeader>
               <div className="flex items-center gap-4 relative z-10">
                 <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current text-white" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-6 w-6 fill-current text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                  </svg>
                 </div>
                 <div>
                   <DialogTitle className="text-xl font-black uppercase tracking-tight text-white leading-none mb-1">
@@ -1118,18 +1357,28 @@ function VisitasPage() {
           </div>
           <div className="p-8">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Número (com DDD)</Label>
-              <Input value={whatsAppNumber} onChange={e => setWhatsAppNumber(e.target.value)} placeholder="Ex: 11999999999" className="h-12 rounded-2xl bg-muted/20 border-none px-6 text-lg font-bold" />
+              <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">
+                Número (com DDD)
+              </Label>
+              <Input
+                value={whatsAppNumber}
+                onChange={(e) => setWhatsAppNumber(e.target.value)}
+                placeholder="Ex: 11999999999"
+                className="h-12 rounded-2xl bg-muted/20 border-none px-6 text-lg font-bold"
+              />
             </div>
           </div>
           <div className="p-6 bg-slate-50 border-t">
-            <Button onClick={confirmWhatsAppShare} className="w-full h-12 rounded-2xl font-black uppercase tracking-widest text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/20 active:scale-95 transition-all">
+            <Button
+              onClick={confirmWhatsAppShare}
+              className="w-full h-12 rounded-2xl font-black uppercase tracking-widest text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/20 active:scale-95 transition-all"
+            >
               Enviar Agora
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-      
+
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="sm:max-w-[850px] h-[95vh] flex flex-col p-0 overflow-hidden rounded-[2.5rem] no-print border-none shadow-2xl">
           <div className="bg-slate-900 text-white p-8 relative shrink-0">
@@ -1144,60 +1393,83 @@ function VisitasPage() {
                     Pré-visualização
                   </DialogTitle>
                   <DialogDescription className="text-white/40 text-[10px] font-bold uppercase tracking-widest">
-                    {selectedVisitas.length} {selectedVisitas.length === 1 ? 'visita selecionada' : 'visitas selecionadas'}
+                    {selectedVisitas.length}{" "}
+                    {selectedVisitas.length === 1 ? "visita selecionada" : "visitas selecionadas"}
                   </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
           </div>
-          
+
           <div className="bg-slate-50 p-4 border-b flex items-center justify-between no-print shrink-0 px-8">
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Modo:</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Modo:
+              </span>
               <div className="bg-white p-1 rounded-xl shadow-sm border flex gap-1">
-                <Button 
-                  variant={printMode === "combined" ? "default" : "ghost"} 
-                  size="sm" 
+                <Button
+                  variant={printMode === "combined" ? "default" : "ghost"}
+                  size="sm"
                   onClick={() => setPrintMode("combined")}
-                  className={cn("h-8 rounded-lg text-[10px] font-black uppercase tracking-wider px-4", printMode === "combined" ? "bg-slate-900 text-white" : "text-slate-500")}
+                  className={cn(
+                    "h-8 rounded-lg text-[10px] font-black uppercase tracking-wider px-4",
+                    printMode === "combined" ? "bg-slate-900 text-white" : "text-slate-500",
+                  )}
                 >
                   Documento Único
                 </Button>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="h-8 rounded-xl px-4 border-slate-200 text-slate-500 font-bold text-[10px] uppercase">Formato {printFormat}</Badge>
+              <Badge
+                variant="outline"
+                className="h-8 rounded-xl px-4 border-slate-200 text-slate-500 font-bold text-[10px] uppercase"
+              >
+                Formato {printFormat}
+              </Badge>
             </div>
           </div>
-          
+
           <ScrollArea className="flex-1 p-6 bg-slate-100">
-            <div 
-              ref={printContentRef} 
+            <div
+              ref={printContentRef}
               className="flex flex-col gap-8 w-full mx-auto"
               style={{ paddingLeft: `${printMargin}mm`, paddingRight: `${printMargin}mm` }}
             >
               {visitas
-                .filter(v => selectedVisitas.includes(v.id))
-                .map(v => (
-                  <div key={v.id} className="bg-white shadow-xl rounded-sm overflow-hidden ring-1 ring-black/5">
+                .filter((v) => selectedVisitas.includes(v.id))
+                .map((v) => (
+                  <div
+                    key={v.id}
+                    className="bg-white shadow-xl rounded-sm overflow-hidden ring-1 ring-black/5"
+                  >
                     <VisitaReceipt v={v} isPrint={true} />
                   </div>
                 ))}
             </div>
           </ScrollArea>
-          
+
           <DialogFooter className="p-6 border-t shrink-0 bg-white gap-2 flex-wrap sm:flex-nowrap">
-            <Button variant="outline" onClick={() => setIsPreviewOpen(false)} className="rounded-xl h-11 px-6">Cancelar</Button>
-            <Button 
-              variant="secondary" 
-              onClick={handleDownloadPDF} 
+            <Button
+              variant="outline"
+              onClick={() => setIsPreviewOpen(false)}
+              className="rounded-xl h-11 px-6"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleDownloadPDF}
               disabled={isDownloading}
               className="rounded-xl h-11 px-6 font-bold"
             >
               <Download className="h-4 w-4 mr-2" />
               {isDownloading ? "Baixando..." : "Baixar PDF"}
             </Button>
-            <Button onClick={confirmPrint} className="rounded-xl h-11 px-6 font-bold shadow-lg shadow-primary/20">
+            <Button
+              onClick={confirmPrint}
+              className="rounded-xl h-11 px-6 font-bold shadow-lg shadow-primary/20"
+            >
               <Printer className="h-4 w-4 mr-2" />
               Imprimir Agora
             </Button>
@@ -1225,15 +1497,15 @@ function VisitasPage() {
               </div>
             </DialogHeader>
           </div>
-          
+
           <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
             <VisitaFormFields />
           </div>
 
           <div className="p-6 bg-slate-50 border-t shrink-0">
-            <Button 
-              onClick={handleUpdateVisita} 
-              disabled={updateVisitaMutation.isPending} 
+            <Button
+              onClick={handleUpdateVisita}
+              disabled={updateVisitaMutation.isPending}
               className="w-full h-12 rounded-2xl bg-slate-900 text-white font-black uppercase tracking-widest text-xs shadow-xl shadow-slate-900/20 active:scale-95 transition-all"
             >
               {updateVisitaMutation.isPending ? "Salvando..." : "Salvar Alterações"}
@@ -1263,26 +1535,34 @@ function VisitasPage() {
           </div>
           <div className="p-8 space-y-4">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Justificativa (obrigatório)</Label>
-              <Input 
-                value={cancelReason} 
-                onChange={e => setCancelReason(e.target.value.slice(0, 100))} 
-                maxLength={100} 
-                placeholder="Digite o motivo do cancelamento..." 
-                className="h-12 rounded-2xl bg-muted/20 border-none px-6" 
+              <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">
+                Justificativa (obrigatório)
+              </Label>
+              <Input
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value.slice(0, 100))}
+                maxLength={100}
+                placeholder="Digite o motivo do cancelamento..."
+                className="h-12 rounded-2xl bg-muted/20 border-none px-6"
               />
               <div className="flex justify-end">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{cancelReason.length}/100</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  {cancelReason.length}/100
+                </span>
               </div>
             </div>
           </div>
           <div className="p-6 bg-slate-50 border-t flex gap-3">
-            <Button variant="ghost" onClick={() => setIsCancelDialogOpen(false)} className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px]">
+            <Button
+              variant="ghost"
+              onClick={() => setIsCancelDialogOpen(false)}
+              className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px]"
+            >
               Fechar
             </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleConfirmCancel} 
+            <Button
+              variant="destructive"
+              onClick={handleConfirmCancel}
               disabled={cancelVisitaMutation.isPending}
               className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-red-600/20"
             >
@@ -1313,16 +1593,21 @@ function VisitasPage() {
           </div>
           <div className="p-8">
             <p className="text-sm font-medium text-slate-600 leading-relaxed">
-              Deseja realmente remover esta visita permanentemente? Todos os dados vinculados serão perdidos.
+              Deseja realmente remover esta visita permanentemente? Todos os dados vinculados serão
+              perdidos.
             </p>
           </div>
           <div className="p-6 bg-slate-50 border-t flex gap-3">
-            <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px]">
+            <Button
+              variant="ghost"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px]"
+            >
               Cancelar
             </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleConfirmDelete} 
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
               disabled={deleteVisitaMutation.isPending}
               className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-red-600/20"
             >
@@ -1335,11 +1620,11 @@ function VisitasPage() {
       {/* Container de Impressão */}
       <div className="print-only hidden print:block">
         {visitas
-          .filter(v => selectedVisitas.includes(v.id))
+          .filter((v) => selectedVisitas.includes(v.id))
           .map((v, index, array) => (
-            <div 
-              key={v.id} 
-              className={`bg-white ${printMode === 'separate' && index < array.length - 1 ? 'page-break-always' : index < array.length - 1 ? 'border-b-[3px] border-dashed border-black pb-8 mb-8' : ''} print-card-wrapper`}
+            <div
+              key={v.id}
+              className={`bg-white ${printMode === "separate" && index < array.length - 1 ? "page-break-always" : index < array.length - 1 ? "border-b-[3px] border-dashed border-black pb-8 mb-8" : ""} print-card-wrapper`}
               style={{ paddingLeft: `${printMargin}mm`, paddingRight: `${printMargin}mm` }}
             >
               <VisitaReceipt v={v} isPrint={true} />

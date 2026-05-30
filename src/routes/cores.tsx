@@ -24,15 +24,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -54,7 +54,9 @@ function CoresPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpenConfirm, setIsDeleteDialogOpenConfirm] = useState(false);
   const [isProductsDialogOpen, setIsProductsDialogOpen] = useState(false);
-  const [productsUsingCor, setProductsUsingCor] = useState<{ pro_nome: string, pro_codigo: string | null }[]>([]);
+  const [productsUsingCor, setProductsUsingCor] = useState<
+    { pro_nome: string; pro_codigo: string | null }[]
+  >([]);
   const [selectedCor, setSelectedCor] = useState<Cor | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -65,10 +67,7 @@ function CoresPage() {
   const fetchCores = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("tab_cores")
-        .select("*")
-        .order("cor_nome");
+      const { data, error } = await supabase.from("tab_cores").select("*").order("cor_nome");
 
       if (error) throw error;
       setCores(data || []);
@@ -85,7 +84,7 @@ function CoresPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.cor_nome.trim()) {
       return toast.error("O nome da cor é obrigatório");
     }
@@ -98,16 +97,11 @@ function CoresPage() {
       };
 
       if (selectedCor) {
-        const { error } = await supabase
-          .from("tab_cores")
-          .update(data)
-          .eq("id", selectedCor.id);
+        const { error } = await supabase.from("tab_cores").update(data).eq("id", selectedCor.id);
         if (error) throw error;
         toast.success("Cor atualizada com sucesso");
       } else {
-        const { error } = await supabase
-          .from("tab_cores")
-          .insert([data]);
+        const { error } = await supabase.from("tab_cores").insert([data]);
         if (error) throw error;
         toast.success("Cor criada com sucesso");
       }
@@ -128,10 +122,12 @@ function CoresPage() {
         .eq("pro_cor_id", corId);
 
       if (error) throw error;
-      setProductsUsingCor((data || []).map(p => ({ 
-        pro_nome: p.pro_descricao || "Produto sem descrição", 
-        pro_codigo: p.pro_codigo 
-      })));
+      setProductsUsingCor(
+        (data || []).map((p) => ({
+          pro_nome: p.pro_descricao || "Produto sem descrição",
+          pro_codigo: p.pro_codigo,
+        })),
+      );
       setIsProductsDialogOpen(true);
     } catch (error: any) {
       toast.error("Erro ao carregar produtos: " + error.message);
@@ -142,34 +138,34 @@ function CoresPage() {
     if (!selectedCor) return;
     try {
       setSubmitting(true);
-      
+
       // First check if this color is being used by any product
       const { count, error: countError } = await supabase
         .from("tab_produtos")
-        .select("*", { count: 'exact', head: true })
+        .select("*", { count: "exact", head: true })
         .eq("pro_cor_id", selectedCor.id);
 
       if (countError) throw countError;
 
       if (count && count > 0) {
-        toast.error(`Não é possível excluir esta cor pois ela está vinculada a ${count} produto(s).`, {
-          action: {
-            label: "Ver Produtos",
-            onClick: () => fetchProductsUsingCor(selectedCor.id)
+        toast.error(
+          `Não é possível excluir esta cor pois ela está vinculada a ${count} produto(s).`,
+          {
+            action: {
+              label: "Ver Produtos",
+              onClick: () => fetchProductsUsingCor(selectedCor.id),
+            },
+            duration: 5000,
           },
-          duration: 5000,
-        });
+        );
         setIsDeleteDialogOpenConfirm(false);
         return;
       }
 
-      const { error } = await supabase
-        .from("tab_cores")
-        .delete()
-        .eq("id", selectedCor.id);
-        
+      const { error } = await supabase.from("tab_cores").delete().eq("id", selectedCor.id);
+
       if (error) throw error;
-      
+
       toast.success("Cor excluída com sucesso");
       setIsDeleteDialogOpenConfirm(false);
       fetchCores();
@@ -178,8 +174,8 @@ function CoresPage() {
         toast.error("Esta cor não pode ser excluída pois está vinculada a um produto.", {
           action: {
             label: "Ver Produtos",
-            onClick: () => fetchProductsUsingCor(selectedCor.id)
-          }
+            onClick: () => fetchProductsUsingCor(selectedCor.id),
+          },
         });
       } else {
         toast.error("Erro ao excluir cor: " + error.message);
@@ -224,15 +220,15 @@ function CoresPage() {
     <div className="space-y-6 pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <PageHeader
-            title="Cores"
-            description="Gerencie as variações de cores dos produtos."
-          />
+          <PageHeader title="Cores" description="Gerencie as variações de cores dos produtos." />
           <span className="text-xs font-medium text-muted-foreground ml-1">
             Total de registros: <span className="text-primary font-bold">{cores.length}</span>
           </span>
         </div>
-        <Button onClick={openAddDialog} className="w-full sm:w-auto rounded-full bg-primary hover:bg-primary/90 h-11 sm:h-10">
+        <Button
+          onClick={openAddDialog}
+          className="w-full sm:w-auto rounded-full bg-primary hover:bg-primary/90 h-11 sm:h-10"
+        >
           <Plus className="mr-2 h-4 w-4" /> Nova Cor
         </Button>
       </div>
@@ -275,14 +271,29 @@ function CoresPage() {
               <div key={cor.id} className="p-4 space-y-3 active:bg-muted/50 transition-colors">
                 <div className="space-y-1">
                   <h3 className="font-bold text-foreground leading-tight">{cor.cor_nome}</h3>
-                  <p className="text-xs text-muted-foreground italic truncate">{cor.cor_descricao || "Sem descrição"}</p>
+                  <p className="text-xs text-muted-foreground italic truncate">
+                    {cor.cor_descricao || "Sem descrição"}
+                  </p>
                 </div>
-                
+
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="outline" size="sm" className="h-9 px-3 rounded-xl border-blue-100 text-blue-600 font-bold text-xs" onClick={() => openEditDialog(cor)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 rounded-xl border-blue-100 text-blue-600 font-bold text-xs"
+                    onClick={() => openEditDialog(cor)}
+                  >
                     <Pencil className="h-3.5 w-3.5 mr-1.5" /> Editar
                   </Button>
-                  <Button variant="outline" size="sm" className="h-9 px-3 rounded-xl border-red-100 text-red-600 font-bold text-xs" onClick={() => { setSelectedCor(cor); setIsDeleteDialogOpenConfirm(true); }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 rounded-xl border-red-100 text-red-600 font-bold text-xs"
+                    onClick={() => {
+                      setSelectedCor(cor);
+                      setIsDeleteDialogOpenConfirm(true);
+                    }}
+                  >
                     <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Excluir
                   </Button>
                 </div>
@@ -305,9 +316,15 @@ function CoresPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><div className="h-4 w-32 bg-muted animate-pulse rounded" /></TableCell>
-                    <TableCell><div className="h-4 w-64 bg-muted animate-pulse rounded" /></TableCell>
-                    <TableCell><div className="h-8 w-16 ml-auto bg-muted animate-pulse rounded" /></TableCell>
+                    <TableCell>
+                      <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-8 w-16 ml-auto bg-muted animate-pulse rounded" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : paginatedCores.length === 0 ? (
@@ -342,7 +359,10 @@ function CoresPage() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 rounded-full text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => { setSelectedCor(cor); setIsDeleteDialogOpenConfirm(true); }}
+                          onClick={() => {
+                            setSelectedCor(cor);
+                            setIsDeleteDialogOpenConfirm(true);
+                          }}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -404,37 +424,50 @@ function CoresPage() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px] rounded-3xl">
-          <form onSubmit={handleSave} onKeyDown={(e) => {
-            if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
-              e.preventDefault();
-              const form = e.currentTarget;
-              const index = Array.from(form.elements).indexOf(e.target);
-              const next = form.elements[index + 1] as HTMLElement;
-              if (next) next.focus();
-            }
-          }}>
+          <form
+            onSubmit={handleSave}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
+                e.preventDefault();
+                const form = e.currentTarget;
+                const index = Array.from(form.elements).indexOf(e.target);
+                const next = form.elements[index + 1] as HTMLElement;
+                if (next) next.focus();
+              }
+            }}
+          >
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">
                 {selectedCor ? "Editar Cor" : "Nova Cor"}
               </DialogTitle>
-              <DialogDescription>
-                Informe o nome da cor e uma descrição opcional.
-              </DialogDescription>
+              <DialogDescription>Informe o nome da cor e uma descrição opcional.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="cor_nome" className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Nome da Cor</Label>
+                <Label
+                  htmlFor="cor_nome"
+                  className="font-semibold text-xs uppercase tracking-wider text-muted-foreground"
+                >
+                  Nome da Cor
+                </Label>
                 <Input
                   id="cor_nome"
                   placeholder="Ex: VERMELHO"
                   value={formData.cor_nome}
-                  onChange={(e) => setFormData({ ...formData, cor_nome: e.target.value.toUpperCase() })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cor_nome: e.target.value.toUpperCase() })
+                  }
                   className="rounded-xl h-11 bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-primary font-bold"
                   required
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="cor_descricao" className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Descrição (Opcional)</Label>
+                <Label
+                  htmlFor="cor_descricao"
+                  className="font-semibold text-xs uppercase tracking-wider text-muted-foreground"
+                >
+                  Descrição (Opcional)
+                </Label>
                 <Textarea
                   id="cor_descricao"
                   placeholder="Detalhes sobre esta cor..."
@@ -445,17 +478,17 @@ function CoresPage() {
               </div>
             </div>
             <DialogFooter className="gap-2 sm:gap-0">
-              <Button 
-                type="button" 
-                variant="ghost" 
+              <Button
+                type="button"
+                variant="ghost"
                 onClick={() => setIsDialogOpen(false)}
                 className="rounded-full font-bold"
               >
                 Cancelar
               </Button>
-              <Button 
-                type="submit" 
-                disabled={submitting} 
+              <Button
+                type="submit"
+                disabled={submitting}
                 className="rounded-full bg-primary px-8 font-bold"
               >
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -477,22 +510,24 @@ function CoresPage() {
               Esta cor está vinculada aos seguintes produtos e não pode ser excluída.
             </DialogDescription>
           </DialogHeader>
-          
+
           <ScrollArea className="max-h-[300px] mt-4 pr-4">
             <div className="space-y-3">
               {productsUsingCor.map((product, idx) => (
                 <div key={idx} className="p-3 bg-muted/30 rounded-xl flex flex-col gap-1">
                   <span className="font-bold text-sm">{product.pro_nome}</span>
                   {product.pro_codigo && (
-                    <span className="text-xs text-muted-foreground">Código: {product.pro_codigo}</span>
+                    <span className="text-xs text-muted-foreground">
+                      Código: {product.pro_codigo}
+                    </span>
                   )}
                 </div>
               ))}
             </div>
           </ScrollArea>
-          
+
           <DialogFooter className="mt-4">
-            <Button 
+            <Button
               onClick={() => setIsProductsDialogOpen(false)}
               className="rounded-full bg-primary font-bold w-full sm:w-auto"
             >

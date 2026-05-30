@@ -13,17 +13,17 @@ const DICAS_VENDAS = [
   "Use o leitor de código de barras para agilizar o atendimento em dias de pico.",
   "Sempre ofereça a sacola de presente; a apresentação valoriza o seu produto.",
   "Vendas casadas (conjuntos) são ótimas para girar o estoque de peças paradas.",
-  "Mantenha o troco organizado para não atrasar o fechamento das operações."
+  "Mantenha o troco organizado para não atrasar o fechamento das operações.",
 ];
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { 
-  Search, 
-  Trash2, 
-  ShoppingCart, 
-  User, 
-  Plus, 
+import {
+  Search,
+  Trash2,
+  ShoppingCart,
+  User,
+  Plus,
   Minus,
   Barcode,
   ArrowRight,
@@ -39,7 +39,7 @@ import {
   CheckCircle2,
   Download,
   Share2,
-  Zap
+  Zap,
 } from "lucide-react";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { toast } from "sonner";
@@ -59,19 +59,19 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { CupomFiscalPreview } from "@/components/CupomFiscalPreview";
 
 export const shouldShowCancelCoupon = (cupomFiscal: string, items: { cancelado?: boolean }[]) => {
-  return !!cupomFiscal && items.some(i => !i.cancelado);
+  return !!cupomFiscal && items.some((i) => !i.cancelado);
 };
 
 // Limite de cupons que podem ser reenviados de uma vez
@@ -89,7 +89,11 @@ export const PERIODOS_REENVIO = [
 // Converte o período escolhido em um intervalo de datas (ISO). `ate` é exclusivo.
 export const getPeriodoRange = (periodo: string): { desde?: string; ate?: string } => {
   const now = new Date();
-  const inicioDia = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+  const inicioDia = (d: Date) => {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
   switch (periodo) {
     case "hoje":
       return { desde: inicioDia(now).toISOString() };
@@ -114,37 +118,45 @@ export const getPeriodoRange = (periodo: string): { desde?: string; ate?: string
 
 export const getCancelDialogTitle = (items: { cancelado?: boolean }[]) => {
   const hasItems = items.length > 0;
-  const allCancelled = hasItems && items.every(i => i.cancelado);
+  const allCancelled = hasItems && items.every((i) => i.cancelado);
   return allCancelled ? "CANCELAR CUPOM?" : "CANCELAR VENDA?";
 };
 
-export const calculateChange = (total: number, pagamentos: { forma: string, valor: number }[], finalizadoras: any[]) => {
+export const calculateChange = (
+  total: number,
+  pagamentos: { forma: string; valor: number }[],
+  finalizadoras: any[],
+) => {
   const totalPago = pagamentos.reduce((acc, p) => acc + p.valor, 0);
   if (totalPago <= total) return 0;
-  
+
   // O troco é apenas a diferença, mas logicamente associado a formas que permitem troco
   return totalPago - total;
 };
 
 export const validatePagamentoValor = (
-  id: string, 
-  novoValor: number, 
-  total: number, 
-  pagamentos: { id: string, forma: string, valor: number }[], 
-  finalizadoras: any[]
+  id: string,
+  novoValor: number,
+  total: number,
+  pagamentos: { id: string; forma: string; valor: number }[],
+  finalizadoras: any[],
 ) => {
-  const pagamento = pagamentos.find(p => p.id === id);
+  const pagamento = pagamentos.find((p) => p.id === id);
   if (!pagamento) return { valid: false, reason: "Pagamento não encontrado" };
 
-  const fin = finalizadoras.find(f => f.fin_descricao.toLowerCase() === pagamento.forma.toLowerCase());
-  const permiteTroco = fin?.fin_permite_troco ?? (pagamento.forma.toLowerCase() === 'dinheiro');
+  const fin = finalizadoras.find(
+    (f) => f.fin_descricao.toLowerCase() === pagamento.forma.toLowerCase(),
+  );
+  const permiteTroco = fin?.fin_permite_troco ?? pagamento.forma.toLowerCase() === "dinheiro";
 
   if (!permiteTroco && novoValor > total) {
     return { valid: false, reason: "Valor excede o total (esta forma não permite troco)" };
   }
 
   if (!permiteTroco) {
-    const outrosPagamentos = pagamentos.filter(op => op.id !== id).reduce((acc, op) => acc + op.valor, 0);
+    const outrosPagamentos = pagamentos
+      .filter((op) => op.id !== id)
+      .reduce((acc, op) => acc + op.valor, 0);
     if (outrosPagamentos + novoValor > total + 0.01) {
       return { valid: false, reason: "A soma excede o total (esta forma não permite troco)" };
     }
@@ -157,7 +169,6 @@ export const Route = createFileRoute("/vendas")({
   validateSearch: (search) => vendasSearchSchema.parse(search),
   component: PDVPage,
 });
-
 
 interface ItemVenda {
   id: string;
@@ -185,7 +196,7 @@ export function PDVPage() {
   const [selectedClienteId, setSelectedClienteId] = useState<string>("default");
   const [isFinishing, setIsFinishing] = useState(false);
   const [desconto, setDesconto] = useState<number>(0);
-  const [pagamentos, setPagamentos] = useState<{ id: string, forma: string, valor: number }[]>([]);
+  const [pagamentos, setPagamentos] = useState<{ id: string; forma: string; valor: number }[]>([]);
   const [valorPagoManual, setValorPagoManual] = useState<string>("0,00");
   const [currentConsignacaoId, setCurrentConsignacaoId] = useState<string | null>(null);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
@@ -196,7 +207,9 @@ export function PDVPage() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cupomFiscal, setCupomFiscal] = useState<string>("");
   const [motivoCancelamento, setMotivoCancelamento] = useState("");
-  const [motivosCancelamento, setMotivosCancelamento] = useState<{ id: string; mot_codigo: number; mot_descricao: string }[]>([]);
+  const [motivosCancelamento, setMotivosCancelamento] = useState<
+    { id: string; mot_codigo: number; mot_descricao: string }[]
+  >([]);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [receiptBlob, setReceiptBlob] = useState<Blob | null>(null);
   const [isResending, setIsResending] = useState(false);
@@ -204,7 +217,7 @@ export function PDVPage() {
   const [isVendaFinalizadaOpen, setIsVendaFinalizadaOpen] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [isSendingWhatsapp, setIsSendingWhatsapp] = useState(false);
-  const [exportFormat, setExportFormat] = useState<'pdf' | 'png'>('pdf');
+  const [exportFormat, setExportFormat] = useState<"pdf" | "png">("pdf");
   const [isCupomPreviewOpen, setIsCupomPreviewOpen] = useState(false);
   const [whatsappFromCadastro, setWhatsappFromCadastro] = useState(false);
   const [isReenviarModalOpen, setIsReenviarModalOpen] = useState(false);
@@ -231,26 +244,27 @@ export function PDVPage() {
       const regenerate = async () => {
         const loadingToast = toast.loading("Alterando formato...");
         try {
-          const { blob, url } = exportFormat === 'pdf' 
-            ? await gerarReciboVendaPDF(lastSaleData)
-            : await gerarReciboVendaPNG(lastSaleData);
-            
-          const extension = exportFormat === 'pdf' ? 'pdf' : 'png';
-          const contentType = exportFormat === 'pdf' ? 'application/pdf' : 'image/png';
+          const { blob, url } =
+            exportFormat === "pdf"
+              ? await gerarReciboVendaPDF(lastSaleData)
+              : await gerarReciboVendaPNG(lastSaleData);
+
+          const extension = exportFormat === "pdf" ? "pdf" : "png";
+          const contentType = exportFormat === "pdf" ? "application/pdf" : "image/png";
           const fileName = `recibo-${lastSaleData.cupomFiscal}-${Date.now()}.${extension}`;
-          
+
           const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('recibos-vendas')
+            .from("recibos-vendas")
             .upload(fileName, blob, {
               contentType,
-              cacheControl: '3600',
-              upsert: false
+              cacheControl: "3600",
+              upsert: false,
             });
 
           if (!uploadError) {
-            const { data: { publicUrl } } = supabase.storage
-              .from('recibos-vendas')
-              .getPublicUrl(fileName);
+            const {
+              data: { publicUrl },
+            } = supabase.storage.from("recibos-vendas").getPublicUrl(fileName);
             setReceiptUrl(publicUrl);
           } else {
             setReceiptUrl(url);
@@ -267,9 +281,9 @@ export function PDVPage() {
 
   useEffect(() => {
     if (isFinishing && !cupomFiscal) {
-      supabase.rpc('proximo_cupom_fiscal' as any).then(({ data, error }) => {
+      supabase.rpc("proximo_cupom_fiscal" as any).then(({ data, error }) => {
         if (!error && data) {
-          setCupomFiscal(String(data).padStart(6, '0'));
+          setCupomFiscal(String(data).padStart(6, "0"));
         } else {
           setCupomFiscal(Math.floor(100000 + Math.random() * 900000).toString());
         }
@@ -280,20 +294,20 @@ export function PDVPage() {
   const valorPagoRef = useRef<HTMLInputElement>(null);
 
   const formatarMoeda = (valor: number) => {
-    return new Intl.NumberFormat('pt-BR', {
+    return new Intl.NumberFormat("pt-BR", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(valor);
   };
 
   const parseMoeda = (valor: string) => {
-    const cleanValue = valor.replace(/\D/g, '');
+    const cleanValue = valor.replace(/\D/g, "");
     return Number(cleanValue) / 100;
   };
 
   const formatPhoneBR = (value: string) => {
-    const d = value.replace(/\D/g, '').slice(0, 11);
-    if (d.length === 0) return '';
+    const d = value.replace(/\D/g, "").slice(0, 11);
+    if (d.length === 0) return "";
     if (d.length <= 2) return `(${d}`;
     if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
     if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
@@ -301,8 +315,8 @@ export function PDVPage() {
   };
 
   const buildWhatsappUrl = (phone: string, message: string) => {
-    const digits = phone.replace(/\D/g, '');
-    const withCountry = digits.startsWith('55') ? digits : `55${digits}`;
+    const digits = phone.replace(/\D/g, "");
+    const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
     return `https://wa.me/${withCountry}?text=${encodeURIComponent(message)}`;
   };
 
@@ -310,15 +324,18 @@ export function PDVPage() {
     if (!whatsappNumber || !lastSaleData) return;
     setIsSendingWhatsapp(true);
 
-    const clienteNome = lastSaleData.cliente || 'cliente';
-    const cupom = lastSaleData.cupomFiscal || '';
-    const totalStr = (lastSaleData.total ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const clienteNome = lastSaleData.cliente || "cliente";
+    const cupom = lastSaleData.cupomFiscal || "";
+    const totalStr = (lastSaleData.total ?? 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
     const fileName = `Divas-Lingerie-Cupom-${cupom}.pdf`;
 
     try {
       // Gera PDF atualizado do cupom profissional
       const { blob: pdfBlob } = await gerarReciboVendaPDF(lastSaleData);
-      const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+      const file = new File([pdfBlob], fileName, { type: "application/pdf" });
 
       // Tenta Web Share API (compartilha o arquivo direto no celular)
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -327,24 +344,24 @@ export function PDVPage() {
           title: `Cupom Divas Lingerie – Nº ${cupom}`,
           text: `Olá, ${clienteNome}! 🌸 Segue seu cupom da Divas Lingerie. Total: ${totalStr}`,
         });
-        toast.success('Cupom compartilhado!');
+        toast.success("Cupom compartilhado!");
         return;
       }
 
       // Fallback desktop: abre wa.me com link do Storage
-      const linkFallback = receiptUrl ?? '';
+      const linkFallback = receiptUrl ?? "";
       const message =
         `Olá, ${clienteNome}! 🌸\n\n` +
         `Obrigada pela sua compra na *Divas Lingerie*!\n\n` +
         `📄 *Cupom Nº ${cupom}*\n` +
         `💰 *Total:* ${totalStr}\n\n` +
-        (linkFallback ? `Acesse seu cupom:\n${linkFallback}\n\n` : '') +
+        (linkFallback ? `Acesse seu cupom:\n${linkFallback}\n\n` : "") +
         `Volte sempre! 💕`;
-      window.open(buildWhatsappUrl(whatsappNumber, message), '_blank');
-      toast.success('WhatsApp aberto!', { description: 'Confirme o envio no WhatsApp.' });
+      window.open(buildWhatsappUrl(whatsappNumber, message), "_blank");
+      toast.success("WhatsApp aberto!", { description: "Confirme o envio no WhatsApp." });
     } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        toast.error('Erro ao compartilhar', { description: err?.message });
+      if (err?.name !== "AbortError") {
+        toast.error("Erro ao compartilhar", { description: err?.message });
       }
     } finally {
       setIsSendingWhatsapp(false);
@@ -367,23 +384,33 @@ export function PDVPage() {
 
   const { data: produtos = [], isLoading: isLoadingProdutos } = useQuery({
     queryKey: ["produtos-pdv"],
-    queryFn: async () => { 
-      const { data, error } = await supabase.from("tab_produtos").select("*").order("pro_descricao"); 
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tab_produtos")
+        .select("*")
+        .order("pro_descricao");
       if (error) throw error;
-      return data || []; 
+      return data || [];
     },
   });
 
   const { data: clientesData = [], isLoading: isLoadingClientes } = useQuery({
     queryKey: ["clientes-pdv"],
-    queryFn: async () => { 
-      const { data, error } = await supabase.from("tab_clientes").select("id, cli_nome, cli_telefone").order("cli_nome"); 
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tab_clientes")
+        .select("id, cli_nome, cli_telefone")
+        .order("cli_nome");
       if (error) throw error;
-      return data || []; 
+      return data || [];
     },
   });
 
-  const { data: vendasDoDia = [], isLoading: isLoadingVendasDia, error: errorVendasDia } = useQuery({
+  const {
+    data: vendasDoDia = [],
+    isLoading: isLoadingVendasDia,
+    error: errorVendasDia,
+  } = useQuery({
     queryKey: ["vendas-reenvio", isReenviarModalOpen, reenviarPeriodo],
     queryFn: async () => {
       // Filtra pelo período escolhido no combo — select * para evitar erro de coluna desconhecida
@@ -409,7 +436,9 @@ export function PDVPage() {
       .select("id, mot_codigo, mot_descricao")
       .eq("mot_ativo", true)
       .order("mot_codigo")
-      .then(({ data }) => { if (data) setMotivosCancelamento(data); });
+      .then(({ data }) => {
+        if (data) setMotivosCancelamento(data);
+      });
   }, []);
 
   // Carregar consignação se houver ID na URL
@@ -418,10 +447,12 @@ export function PDVPage() {
       const loadConsignacao = async () => {
         const { data, error } = await supabase
           .from("tab_consignacao")
-          .select(`
+          .select(
+            `
             *,
             tab_produtos (*)
-          `)
+          `,
+          )
           .eq("id", searchParams.consignacao_id)
           .single();
 
@@ -430,27 +461,29 @@ export function PDVPage() {
           return;
         }
 
-        if (data && data.con_status === 'em_posse') {
+        if (data && data.con_status === "em_posse") {
           const produto = (data as any).tab_produtos;
           const valor = Number(produto.pro_valor_venda) || 0;
-          
-          setItems([{ 
-            id: Math.random().toString(36).substr(2, 9), 
-            produto_id: data.con_produto_id, 
-            descricao: produto.pro_descricao, 
-            codigo: produto.pro_codigo, 
-            valor, 
-            quantidade: data.con_quantidade, 
-            total: valor * data.con_quantidade, 
-            added_at: Date.now() 
-          }]);
-          
+
+          setItems([
+            {
+              id: Math.random().toString(36).substr(2, 9),
+              produto_id: data.con_produto_id,
+              descricao: produto.pro_descricao,
+              codigo: produto.pro_codigo,
+              valor,
+              quantidade: data.con_quantidade,
+              total: valor * data.con_quantidade,
+              added_at: Date.now(),
+            },
+          ]);
+
           setSelectedClienteId(data.con_cliente_id);
           setCurrentConsignacaoId(data.id);
           setHasConfirmedClient(true);
           setIsFinishing(true); // Abre a tela de pagamento
           toast.success("Itens da consignação carregados!");
-          
+
           // Limpar a URL para não carregar de novo se atualizar
           navigate({ search: { consignacao_id: undefined } as any, replace: true });
         }
@@ -459,30 +492,34 @@ export function PDVPage() {
     }
   }, [searchParams.consignacao_id, produtos, navigate]);
 
-
   const filteredProducts = useMemo(() => {
     if (!searchTerm) return []; // Mostra lista em branco se não houver pesquisa
     const search = searchTerm.toLowerCase();
-    return produtos.filter(p => 
-      p.pro_descricao?.toLowerCase().includes(search) || 
-      p.pro_codigo?.toLowerCase().includes(search) ||
-      p.pro_codigo_barras?.toLowerCase() === search
-    ).slice(0, 50);
+    return produtos
+      .filter(
+        (p) =>
+          p.pro_descricao?.toLowerCase().includes(search) ||
+          p.pro_codigo?.toLowerCase().includes(search) ||
+          p.pro_codigo_barras?.toLowerCase() === search,
+      )
+      .slice(0, 50);
   }, [produtos, searchTerm]);
 
   const addItem = (produto: any) => {
     const estoqueDisponivel = Number(produto.pro_estoque_atual) || 0;
-    const itemAtivo = items.find(i => i.produto_id === produto.id && !i.cancelado);
+    const itemAtivo = items.find((i) => i.produto_id === produto.id && !i.cancelado);
     const qtdAtualNoCarrinho = itemAtivo?.quantidade || 0;
 
     if (qtdAtualNoCarrinho + 1 > estoqueDisponivel) {
-      toast.error(`Estoque insuficiente`, { description: `"${produto.pro_descricao}" — disponível: ${estoqueDisponivel}` });
+      toast.error(`Estoque insuficiente`, {
+        description: `"${produto.pro_descricao}" — disponível: ${estoqueDisponivel}`,
+      });
       return;
     }
 
     const valor = Number(produto.pro_valor_venda) || 0;
-    setItems(prev => {
-      const existingIndex = prev.findIndex(i => i.produto_id === produto.id && !i.cancelado);
+    setItems((prev) => {
+      const existingIndex = prev.findIndex((i) => i.produto_id === produto.id && !i.cancelado);
       if (existingIndex !== -1) {
         const updatedItems = [...prev];
         const item = updatedItems[existingIndex];
@@ -490,23 +527,25 @@ export function PDVPage() {
         updatedItems[existingIndex] = { ...item, quantidade: newQty, total: newQty * item.valor };
         return updatedItems;
       }
-      return [{
-        id: Math.random().toString(36).substr(2, 9),
-        produto_id: produto.id,
-        descricao: produto.pro_descricao,
-        codigo: produto.pro_codigo,
-        valor,
-        quantidade: 1,
-        total: valor,
-        added_at: Date.now()
-      }, ...prev];
+      return [
+        {
+          id: Math.random().toString(36).substr(2, 9),
+          produto_id: produto.id,
+          descricao: produto.pro_descricao,
+          codigo: produto.pro_codigo,
+          valor,
+          quantidade: 1,
+          total: valor,
+          added_at: Date.now(),
+        },
+        ...prev,
+      ];
     });
-    
   };
 
   const updateQuantity = (id: string, delta: number) => {
-    setItems(prev => {
-      const item = prev.find(i => i.id === id);
+    setItems((prev) => {
+      const item = prev.find((i) => i.id === id);
       if (!item || item.cancelado) return prev;
 
       if (item.quantidade === 1 && delta === -1) {
@@ -516,28 +555,34 @@ export function PDVPage() {
           description: `Deseja cancelar ${item.descricao} da venda?`,
           showMotivo: true,
           onConfirm: (motivo) => {
-            setItems(current => current.map(i => i.id === id ? { ...i, cancelado: true, total: 0, motivo_cancelamento: motivo } : i));
+            setItems((current) =>
+              current.map((i) =>
+                i.id === id ? { ...i, cancelado: true, total: 0, motivo_cancelamento: motivo } : i,
+              ),
+            );
             toast.error("Item cancelado");
-          }
+          },
         });
         return prev;
       }
 
-      const produto = produtos.find(p => p.id === item.produto_id);
+      const produto = produtos.find((p) => p.id === item.produto_id);
       const estoqueDisponivel = Number(produto?.pro_estoque_atual) || 0;
       const novaQtd = item.quantidade + delta;
-      
+
       if (novaQtd > estoqueDisponivel) {
         toast.error(`Estoque insuficiente`, { description: `Disponível: ${estoqueDisponivel}` });
         return prev;
       }
-      
-      return prev.map(i => i.id === id ? { ...i, quantidade: novaQtd, total: novaQtd * i.valor } : i);
+
+      return prev.map((i) =>
+        i.id === id ? { ...i, quantidade: novaQtd, total: novaQtd * i.valor } : i,
+      );
     });
   };
 
   const removeItem = (id: string) => {
-    const item = items.find(i => i.id === id);
+    const item = items.find((i) => i.id === id);
     if (!item || item.cancelado) return;
 
     setConfirmDialog({
@@ -546,17 +591,21 @@ export function PDVPage() {
       description: `Deseja cancelar ${item.descricao} da venda?`,
       showMotivo: true,
       onConfirm: (motivo) => {
-        setItems(prev => prev.map(i => i.id === id ? { ...i, cancelado: true, motivo_cancelamento: motivo } : i));
+        setItems((prev) =>
+          prev.map((i) =>
+            i.id === id ? { ...i, cancelado: true, motivo_cancelamento: motivo } : i,
+          ),
+        );
         toast.error(`Item cancelado`, {
           description: `${item.descricao} foi cancelado na venda.`,
           duration: 3000,
         });
-      }
+      },
     });
   };
 
   const subtotal = items.reduce((acc, item) => acc + (item.cancelado ? 0 : item.total), 0);
-  
+
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => a.descricao.localeCompare(b.descricao));
   }, [items]);
@@ -565,14 +614,18 @@ export function PDVPage() {
   const totalPago = pagamentos.reduce((acc, p) => acc + p.valor, 0);
   const valorFaltante = total - totalPago;
 
-  const pagamentosQuePermitemTroco = pagamentos.filter(p => {
-    const fin = finalizadorasAtivas.find(f => f.fin_descricao.toLowerCase() === p.forma.toLowerCase());
-    return fin?.fin_permite_troco ?? (p.forma.toLowerCase() === 'dinheiro');
+  const pagamentosQuePermitemTroco = pagamentos.filter((p) => {
+    const fin = finalizadorasAtivas.find(
+      (f) => f.fin_descricao.toLowerCase() === p.forma.toLowerCase(),
+    );
+    return fin?.fin_permite_troco ?? p.forma.toLowerCase() === "dinheiro";
   });
 
   const totalPagoPermiteTroco = pagamentosQuePermitemTroco.reduce((acc, p) => acc + p.valor, 0);
-  const outrosPagamentos = pagamentos.filter(p => !pagamentosQuePermitemTroco.includes(p)).reduce((acc, p) => acc + p.valor, 0);
-  
+  const outrosPagamentos = pagamentos
+    .filter((p) => !pagamentosQuePermitemTroco.includes(p))
+    .reduce((acc, p) => acc + p.valor, 0);
+
   // O troco só é calculado se o total pago superar o total da venda.
   const trocoCalculado = calculateChange(total, pagamentos, finalizadorasAtivas);
 
@@ -580,12 +633,12 @@ export function PDVPage() {
     if (isProcessingRef.current) return;
     isProcessingRef.current = true;
     setIsProcessingFinish(true);
-    
+
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Usuário não autenticado");
-      
-      const activeItems = items.filter(i => !i.cancelado);
+
+      const activeItems = items.filter((i) => !i.cancelado);
 
       if (activeItems.length === 0) {
         toast.error("Carrinho sem itens ativos");
@@ -602,72 +655,79 @@ export function PDVPage() {
       }
 
       // Verificar estoque disponível antes de prosseguir
-      const produtoIds = activeItems.map(i => i.produto_id);
+      const produtoIds = activeItems.map((i) => i.produto_id);
       const { data: estoques } = await supabase
         .from("tab_produtos")
         .select("id, pro_descricao, pro_codigo, pro_estoque_atual")
         .in("id", produtoIds);
 
-      const semEstoque = activeItems.filter(item => {
+      const semEstoque = activeItems.filter((item) => {
         const produto = estoques?.find((p: any) => p.id === item.produto_id);
         return produto !== undefined && (produto.pro_estoque_atual ?? 0) < item.quantidade;
       });
 
       if (semEstoque.length > 0) {
-        const detalhes = semEstoque.map(item => {
-          const produto = estoques?.find((p: any) => p.id === item.produto_id);
-          const disponivel = produto?.pro_estoque_atual ?? 0;
-          return `${item.descricao || produto?.pro_codigo || "Produto"}: disponível ${disponivel}, solicitado ${item.quantidade}`;
-        }).join(" | ");
+        const detalhes = semEstoque
+          .map((item) => {
+            const produto = estoques?.find((p: any) => p.id === item.produto_id);
+            const disponivel = produto?.pro_estoque_atual ?? 0;
+            return `${item.descricao || produto?.pro_codigo || "Produto"}: disponível ${disponivel}, solicitado ${item.quantidade}`;
+          })
+          .join(" | ");
         toast.error("Estoque insuficiente", { description: detalhes });
         isProcessingRef.current = false;
         setIsProcessingFinish(false);
         return;
       }
 
-      const rpcItens = activeItems.map(item => ({
+      const rpcItens = activeItems.map((item) => ({
         produto_id: item.produto_id,
         quantidade: item.quantidade,
         valor_unitario: item.valor,
         valor_total: item.total,
-        observacao: item.motivo_cancelamento || null
+        observacao: item.motivo_cancelamento || null,
       }));
-      console.log('[VENDA] RPC chamada. Itens:', JSON.stringify(rpcItens));
+      console.log("[VENDA] RPC chamada. Itens:", JSON.stringify(rpcItens));
 
       // Combina todas as formas de pagamento distintas para o cabeçalho da venda
       // (ex.: "DINHEIRO + PIX"). O detalhamento por forma fica em tab_vendas_pagamentos.
-      const formasDistintas = Array.from(new Set(pagamentos.map(p => p.forma)));
-      const formaPagamentoHeader = formasDistintas.join(" + ") || 'DINHEIRO';
+      const formasDistintas = Array.from(new Set(pagamentos.map((p) => p.forma)));
+      const formaPagamentoHeader = formasDistintas.join(" + ") || "DINHEIRO";
 
-      const { data: vendaId, error: rpcError } = await supabase.rpc('registrar_venda_completa' as any, {
-        p_cliente_id: selectedClienteId === "default" ? null : selectedClienteId,
-        p_usuario_id: null,
-        p_valor_total: total,
-        p_desconto: desconto,
-        p_forma_pagamento: formaPagamentoHeader,
-        p_itens: rpcItens,
-        p_pagamentos: pagamentos.map(p => {
-          const fin = finalizadorasAtivas.find(f => f.fin_descricao.toLowerCase() === p.forma.toLowerCase());
-          return {
-            forma: p.forma,
-            valor: p.valor,
-            finalizadora_id: fin?.id,
-            permite_troco: fin?.fin_permite_troco ?? true
-          };
-        })
-      });
+      const { data: vendaId, error: rpcError } = await supabase.rpc(
+        "registrar_venda_completa" as any,
+        {
+          p_cliente_id: selectedClienteId === "default" ? null : selectedClienteId,
+          p_usuario_id: null,
+          p_valor_total: total,
+          p_desconto: desconto,
+          p_forma_pagamento: formaPagamentoHeader,
+          p_itens: rpcItens,
+          p_pagamentos: pagamentos.map((p) => {
+            const fin = finalizadorasAtivas.find(
+              (f) => f.fin_descricao.toLowerCase() === p.forma.toLowerCase(),
+            );
+            return {
+              forma: p.forma,
+              valor: p.valor,
+              finalizadora_id: fin?.id,
+              permite_troco: fin?.fin_permite_troco ?? true,
+            };
+          }),
+        },
+      );
 
       if (rpcError) throw rpcError;
 
       // Persiste o número do cupom fiscal na venda (usado no reenvio de recibo e relatórios)
       if (vendaId && cupomFiscal) {
         try {
-          await supabase.rpc('definir_cupom_fiscal' as any, {
+          await supabase.rpc("definir_cupom_fiscal" as any, {
             p_venda_id: vendaId as string,
             p_cupom_fiscal: String(cupomFiscal),
           });
         } catch (e) {
-          console.warn('[VENDA] Falha ao salvar cupom fiscal na venda', e);
+          console.warn("[VENDA] Falha ao salvar cupom fiscal na venda", e);
         }
       }
 
@@ -676,8 +736,8 @@ export function PDVPage() {
         await supabase
           .from("tab_consignacao")
           .update({
-            con_status: 'vendido',
-            con_venda_id: vendaId as string
+            con_status: "vendido",
+            con_venda_id: vendaId as string,
           } as any)
           .eq("id", currentConsignacaoId);
         setCurrentConsignacaoId(null);
@@ -696,21 +756,29 @@ export function PDVPage() {
         setWhatsappNumber("");
         setWhatsappFromCadastro(false);
       }
-      const temDinheiro = pagamentos.some(p => p.forma.toLowerCase() === "dinheiro");
+      const temDinheiro = pagamentos.some((p) => p.forma.toLowerCase() === "dinheiro");
       const excedente = Math.max(0, totalPago - total);
 
       const saleData = {
         vendaId: vendaId as string,
         cliente: clienteNome,
-        itens: items.filter(it => !it.cancelado).map(it => ({ descricao: it.descricao, codigo: it.codigo, quantidade: it.quantidade, valor: it.valor, total: it.total })),
+        itens: items
+          .filter((it) => !it.cancelado)
+          .map((it) => ({
+            descricao: it.descricao,
+            codigo: it.codigo,
+            quantidade: it.quantidade,
+            valor: it.valor,
+            total: it.total,
+          })),
         subtotal,
         desconto,
         total,
-        pagamentos: pagamentos.map(p => ({ forma: p.forma, valor: p.valor })),
+        pagamentos: pagamentos.map((p) => ({ forma: p.forma, valor: p.valor })),
         totalPago,
         troco: temDinheiro ? excedente : 0,
         data: new Date(),
-        cupomFiscal: cupomFiscal
+        cupomFiscal: cupomFiscal,
       };
 
       // Salva os dados da venda e fecha o checkout dialog primeiro
@@ -771,7 +839,7 @@ export function PDVPage() {
               descricao: i.tab_produtos?.pro_descricao || "Produto",
               codigo: i.tab_produtos?.pro_codigo,
               quantidade: i.itv_quantidade,
-              valor: i.itv_valor_unitario ?? (i.itv_valor_total / Math.max(1, i.itv_quantidade)),
+              valor: i.itv_valor_unitario ?? i.itv_valor_total / Math.max(1, i.itv_quantidade),
               total: i.itv_valor_total,
             }));
           const subtotal = itens.reduce((s: number, i: any) => s + i.total, 0);
@@ -781,9 +849,18 @@ export function PDVPage() {
             .from("tab_vendas_pagamentos")
             .select("vpa_forma_pagamento, vpa_valor")
             .eq("vpa_venda_id", venda.id);
-          const pagamentosRecibo = (pags && pags.length > 0)
-            ? (pags as any[]).map((p) => ({ forma: p.vpa_forma_pagamento || "DINHEIRO", valor: Number(p.vpa_valor) || 0 }))
-            : [{ forma: venda.ven_forma_pagamento || "DINHEIRO", valor: venda.ven_valor_total ?? subtotal }];
+          const pagamentosRecibo =
+            pags && pags.length > 0
+              ? (pags as any[]).map((p) => ({
+                  forma: p.vpa_forma_pagamento || "DINHEIRO",
+                  valor: Number(p.vpa_valor) || 0,
+                }))
+              : [
+                  {
+                    forma: venda.ven_forma_pagamento || "DINHEIRO",
+                    valor: venda.ven_valor_total ?? subtotal,
+                  },
+                ];
           const totalPagoRecibo = pagamentosRecibo.reduce((s, p) => s + p.valor, 0);
 
           const reciboData: ReciboVendaData = {
@@ -799,13 +876,23 @@ export function PDVPage() {
             cupomFiscal: venda.ven_cupom_fiscal,
           };
           const { blob } = await gerarReciboVendaPDF(reciboData);
-          return new File([blob], `Divas-Cupom-${venda.ven_cupom_fiscal || venda.id.slice(0, 8)}.pdf`, { type: "application/pdf" });
-        })
+          return new File(
+            [blob],
+            `Divas-Cupom-${venda.ven_cupom_fiscal || venda.id.slice(0, 8)}.pdf`,
+            { type: "application/pdf" },
+          );
+        }),
       );
 
-      const cupons = selectedReenviarVendas.map(v => v.ven_cupom_fiscal || v.id.slice(0, 8)).join(", ");
-      const totalGeral = brl(selectedReenviarVendas.reduce((s, v) => s + (v.ven_valor_total || 0), 0));
-      const clienteNome = clientesData.find((c: any) => c.id === selectedReenviarVendas[0]?.ven_cliente_id)?.cli_nome || "cliente";
+      const cupons = selectedReenviarVendas
+        .map((v) => v.ven_cupom_fiscal || v.id.slice(0, 8))
+        .join(", ");
+      const totalGeral = brl(
+        selectedReenviarVendas.reduce((s, v) => s + (v.ven_valor_total || 0), 0),
+      );
+      const clienteNome =
+        clientesData.find((c: any) => c.id === selectedReenviarVendas[0]?.ven_cliente_id)
+          ?.cli_nome || "cliente";
       const message =
         `Olá, ${clienteNome}! 🌸\n\n` +
         (files.length === 1
@@ -837,33 +924,34 @@ export function PDVPage() {
       toast.error("Nenhuma venda recente para reenviar");
       return;
     }
-    
+
     setIsResending(true);
     const loadingToast = toast.loading("Gerando link para reenvio...");
-    
+
     try {
-      const { blob, url } = exportFormat === 'pdf'
-        ? await gerarReciboVendaPDF(lastSaleData)
-        : await gerarReciboVendaPNG(lastSaleData);
-      
-      const extension = exportFormat === 'pdf' ? 'pdf' : 'png';
-      const contentType = exportFormat === 'pdf' ? 'application/pdf' : 'image/png';
+      const { blob, url } =
+        exportFormat === "pdf"
+          ? await gerarReciboVendaPDF(lastSaleData)
+          : await gerarReciboVendaPNG(lastSaleData);
+
+      const extension = exportFormat === "pdf" ? "pdf" : "png";
+      const contentType = exportFormat === "pdf" ? "application/pdf" : "image/png";
       const fileName = `recibo-reenvio-${lastSaleData.cupomFiscal}-${Date.now()}.${extension}`;
-      
+
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('recibos-vendas')
+        .from("recibos-vendas")
         .upload(fileName, blob, {
           contentType,
-          cacheControl: '3600',
-          upsert: false
+          cacheControl: "3600",
+          upsert: false,
         });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('recibos-vendas')
-        .getPublicUrl(fileName);
-        
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("recibos-vendas").getPublicUrl(fileName);
+
       setReceiptUrl(publicUrl);
       toast.dismiss(loadingToast);
     } catch (error: any) {
@@ -877,9 +965,9 @@ export function PDVPage() {
 
   const addPagamento = (forma: string) => {
     // Toggle: se a forma já está selecionada, desmarca e estorna o valor informado
-    const jaSelecionada = pagamentos.some(p => p.forma === forma);
+    const jaSelecionada = pagamentos.some((p) => p.forma === forma);
     if (jaSelecionada) {
-      setPagamentos(prev => prev.filter(p => p.forma !== forma));
+      setPagamentos((prev) => prev.filter((p) => p.forma !== forma));
       return;
     }
 
@@ -896,26 +984,30 @@ export function PDVPage() {
 
   const updatePagamentoValor = (id: string, novoValorStr: string) => {
     const valorNum = parseMoeda(novoValorStr);
-    
-    setPagamentos(prev => prev.map(p => {
-      if (p.id !== id) return p;
 
-      const validation = validatePagamentoValor(id, valorNum, total, prev, finalizadorasAtivas);
-      
-      if (!validation.valid) {
-        toast.error("Valor inválido", { description: validation.reason });
-        return p;
-      }
+    setPagamentos((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
 
-      return { ...p, valor: valorNum };
-    }));
+        const validation = validatePagamentoValor(id, valorNum, total, prev, finalizadorasAtivas);
+
+        if (!validation.valid) {
+          toast.error("Valor inválido", { description: validation.reason });
+          return p;
+        }
+
+        return { ...p, valor: valorNum };
+      }),
+    );
   };
 
   if (isLoadingFinalizadoras || isLoadingProdutos || isLoadingClientes) {
     return (
       <div className="fixed inset-0 bg-slate-50 flex flex-col items-center justify-center space-y-4 z-[100]">
         <LoaderIcon className="w-10 h-10 text-primary animate-spin" />
-        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Carregando PDV...</p>
+        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">
+          Carregando PDV...
+        </p>
       </div>
     );
   }
@@ -929,23 +1021,29 @@ export function PDVPage() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
               <ShoppingBag className="w-4 h-4 text-white" />
             </div>
-            <h1 className="font-black tracking-tighter text-xl">VENDAS<span className="text-primary">PRO</span></h1>
+            <h1 className="font-black tracking-tighter text-xl">
+              VENDAS<span className="text-primary">PRO</span>
+            </h1>
           </div>
-          <Badge variant="outline" className="text-[10px] border-white/20 text-white/60">v2.5</Badge>
+          <Badge variant="outline" className="text-[10px] border-white/20 text-white/60">
+            v2.5
+          </Badge>
         </div>
-        
+
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40 pointer-events-none group-focus-within:text-primary transition-colors" />
-          <Input 
-            ref={searchInputRef} 
-            className="h-14 pl-12 pr-28 rounded-2xl bg-white/10 border-none text-white placeholder:text-white/30 focus-visible:ring-2 focus-visible:ring-primary/50 text-lg uppercase" 
-            placeholder="Buscar produto ou código de barras..." 
-            value={searchTerm} 
-            onChange={e => setSearchTerm(e.target.value.toUpperCase())} 
-            onKeyDown={e => {
-              if (e.key === 'Enter' && searchTerm) {
+          <Input
+            ref={searchInputRef}
+            className="h-14 pl-12 pr-28 rounded-2xl bg-white/10 border-none text-white placeholder:text-white/30 focus-visible:ring-2 focus-visible:ring-primary/50 text-lg uppercase"
+            placeholder="Buscar produto ou código de barras..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && searchTerm) {
                 const search = searchTerm.toUpperCase();
-                const exact = produtos.find(p => p.pro_codigo_barras === search || p.pro_codigo?.toUpperCase() === search);
+                const exact = produtos.find(
+                  (p) => p.pro_codigo_barras === search || p.pro_codigo?.toUpperCase() === search,
+                );
                 if (exact) {
                   addItem(exact);
                   setSearchTerm("");
@@ -955,7 +1053,7 @@ export function PDVPage() {
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
             {searchTerm && (
-              <button 
+              <button
                 onClick={() => setSearchTerm("")}
                 className="w-10 h-10 flex items-center justify-center text-white/40 hover:text-white transition-colors"
                 title="Limpar pesquisa"
@@ -963,7 +1061,7 @@ export function PDVPage() {
                 <X className="w-5 h-5" />
               </button>
             )}
-            <button 
+            <button
               onClick={() => setIsScannerOpen(true)}
               className="w-10 h-10 flex items-center justify-center text-white/40 hover:text-primary transition-colors"
             >
@@ -977,65 +1075,85 @@ export function PDVPage() {
       <main className="flex-1 min-h-0 overflow-y-auto px-4 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="mb-6 px-1">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-            <Zap className="h-3 w-3 text-primary fill-current" /> Dica de Venda: <span className="text-slate-200 normal-case font-medium italic">{dicaAleatoria}</span>
+            <Zap className="h-3 w-3 text-primary fill-current" /> Dica de Venda:{" "}
+            <span className="text-slate-200 normal-case font-medium italic">{dicaAleatoria}</span>
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredProducts.map((p) => {
-            const itemNoCarrinho = items.find(i => i.produto_id === p.id && !i.cancelado);
+            const itemNoCarrinho = items.find((i) => i.produto_id === p.id && !i.cancelado);
             return (
-              <Card 
-                key={p.id} 
+              <Card
+                key={p.id}
                 className={cn(
                   "p-3 rounded-[1.5rem] border-none shadow-sm flex flex-col justify-between gap-3 transition-all active:scale-[0.98]",
-                  itemNoCarrinho ? "bg-primary/5 ring-2 ring-primary/20" : "bg-white"
+                  itemNoCarrinho ? "bg-primary/5 ring-2 ring-primary/20" : "bg-white",
                 )}
                 onClick={() => !itemNoCarrinho && addItem(p)}
               >
                 <div className="flex justify-between items-start gap-3">
                   <div className="flex flex-col gap-0.5 min-w-0">
-                    <span className="text-[9px] font-mono text-slate-400 tracking-widest uppercase">REF: {p.pro_codigo || '---'}</span>
-                    <h3 className={cn(
-                      "font-bold leading-tight truncate uppercase text-xs",
-                      itemNoCarrinho?.cancelado ? "line-through text-red-400" : "text-slate-900"
-                    )}>
+                    <span className="text-[9px] font-mono text-slate-400 tracking-widest uppercase">
+                      REF: {p.pro_codigo || "---"}
+                    </span>
+                    <h3
+                      className={cn(
+                        "font-bold leading-tight truncate uppercase text-xs",
+                        itemNoCarrinho?.cancelado ? "line-through text-red-400" : "text-slate-900",
+                      )}
+                    >
                       {p.pro_descricao}
                     </h3>
                     {itemNoCarrinho?.cancelado && (
-                      <span className="text-[8px] font-black text-red-500 uppercase">CANCELADO</span>
+                      <span className="text-[8px] font-black text-red-500 uppercase">
+                        CANCELADO
+                      </span>
                     )}
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 text-[9px] border-emerald-100 font-bold">
+                      <Badge
+                        variant="secondary"
+                        className="bg-emerald-50 text-emerald-600 text-[9px] border-emerald-100 font-bold"
+                      >
                         {p.pro_estoque_atual} EM ESTOQUE
                       </Badge>
                     </div>
                   </div>
                   {itemNoCarrinho && (
-                    <div className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg",
-                      itemNoCarrinho.cancelado ? "bg-red-400" : "bg-primary shadow-primary/30"
-                    )}>
-                      {itemNoCarrinho.cancelado ? <X className="w-4 h-4" /> : <span className="text-xs font-black">{itemNoCarrinho.quantidade}</span>}
+                    <div
+                      className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg",
+                        itemNoCarrinho.cancelado ? "bg-red-400" : "bg-primary shadow-primary/30",
+                      )}
+                    >
+                      {itemNoCarrinho.cancelado ? (
+                        <X className="w-4 h-4" />
+                      ) : (
+                        <span className="text-xs font-black">{itemNoCarrinho.quantidade}</span>
+                      )}
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex items-center justify-between mt-auto">
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Preço</span>
-                    <span className={cn(
-                      "text-lg font-black tabular-nums",
-                      itemNoCarrinho?.cancelado ? "line-through text-red-300" : "text-slate-900"
-                    )}>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                      Preço
+                    </span>
+                    <span
+                      className={cn(
+                        "text-lg font-black tabular-nums",
+                        itemNoCarrinho?.cancelado ? "line-through text-red-300" : "text-slate-900",
+                      )}
+                    >
                       {brl(Number(p.pro_valor_venda))}
                     </span>
                   </div>
-                  
-                  <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     {itemNoCarrinho && !itemNoCarrinho.cancelado && (
-                      <Button 
-                        size="icon" 
-                        variant="secondary" 
+                      <Button
+                        size="icon"
+                        variant="secondary"
                         className="rounded-xl h-10 w-10 shadow-sm border border-slate-100"
                         onClick={() => updateQuantity(itemNoCarrinho.id, -1)}
                       >
@@ -1043,9 +1161,9 @@ export function PDVPage() {
                       </Button>
                     )}
                     {!itemNoCarrinho?.cancelado && (
-                      <Button 
-                        size="icon" 
-                        variant={itemNoCarrinho ? "default" : "secondary"} 
+                      <Button
+                        size="icon"
+                        variant={itemNoCarrinho ? "default" : "secondary"}
                         className="rounded-xl h-10 w-10 shadow-md"
                         onClick={() => addItem(p)}
                       >
@@ -1053,12 +1171,18 @@ export function PDVPage() {
                       </Button>
                     )}
                     {itemNoCarrinho?.cancelado && (
-                      <Button 
+                      <Button
                         size="sm"
                         variant="ghost"
                         className="text-[9px] font-black uppercase text-primary hover:bg-primary/5"
                         onClick={() => {
-                          setItems(prev => prev.map(i => i.id === itemNoCarrinho.id ? { ...i, cancelado: false, total: i.quantidade * i.valor } : i));
+                          setItems((prev) =>
+                            prev.map((i) =>
+                              i.id === itemNoCarrinho.id
+                                ? { ...i, cancelado: false, total: i.quantidade * i.valor }
+                                : i,
+                            ),
+                          );
                           toast.success("Item restaurado");
                         }}
                       >
@@ -1087,34 +1211,40 @@ export function PDVPage() {
           <Button
             variant="secondary"
             className="w-full h-10 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 shadow-sm"
-            onClick={() => { setIsReenviarModalOpen(true); setSelectedReenviarVendas([]); setReenviarWhatsapp(""); setReenviarPeriodo(""); }}
+            onClick={() => {
+              setIsReenviarModalOpen(true);
+              setSelectedReenviarVendas([]);
+              setReenviarWhatsapp("");
+              setReenviarPeriodo("");
+            }}
           >
             <Share2 className="w-3.5 h-3.5" />
             Reenviar Recibo (WhatsApp)
           </Button>
         </div>
-        
+
         {items.length > 0 && (
           <div className="max-w-md mx-auto flex items-center gap-3 w-full animate-in slide-in-from-bottom-full duration-500">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-16 px-4 rounded-3xl border-2 border-slate-100 bg-white text-red-500 hover:bg-red-50 flex flex-col items-center justify-center gap-1 transition-all"
               onClick={() => {
-                const totalItens = items.filter(i => !i.cancelado).length;
+                const totalItens = items.filter((i) => !i.cancelado).length;
                 const valorTotal = brl(total);
                 setConfirmDialog({
                   open: true,
                   title: getCancelDialogTitle(items),
-                  description: items.length > 0 && items.every(i => i.cancelado) 
-                    ? `Deseja cancelar o cupom fiscal?\nResumo: ${totalItens} itens cancelados`
-                    : `Deseja cancelar toda a venda?\nResumo: ${totalItens} itens - Total: ${valorTotal}`,
+                  description:
+                    items.length > 0 && items.every((i) => i.cancelado)
+                      ? `Deseja cancelar o cupom fiscal?\nResumo: ${totalItens} itens cancelados`
+                      : `Deseja cancelar toda a venda?\nResumo: ${totalItens} itens - Total: ${valorTotal}`,
                   showMotivo: true,
                   onConfirm: (motivo) => {
                     setItems([]);
                     setCupomFiscal("");
                     setCurrentConsignacaoId(null);
                     toast.error("Venda cancelada integralmente");
-                  }
+                  },
                 });
               }}
             >
@@ -1122,12 +1252,14 @@ export function PDVPage() {
               <span className="text-[8px] font-black uppercase">CANCELAR</span>
             </Button>
 
-            <div 
+            <div
               className="flex-1 bg-slate-900 text-white rounded-3xl h-16 flex items-center justify-between px-6 cursor-pointer shadow-xl shadow-slate-900/20 active:scale-[0.98] transition-all"
               onClick={() => setIsCartOpen(true)}
             >
               <div className="flex flex-col">
-                <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] leading-none mb-1">{items.length} {items.length === 1 ? 'ITEM' : 'ITENS'}</span>
+                <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] leading-none mb-1">
+                  {items.length} {items.length === 1 ? "ITEM" : "ITENS"}
+                </span>
                 <span className="text-xl font-black tabular-nums">{brl(total)}</span>
               </div>
               <div className="flex items-center gap-2 bg-primary px-4 py-2 rounded-2xl shadow-lg shadow-primary/20">
@@ -1141,7 +1273,10 @@ export function PDVPage() {
 
       {/* Cart Sheet */}
       <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-        <SheetContent side="bottom" className="h-[92vh] rounded-t-[3rem] p-0 overflow-hidden bg-slate-50 border-none">
+        <SheetContent
+          side="bottom"
+          className="h-[92vh] rounded-t-[3rem] p-0 overflow-hidden bg-slate-50 border-none"
+        >
           <div className="flex flex-col h-full">
             <div className="p-6 bg-white border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1149,11 +1284,20 @@ export function PDVPage() {
                   <ShoppingCart className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="font-black text-slate-900 text-lg uppercase tracking-tight leading-none">Carrinho</h2>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{items.length} itens selecionados</span>
+                  <h2 className="font-black text-slate-900 text-lg uppercase tracking-tight leading-none">
+                    Carrinho
+                  </h2>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    {items.length} itens selecionados
+                  </span>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsCartOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                onClick={() => setIsCartOpen(false)}
+              >
                 <X className="w-6 h-6" />
               </Button>
             </div>
@@ -1164,33 +1308,45 @@ export function PDVPage() {
                   <Card key={item.id} className="p-4 rounded-[2rem] border-none shadow-sm bg-white">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex flex-col gap-1 min-w-0">
-                        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">{item.codigo}</span>
-                        <h3 className={cn(
-                          "font-bold text-sm leading-tight uppercase",
-                          item.cancelado ? "line-through text-red-400" : "text-slate-900"
-                        )}>
+                        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
+                          {item.codigo}
+                        </span>
+                        <h3
+                          className={cn(
+                            "font-bold text-sm leading-tight uppercase",
+                            item.cancelado ? "line-through text-red-400" : "text-slate-900",
+                          )}
+                        >
                           {item.descricao}
                         </h3>
                         {item.cancelado && (
-                          <span className="text-[9px] font-black text-red-500 uppercase">ITEM CANCELADO</span>
+                          <span className="text-[9px] font-black text-red-500 uppercase">
+                            ITEM CANCELADO
+                          </span>
                         )}
                       </div>
                       {!item.cancelado ? (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="text-red-400 hover:text-red-600 -mt-2 -mr-2 flex items-center gap-1 font-bold text-[10px]"
                           onClick={() => removeItem(item.id)}
                         >
                           <Trash2 className="w-3 h-3" /> CANCELAR
                         </Button>
                       ) : (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="text-primary hover:text-primary/80 -mt-2 -mr-2 flex items-center gap-1 font-bold text-[10px]"
                           onClick={() => {
-                            setItems(prev => prev.map(i => i.id === item.id ? { ...i, cancelado: false, total: i.quantidade * i.valor } : i));
+                            setItems((prev) =>
+                              prev.map((i) =>
+                                i.id === item.id
+                                  ? { ...i, cancelado: false, total: i.quantidade * i.valor }
+                                  : i,
+                              ),
+                            );
                             toast.success("Item restaurado");
                           }}
                         >
@@ -1198,17 +1354,24 @@ export function PDVPage() {
                         </Button>
                       )}
                     </div>
-                    
-                    <div className={cn("flex items-center justify-between", item.cancelado && "opacity-40 grayscale")}>
+
+                    <div
+                      className={cn(
+                        "flex items-center justify-between",
+                        item.cancelado && "opacity-40 grayscale",
+                      )}
+                    >
                       <div className="flex items-center gap-4 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-                        <button 
+                        <button
                           onClick={() => updateQuantity(item.id, -1)}
                           className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm text-slate-600 active:scale-90 transition-transform"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
-                        <span className="w-6 text-center font-black text-slate-900">{item.quantidade}</span>
-                        <button 
+                        <span className="w-6 text-center font-black text-slate-900">
+                          {item.quantidade}
+                        </span>
+                        <button
                           onClick={() => updateQuantity(item.id, 1)}
                           className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm text-slate-600 active:scale-90 transition-transform"
                         >
@@ -1216,8 +1379,12 @@ export function PDVPage() {
                         </button>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">{brl(item.valor)}/UN</span>
-                        <span className="text-xl font-black text-slate-900 tabular-nums">{brl(item.total)}</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+                          {brl(item.valor)}/UN
+                        </span>
+                        <span className="text-xl font-black text-slate-900 tabular-nums">
+                          {brl(item.total)}
+                        </span>
                       </div>
                     </div>
                   </Card>
@@ -1232,13 +1399,17 @@ export function PDVPage() {
                   <span className="text-sm font-bold tabular-nums">{brl(subtotal)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-black text-slate-900 uppercase tracking-[0.2em]">Total da Venda</span>
-                  <span className="text-3xl font-black text-primary tabular-nums tracking-tighter">{brl(total)}</span>
+                  <span className="text-xs font-black text-slate-900 uppercase tracking-[0.2em]">
+                    Total da Venda
+                  </span>
+                  <span className="text-3xl font-black text-primary tabular-nums tracking-tighter">
+                    {brl(total)}
+                  </span>
                 </div>
               </div>
 
               <div className="flex gap-4">
-                <Button 
+                <Button
                   className="w-full h-16 rounded-3xl font-black uppercase tracking-widest bg-slate-900 text-white shadow-xl shadow-slate-900/20"
                   onClick={() => setIsFinishing(true)}
                 >
@@ -1257,39 +1428,48 @@ export function PDVPage() {
             <div className="p-5 bg-slate-900 text-white shrink-0">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="text-white hover:bg-white/10 rounded-full h-8 w-8"
                     onClick={() => {
                       setConfirmDialog({
                         open: true,
                         title: "SAIR DA FINALIZAÇÃO?",
-                        description: "Deseja voltar para o carrinho? Seus pagamentos adicionados serão mantidos.",
-                        onConfirm: () => setIsFinishing(false)
+                        description:
+                          "Deseja voltar para o carrinho? Seus pagamentos adicionados serão mantidos.",
+                        onConfirm: () => setIsFinishing(false),
                       });
                     }}
                   >
                     <X className="w-5 h-5" />
                   </Button>
-                  <h2 className="text-xl font-black uppercase tracking-tighter leading-none">Finalizar</h2>
+                  <h2 className="text-xl font-black uppercase tracking-tighter leading-none">
+                    Finalizar
+                  </h2>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-black text-primary tracking-tighter tabular-nums leading-none">{brl(total)}</p>
+                  <p className="text-3xl font-black text-primary tracking-tighter tabular-nums leading-none">
+                    {brl(total)}
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 bg-white/10 p-3 rounded-2xl border border-white/10">
                 <User className="w-5 h-5 text-white/40" />
                 <div className="flex-1">
-                  <select 
-                    className="w-full bg-transparent text-white font-black uppercase text-xs focus:outline-none appearance-none cursor-pointer" 
-                    value={selectedClienteId} 
+                  <select
+                    className="w-full bg-transparent text-white font-black uppercase text-xs focus:outline-none appearance-none cursor-pointer"
+                    value={selectedClienteId}
                     onChange={(e) => setSelectedClienteId(e.target.value)}
                   >
-                    <option value="default" className="text-slate-900">CONSUMIDOR FINAL</option>
+                    <option value="default" className="text-slate-900">
+                      CONSUMIDOR FINAL
+                    </option>
                     {clientesData.map((c: any) => (
-                      <option key={c.id} value={c.id} className="text-slate-900">{c.cli_nome.toUpperCase()}</option>
+                      <option key={c.id} value={c.id} className="text-slate-900">
+                        {c.cli_nome.toUpperCase()}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -1306,7 +1486,9 @@ export function PDVPage() {
                     </h3>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs text-slate-600">Nº {cupomFiscal || "---"}</span>
+                    <span className="font-mono text-xs text-slate-600">
+                      Nº {cupomFiscal || "---"}
+                    </span>
                     <div className="flex gap-2">
                       {shouldShowCancelCoupon(cupomFiscal, items) ? (
                         <button
@@ -1320,31 +1502,36 @@ export function PDVPage() {
                                 const cupomAtual = cupomFiscal;
 
                                 // Caso 1: venda já finalizada no banco → chama RPC
-                                if (lastSaleData?.vendaId && lastSaleData?.cupomFiscal === cupomAtual) {
-                                  await supabase.rpc('cancelar_venda' as any, {
+                                if (
+                                  lastSaleData?.vendaId &&
+                                  lastSaleData?.cupomFiscal === cupomAtual
+                                ) {
+                                  await supabase.rpc("cancelar_venda" as any, {
                                     p_venda_id: lastSaleData.vendaId,
                                     p_motivo: motivo || null,
-                                    p_cupom_fiscal: cupomAtual
+                                    p_cupom_fiscal: cupomAtual,
                                   });
                                 } else {
                                   // Caso 2: venda NÃO finalizada → salva direto na tabela
-                                  const itensAtivos = items.filter(i => !i.cancelado);
-                                  const snapshot = itensAtivos.map(i => {
-                                    const prod = (produtos as any[]).find((p: any) => p.id === i.produto_id);
+                                  const itensAtivos = items.filter((i) => !i.cancelado);
+                                  const snapshot = itensAtivos.map((i) => {
+                                    const prod = (produtos as any[]).find(
+                                      (p: any) => p.id === i.produto_id,
+                                    );
                                     return {
                                       produto_id: i.produto_id,
                                       descricao: i.descricao,
                                       estoque_no_cancelamento: prod?.pro_estoque_atual ?? 0,
-                                      quantidade_cancelada: i.quantidade
+                                      quantidade_cancelada: i.quantidade,
                                     };
                                   });
                                   const valorTotal = itensAtivos.reduce((s, i) => s + i.total, 0);
-                                  await supabase.from('tab_cancelamentos' as any).insert({
+                                  await supabase.from("tab_cancelamentos" as any).insert({
                                     can_cupom_fiscal: cupomAtual,
-                                    can_tipo: 'venda_completa',
+                                    can_tipo: "venda_completa",
                                     can_motivo: motivo || null,
                                     can_estoque_snapshot: snapshot,
-                                    can_valor_cancelado: valorTotal
+                                    can_valor_cancelado: valorTotal,
                                   });
                                 }
 
@@ -1358,7 +1545,7 @@ export function PDVPage() {
                                 setCupomFiscal("");
                                 queryClient.invalidateQueries({ queryKey: ["produtos-pdv"] });
                                 toast.info(`Cupom Nº ${cupomAtual} cancelado e estoque restaurado`);
-                              }
+                              },
                             });
                           }}
                           className="text-[9px] font-black text-red-500 uppercase hover:underline"
@@ -1366,8 +1553,10 @@ export function PDVPage() {
                           Cancelar Cupom
                         </button>
                       ) : (
-                        <button 
-                          onClick={() => setCupomFiscal(Math.floor(100000 + Math.random() * 900000).toString())}
+                        <button
+                          onClick={() =>
+                            setCupomFiscal(Math.floor(100000 + Math.random() * 900000).toString())
+                          }
                           className="text-[9px] font-black text-primary uppercase"
                         >
                           Gerar Novo
@@ -1388,13 +1577,15 @@ export function PDVPage() {
                         variant="outline"
                         className={cn(
                           "h-16 rounded-2xl flex flex-col gap-1 border transition-all active:scale-95 group p-1",
-                          pagamentos.some(p => p.forma === f.fin_descricao) 
-                            ? "bg-primary border-primary text-white shadow-md shadow-primary/10" 
-                            : "bg-white border-slate-100 text-slate-600"
+                          pagamentos.some((p) => p.forma === f.fin_descricao)
+                            ? "bg-primary border-primary text-white shadow-md shadow-primary/10"
+                            : "bg-white border-slate-100 text-slate-600",
                         )}
                         onClick={() => addPagamento(f.fin_descricao)}
                       >
-                        <span className="text-[9px] font-black uppercase tracking-tight text-center leading-tight">{f.fin_descricao}</span>
+                        <span className="text-[9px] font-black uppercase tracking-tight text-center leading-tight">
+                          {f.fin_descricao}
+                        </span>
                       </Button>
                     ))}
                   </div>
@@ -1402,33 +1593,51 @@ export function PDVPage() {
 
                 {pagamentos.length > 0 && (
                   <div>
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Valores Recebidos</h3>
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
+                      Valores Recebidos
+                    </h3>
                     <div className="space-y-3 max-h-[34vh] overflow-y-auto pr-1">
                       {pagamentos.map((p, idx) => {
-                        const fin = finalizadorasAtivas.find(f => f.fin_descricao.toLowerCase() === p.forma.toLowerCase());
-                        const permiteTroco = fin?.fin_permite_troco ?? (p.forma.toLowerCase() === 'dinheiro');
+                        const fin = finalizadorasAtivas.find(
+                          (f) => f.fin_descricao.toLowerCase() === p.forma.toLowerCase(),
+                        );
+                        const permiteTroco =
+                          fin?.fin_permite_troco ?? p.forma.toLowerCase() === "dinheiro";
 
                         return (
-                          <div key={p.id} className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
+                          <div
+                            key={p.id}
+                            className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm"
+                          >
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
-                                <div className={cn(
-                                  "w-6 h-6 rounded-full flex items-center justify-center",
-                                  permiteTroco ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
-                                )}>
+                                <div
+                                  className={cn(
+                                    "w-6 h-6 rounded-full flex items-center justify-center",
+                                    permiteTroco
+                                      ? "bg-emerald-50 text-emerald-600"
+                                      : "bg-blue-50 text-blue-600",
+                                  )}
+                                >
                                   <CheckCircle2 className="w-3.5 h-3.5" />
                                 </div>
-                                <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest">{p.forma}</span>
+                                <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest">
+                                  {p.forma}
+                                </span>
                               </div>
-                              <button 
-                                onClick={() => setPagamentos(pagamentos.filter((_, i) => i !== idx))} 
+                              <button
+                                onClick={() =>
+                                  setPagamentos(pagamentos.filter((_, i) => i !== idx))
+                                }
                                 className="text-slate-300 hover:text-red-500 transition-colors"
                               >
                                 <X className="w-4 h-4" />
                               </button>
                             </div>
                             <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">R$</span>
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">
+                                R$
+                              </span>
                               <Input
                                 className="h-11 pl-9 font-black text-slate-900 tabular-nums focus-visible:ring-primary/20 rounded-xl bg-slate-50 border-none"
                                 value={formatarMoeda(p.valor)}
@@ -1447,26 +1656,41 @@ export function PDVPage() {
             <div className="p-5 bg-white border-t border-slate-100 shrink-0">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Status</p>
-                  <p className={cn("text-sm font-black uppercase tracking-tighter", valorFaltante <= 0.01 ? "text-emerald-500" : "text-amber-500")}>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
+                    Status
+                  </p>
+                  <p
+                    className={cn(
+                      "text-sm font-black uppercase tracking-tighter",
+                      valorFaltante <= 0.01 ? "text-emerald-500" : "text-amber-500",
+                    )}
+                  >
                     {valorFaltante > 0.01 ? `FALTA ${brl(valorFaltante)}` : "PAGO"}
                   </p>
                 </div>
                 {trocoCalculado > 0 && (
                   <div className="text-right">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Troco</p>
-                    <p className="text-xl font-black text-emerald-500 tracking-tighter tabular-nums leading-none">{brl(trocoCalculado)}</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
+                      Troco
+                    </p>
+                    <p className="text-xl font-black text-emerald-500 tracking-tighter tabular-nums leading-none">
+                      {brl(trocoCalculado)}
+                    </p>
                   </div>
                 )}
               </div>
-              
-              <Button 
+
+              <Button
                 disabled={valorFaltante > 0.01 || isProcessingFinish}
                 className="w-full h-14 rounded-2xl font-black uppercase tracking-[0.1em] bg-slate-900 text-white shadow-lg shadow-slate-900/20 disabled:opacity-50 text-xs"
                 onClick={handleFinishVenda}
               >
-                {isProcessingFinish ? <LoaderIcon className="w-5 h-5 animate-spin" /> : (
-                  <>CONCLUIR <Receipt className="w-4 h-4 ml-2" /></>
+                {isProcessingFinish ? (
+                  <LoaderIcon className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    CONCLUIR <Receipt className="w-4 h-4 ml-2" />
+                  </>
                 )}
               </Button>
             </div>
@@ -1474,36 +1698,45 @@ export function PDVPage() {
         </DialogContent>
       </Dialog>
 
-      <BarcodeScanner 
-        isOpen={isScannerOpen} 
-        onClose={() => setIsScannerOpen(false)} 
+      <BarcodeScanner
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
         onScan={(code) => {
-          const exact = produtos.find(p => p.pro_codigo_barras === code || p.pro_codigo === code);
+          const exact = produtos.find((p) => p.pro_codigo_barras === code || p.pro_codigo === code);
           if (exact) {
             addItem(exact);
             setIsScannerOpen(false);
           } else {
             toast.error("Produto não encontrado", { description: `Código: ${code}` });
           }
-        }} 
+        }}
       />
 
-      <Dialog open={confirmDialog.open} onOpenChange={(open) => {
-        setConfirmDialog(prev => ({ ...prev, open }));
-        if (!open) setMotivoCancelamento("");
-      }}>
+      <Dialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => {
+          setConfirmDialog((prev) => ({ ...prev, open }));
+          if (!open) setMotivoCancelamento("");
+        }}
+      >
         <DialogContent className="sm:max-w-[350px] rounded-[2rem] p-6 text-center">
           <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center">
               <AlertCircle className="w-6 h-6" />
             </div>
             <div className="w-full">
-              <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">{confirmDialog.title}</h3>
-              <p className="text-sm text-slate-500 mt-2 leading-relaxed whitespace-pre-wrap">{confirmDialog.description}</p>
-              
+              <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">
+                {confirmDialog.title}
+              </h3>
+              <p className="text-sm text-slate-500 mt-2 leading-relaxed whitespace-pre-wrap">
+                {confirmDialog.description}
+              </p>
+
               {confirmDialog.showMotivo && (
                 <div className="mt-4 text-left">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Motivo *</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">
+                    Motivo *
+                  </Label>
                   <Select value={motivoCancelamento} onValueChange={setMotivoCancelamento}>
                     <SelectTrigger className="rounded-xl bg-slate-50 border-slate-100 text-xs h-10">
                       <SelectValue placeholder="Selecione o motivo..." />
@@ -1514,7 +1747,7 @@ export function PDVPage() {
                           Nenhum motivo cadastrado
                         </SelectItem>
                       ) : (
-                        motivosCancelamento.map(m => (
+                        motivosCancelamento.map((m) => (
                           <SelectItem key={m.id} value={m.mot_descricao}>
                             <span className="font-mono text-slate-400 mr-2 text-[10px]">
                               MC{String(m.mot_codigo).padStart(3, "0")}
@@ -1530,19 +1763,19 @@ export function PDVPage() {
             </div>
           </div>
           <DialogFooter className="flex flex-row gap-3 mt-6 sm:justify-center">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex-1 rounded-xl font-bold uppercase text-xs h-12"
-              onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+              onClick={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
             >
               Não
             </Button>
-            <Button 
+            <Button
               className="flex-1 rounded-xl font-bold uppercase text-xs h-12 bg-slate-900"
               disabled={confirmDialog.showMotivo && !motivoCancelamento.trim()}
               onClick={() => {
                 const currentMotivo = motivoCancelamento;
-                setConfirmDialog(prev => ({ ...prev, open: false }));
+                setConfirmDialog((prev) => ({ ...prev, open: false }));
                 setMotivoCancelamento("");
                 confirmDialog.onConfirm(currentMotivo);
               }}
@@ -1556,27 +1789,41 @@ export function PDVPage() {
         open={isCupomPreviewOpen}
         onClose={() => setIsCupomPreviewOpen(false)}
         data={lastSaleData}
-        onDownloadPDF={receiptUrl ? () => {
-          const link = document.createElement('a');
-          link.href = receiptUrl;
-          link.download = `cupom-${lastSaleData?.cupomFiscal || Date.now()}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } : undefined}
+        onDownloadPDF={
+          receiptUrl
+            ? () => {
+                const link = document.createElement("a");
+                link.href = receiptUrl;
+                link.download = `cupom-${lastSaleData?.cupomFiscal || Date.now()}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }
+            : undefined
+        }
       />
 
-      <Dialog open={isVendaFinalizadaOpen} onOpenChange={(open) => { if (!open) { setIsVendaFinalizadaOpen(false); setReceiptUrl(null); } }}>
+      <Dialog
+        open={isVendaFinalizadaOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsVendaFinalizadaOpen(false);
+            setReceiptUrl(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[400px] rounded-[2rem] p-6 text-center">
           <div className="flex flex-col items-center gap-6">
             <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center">
               <CheckCircle2 className="w-10 h-10" />
             </div>
             <div>
-              <h3 className="text-xl font-black uppercase tracking-tight text-slate-900">VENDA FINALIZADA!</h3>
+              <h3 className="text-xl font-black uppercase tracking-tight text-slate-900">
+                VENDA FINALIZADA!
+              </h3>
               <p className="text-sm text-slate-500 mt-2">O cupom fiscal foi gerado com sucesso.</p>
             </div>
-            
+
             <div className="w-full">
               <div className="grid grid-cols-1 gap-3 w-full">
                 <Button
@@ -1600,7 +1847,7 @@ export function PDVPage() {
                         url = result.url;
                       }
                       if (!url) return;
-                      const link = document.createElement('a');
+                      const link = document.createElement("a");
                       link.href = url;
                       link.download = `cupom-${lastSaleData?.cupomFiscal || Date.now()}.pdf`;
                       document.body.appendChild(link);
@@ -1616,80 +1863,100 @@ export function PDVPage() {
                 </Button>
               </div>
             </div>
-              
-              {/* WhatsApp */}
-              <div className="w-full pt-3 border-t border-slate-100 space-y-2">
-                <div className="flex flex-col gap-1 text-left">
-                  <div className="flex items-center justify-between ml-1 mb-0.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      WhatsApp do Cliente
-                    </label>
-                    {whatsappFromCadastro && (
-                      <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wide flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Cadastro
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🇧🇷</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="(00) 00000-0000"
-                      value={whatsappNumber}
-                      onChange={(e) => {
-                        setWhatsappNumber(formatPhoneBR(e.target.value));
-                        setWhatsappFromCadastro(false);
-                      }}
-                      className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all font-mono tracking-wider"
-                    />
-                  </div>
-                  {!whatsappNumber && (
-                    <p className="text-[9px] text-slate-400 ml-1">
-                      Cliente sem WhatsApp cadastrado — digite o número manualmente.
-                    </p>
+
+            {/* WhatsApp */}
+            <div className="w-full pt-3 border-t border-slate-100 space-y-2">
+              <div className="flex flex-col gap-1 text-left">
+                <div className="flex items-center justify-between ml-1 mb-0.5">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    WhatsApp do Cliente
+                  </label>
+                  {whatsappFromCadastro && (
+                    <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wide flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Cadastro
+                    </span>
                   )}
                 </div>
-
-                <Button
-                  className="w-full h-12 rounded-xl font-bold uppercase text-xs bg-[#25D366] hover:bg-[#1ebe5d] text-white flex items-center justify-center gap-2 disabled:opacity-40 shadow-md shadow-emerald-500/20"
-                  disabled={isSendingWhatsapp || !whatsappNumber || whatsappNumber.replace(/\D/g, '').length < 10}
-                  onClick={handleWhatsAppShare}
-                >
-                  {isSendingWhatsapp ? (
-                    <LoaderIcon className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                      </svg>
-                      Enviar PDF via WhatsApp
-                    </>
-                  )}
-                </Button>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                    🇧🇷
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="(00) 00000-0000"
+                    value={whatsappNumber}
+                    onChange={(e) => {
+                      setWhatsappNumber(formatPhoneBR(e.target.value));
+                      setWhatsappFromCadastro(false);
+                    }}
+                    className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all font-mono tracking-wider"
+                  />
+                </div>
+                {!whatsappNumber && (
+                  <p className="text-[9px] text-slate-400 ml-1">
+                    Cliente sem WhatsApp cadastrado — digite o número manualmente.
+                  </p>
+                )}
               </div>
 
-              <Button 
-                variant="ghost" 
-                className="w-full text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-4"
-                onClick={() => {
-                  setIsVendaFinalizadaOpen(false);
-                  setReceiptUrl(null);
-                  setReceiptBlob(null);
-                  setItems([]);
-                  setSearchTerm("");
-                  setWhatsappNumber("");
-                  setWhatsappFromCadastro(false);
-                }}
+              <Button
+                className="w-full h-12 rounded-xl font-bold uppercase text-xs bg-[#25D366] hover:bg-[#1ebe5d] text-white flex items-center justify-center gap-2 disabled:opacity-40 shadow-md shadow-emerald-500/20"
+                disabled={
+                  isSendingWhatsapp ||
+                  !whatsappNumber ||
+                  whatsappNumber.replace(/\D/g, "").length < 10
+                }
+                onClick={handleWhatsAppShare}
               >
-                Fechar
+                {isSendingWhatsapp ? (
+                  <LoaderIcon className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="w-4 h-4 fill-current shrink-0"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
+                    Enviar PDF via WhatsApp
+                  </>
+                )}
               </Button>
             </div>
-          </DialogContent>
-        </Dialog>
+
+            <Button
+              variant="ghost"
+              className="w-full text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-4"
+              onClick={() => {
+                setIsVendaFinalizadaOpen(false);
+                setReceiptUrl(null);
+                setReceiptBlob(null);
+                setItems([]);
+                setSearchTerm("");
+                setWhatsappNumber("");
+                setWhatsappFromCadastro(false);
+              }}
+            >
+              Fechar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal — Reenviar Recibo (WhatsApp) */}
-      <Dialog open={isReenviarModalOpen} onOpenChange={(o) => { if (!o) { setIsReenviarModalOpen(false); setSelectedReenviarVendas([]); setReenviarWhatsapp(""); setReenviarPeriodo(""); } }}>
+      <Dialog
+        open={isReenviarModalOpen}
+        onOpenChange={(o) => {
+          if (!o) {
+            setIsReenviarModalOpen(false);
+            setSelectedReenviarVendas([]);
+            setReenviarWhatsapp("");
+            setReenviarPeriodo("");
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[420px] p-0 rounded-3xl overflow-hidden border-none shadow-2xl">
           {/* Header */}
           <div className="bg-slate-900 text-white px-5 py-4 flex items-center justify-between shrink-0">
@@ -1705,7 +1972,12 @@ export function PDVPage() {
                     : `Selecione até ${MAX_CUPONS_REENVIO} cupons`}
               </p>
             </div>
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full h-8 w-8" onClick={() => setIsReenviarModalOpen(false)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/10 rounded-full h-8 w-8"
+              onClick={() => setIsReenviarModalOpen(false)}
+            >
               <X className="w-4 h-4" />
             </Button>
           </div>
@@ -1717,14 +1989,20 @@ export function PDVPage() {
             </label>
             <Select
               value={reenviarPeriodo}
-              onValueChange={(v) => { setReenviarPeriodo(v); setSelectedReenviarVendas([]); setReenviarWhatsapp(""); }}
+              onValueChange={(v) => {
+                setReenviarPeriodo(v);
+                setSelectedReenviarVendas([]);
+                setReenviarWhatsapp("");
+              }}
             >
               <SelectTrigger className="h-11 rounded-xl">
                 <SelectValue placeholder="Selecione o período..." />
               </SelectTrigger>
               <SelectContent>
                 {PERIODOS_REENVIO.map((p) => (
-                  <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                  <SelectItem key={p.value} value={p.value}>
+                    {p.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -1736,85 +2014,109 @@ export function PDVPage() {
               <div className="flex flex-col items-center justify-center py-10 text-slate-400 gap-2">
                 <Receipt className="w-8 h-8 opacity-30" />
                 <p className="text-sm font-bold">Escolha um período acima</p>
-                <p className="text-[10px] text-slate-400">para listar as vendas e reenviar os recibos</p>
+                <p className="text-[10px] text-slate-400">
+                  para listar as vendas e reenviar os recibos
+                </p>
               </div>
             </div>
           ) : (
-          <div className="bg-slate-100 max-h-[50vh] overflow-y-auto p-3 space-y-2">
-            {isLoadingVendasDia ? (
-              <div className="flex items-center justify-center py-10 gap-2 text-slate-400">
-                <LoaderIcon className="w-5 h-5 animate-spin" />
-                <span className="text-sm font-bold uppercase tracking-widest">Carregando...</span>
-              </div>
-            ) : errorVendasDia ? (
-              <div className="flex flex-col items-center justify-center py-10 text-red-400 gap-2 px-4 text-center">
-                <Receipt className="w-8 h-8 opacity-30" />
-                <p className="text-sm font-bold">Erro ao carregar vendas</p>
-                <p className="text-[10px] text-red-300 break-all">{(errorVendasDia as any)?.message || String(errorVendasDia)}</p>
-              </div>
-            ) : vendasDoDia.filter((v: any) => v.ven_status !== "cancelada").length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-slate-400 gap-2">
-                <Receipt className="w-8 h-8 opacity-30" />
-                <p className="text-sm font-bold">Nenhuma venda no período</p>
-              </div>
-            ) : (
-              vendasDoDia.filter((v: any) => v.ven_status !== "cancelada").map((venda: any) => {
-                const isSelected = selectedReenviarVendas.some(s => s.id === venda.id);
-                const hora = new Date(venda.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-                const clienteObj = clientesData.find((c: any) => c.id === venda.ven_cliente_id);
-                const clienteNome = clienteObj?.cli_nome || "Consumidor Final";
-                const clienteTel  = clienteObj?.cli_telefone || "";
-                return (
-                  <button
-                    key={venda.id}
-                    onClick={() => {
-                      setSelectedReenviarVendas(prev => {
-                        const already = prev.some(s => s.id === venda.id);
-                        // Limite de cupons no reenvio
-                        if (!already && prev.length >= MAX_CUPONS_REENVIO) {
-                          toast.error(`Você pode selecionar até ${MAX_CUPONS_REENVIO} cupons por reenvio.`);
-                          return prev;
-                        }
-                        const next = already ? prev.filter(s => s.id !== venda.id) : [...prev, venda];
-                        // Pré-preenche WhatsApp com telefone do cliente do primeiro selecionado
-                        if (next.length > 0 && !reenviarWhatsapp) {
-                          const primeiroCliente = clientesData.find((c: any) => c.id === next[0].ven_cliente_id);
-                          if (primeiroCliente?.cli_telefone) setReenviarWhatsapp(formatPhoneBR(primeiroCliente.cli_telefone));
-                        }
-                        if (next.length === 0) setReenviarWhatsapp("");
-                        return next;
-                      });
-                    }}
-                    className={`w-full text-left rounded-2xl p-3.5 transition-all border-2 bg-white ${
-                      isSelected ? "border-primary shadow-md shadow-primary/10 bg-primary/5" : "border-transparent hover:border-slate-200"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* Checkbox visual */}
-                      <div className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                        isSelected ? "bg-primary border-primary" : "border-slate-300"
-                      }`}>
-                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black text-primary uppercase tracking-wider">
-                            Nº {venda.ven_cupom_fiscal || "---"}
+            <div className="bg-slate-100 max-h-[50vh] overflow-y-auto p-3 space-y-2">
+              {isLoadingVendasDia ? (
+                <div className="flex items-center justify-center py-10 gap-2 text-slate-400">
+                  <LoaderIcon className="w-5 h-5 animate-spin" />
+                  <span className="text-sm font-bold uppercase tracking-widest">Carregando...</span>
+                </div>
+              ) : errorVendasDia ? (
+                <div className="flex flex-col items-center justify-center py-10 text-red-400 gap-2 px-4 text-center">
+                  <Receipt className="w-8 h-8 opacity-30" />
+                  <p className="text-sm font-bold">Erro ao carregar vendas</p>
+                  <p className="text-[10px] text-red-300 break-all">
+                    {(errorVendasDia as any)?.message || String(errorVendasDia)}
+                  </p>
+                </div>
+              ) : vendasDoDia.filter((v: any) => v.ven_status !== "cancelada").length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-slate-400 gap-2">
+                  <Receipt className="w-8 h-8 opacity-30" />
+                  <p className="text-sm font-bold">Nenhuma venda no período</p>
+                </div>
+              ) : (
+                vendasDoDia
+                  .filter((v: any) => v.ven_status !== "cancelada")
+                  .map((venda: any) => {
+                    const isSelected = selectedReenviarVendas.some((s) => s.id === venda.id);
+                    const hora = new Date(venda.created_at).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                    const clienteObj = clientesData.find((c: any) => c.id === venda.ven_cliente_id);
+                    const clienteNome = clienteObj?.cli_nome || "Consumidor Final";
+                    const clienteTel = clienteObj?.cli_telefone || "";
+                    return (
+                      <button
+                        key={venda.id}
+                        onClick={() => {
+                          setSelectedReenviarVendas((prev) => {
+                            const already = prev.some((s) => s.id === venda.id);
+                            // Limite de cupons no reenvio
+                            if (!already && prev.length >= MAX_CUPONS_REENVIO) {
+                              toast.error(
+                                `Você pode selecionar até ${MAX_CUPONS_REENVIO} cupons por reenvio.`,
+                              );
+                              return prev;
+                            }
+                            const next = already
+                              ? prev.filter((s) => s.id !== venda.id)
+                              : [...prev, venda];
+                            // Pré-preenche WhatsApp com telefone do cliente do primeiro selecionado
+                            if (next.length > 0 && !reenviarWhatsapp) {
+                              const primeiroCliente = clientesData.find(
+                                (c: any) => c.id === next[0].ven_cliente_id,
+                              );
+                              if (primeiroCliente?.cli_telefone)
+                                setReenviarWhatsapp(formatPhoneBR(primeiroCliente.cli_telefone));
+                            }
+                            if (next.length === 0) setReenviarWhatsapp("");
+                            return next;
+                          });
+                        }}
+                        className={`w-full text-left rounded-2xl p-3.5 transition-all border-2 bg-white ${
+                          isSelected
+                            ? "border-primary shadow-md shadow-primary/10 bg-primary/5"
+                            : "border-transparent hover:border-slate-200"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Checkbox visual */}
+                          <div
+                            className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                              isSelected ? "bg-primary border-primary" : "border-slate-300"
+                            }`}
+                          >
+                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-black text-primary uppercase tracking-wider">
+                                Nº {venda.ven_cupom_fiscal || "---"}
+                              </span>
+                              <span className="text-[9px] text-slate-400 font-mono">{hora}</span>
+                            </div>
+                            <p className="text-sm font-bold text-slate-800 truncate mt-0.5">
+                              {clienteNome}
+                            </p>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wide mt-0.5">
+                              {venda.ven_forma_pagamento || "—"}
+                            </p>
+                          </div>
+                          <span className="text-base font-black text-slate-900 shrink-0">
+                            {brl(venda.ven_valor_total)}
                           </span>
-                          <span className="text-[9px] text-slate-400 font-mono">{hora}</span>
                         </div>
-                        <p className="text-sm font-bold text-slate-800 truncate mt-0.5">{clienteNome}</p>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-wide mt-0.5">
-                          {venda.ven_forma_pagamento || "—"}
-                        </p>
-                      </div>
-                      <span className="text-base font-black text-slate-900 shrink-0">{brl(venda.ven_valor_total)}</span>
-                    </div>
-                  </button>
-                );
-              })
-            )}
-          </div>
+                      </button>
+                    );
+                  })
+              )}
+            </div>
           )}
 
           {/* Seção WhatsApp — aparece quando há seleção */}
@@ -1822,8 +2124,12 @@ export function PDVPage() {
             <div className="bg-white px-4 pt-3 pb-4 border-t border-slate-100 space-y-3">
               {selectedReenviarVendas.length > 1 && (
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="font-bold text-slate-500 uppercase tracking-wider">{selectedReenviarVendas.length} cupons selecionados</span>
-                  <span className="font-black text-slate-800">{brl(selectedReenviarVendas.reduce((s, v) => s + (v.ven_valor_total || 0), 0))}</span>
+                  <span className="font-bold text-slate-500 uppercase tracking-wider">
+                    {selectedReenviarVendas.length} cupons selecionados
+                  </span>
+                  <span className="font-black text-slate-800">
+                    {brl(selectedReenviarVendas.reduce((s, v) => s + (v.ven_valor_total || 0), 0))}
+                  </span>
                 </div>
               )}
               <div>
@@ -1831,7 +2137,9 @@ export function PDVPage() {
                   WhatsApp do Cliente
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none">🇧🇷</span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none">
+                    🇧🇷
+                  </span>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -1844,17 +2152,27 @@ export function PDVPage() {
               </div>
               <Button
                 className="w-full h-12 rounded-xl font-black uppercase text-xs bg-[#25D366] hover:bg-[#1ebe5d] text-white flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 disabled:opacity-40"
-                disabled={isEnviandoReenvio || !reenviarWhatsapp || reenviarWhatsapp.replace(/\D/g, "").length < 10}
+                disabled={
+                  isEnviandoReenvio ||
+                  !reenviarWhatsapp ||
+                  reenviarWhatsapp.replace(/\D/g, "").length < 10
+                }
                 onClick={handleReenviarWhatsApp}
               >
                 {isEnviandoReenvio ? (
                   <LoaderIcon className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="w-4 h-4 fill-current shrink-0"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                     </svg>
-                    {selectedReenviarVendas.length > 1 ? `Enviar ${selectedReenviarVendas.length} PDFs via WhatsApp` : "Enviar PDF via WhatsApp"}
+                    {selectedReenviarVendas.length > 1
+                      ? `Enviar ${selectedReenviarVendas.length} PDFs via WhatsApp`
+                      : "Enviar PDF via WhatsApp"}
                   </>
                 )}
               </Button>
@@ -1862,7 +2180,6 @@ export function PDVPage() {
           )}
         </DialogContent>
       </Dialog>
-
-      </div>
-    );
+    </div>
+  );
 }

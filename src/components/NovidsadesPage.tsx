@@ -30,7 +30,8 @@ const NOVIDADES: Novidade[] = [
   {
     id: 1,
     titulo: "Conjunto Rendas Florais",
-    descricao: "Sutia e calcinha em renda floral delicada. Detalhes em laço de cetim e alças ajustáveis.",
+    descricao:
+      "Sutia e calcinha em renda floral delicada. Detalhes em laço de cetim e alças ajustáveis.",
     categoria: "Conjuntos",
     badge: "LANÇAMENTO",
     gradiente: "linear-gradient(135deg, #3d1520 0%, #6b2535 50%, #8b3a4a 100%)",
@@ -39,7 +40,8 @@ const NOVIDADES: Novidade[] = [
   {
     id: 2,
     titulo: "Body Veludo Bordô",
-    descricao: "Body em veludo com decote em V profundo. Fechamento com botões de pressão na entreperna.",
+    descricao:
+      "Body em veludo com decote em V profundo. Fechamento com botões de pressão na entreperna.",
     categoria: "Bodies",
     badge: "DESTAQUE",
     gradiente: "linear-gradient(135deg, #2d0a1a 0%, #5c1530 50%, #7a2040 100%)",
@@ -48,7 +50,8 @@ const NOVIDADES: Novidade[] = [
   {
     id: 3,
     titulo: "Camisola Seda Natural",
-    descricao: "Camisola em seda pura com acabamento em renda italiana. Comprimento midi, caimento perfeito.",
+    descricao:
+      "Camisola em seda pura com acabamento em renda italiana. Comprimento midi, caimento perfeito.",
     categoria: "Camisolas",
     badge: "EXCLUSIVO",
     gradiente: "linear-gradient(135deg, #1a0d1a 0%, #3d1a35 50%, #5c2a50 100%)",
@@ -86,11 +89,11 @@ const NOVIDADES: Novidade[] = [
 const CATEGORIAS = ["Todas", "Conjuntos", "Bodies", "Camisolas", "Sutiãs", "Calcinhas"];
 
 const BADGE_COLORS: Record<Badge, string> = {
-  "LANÇAMENTO": C.rose,
-  "DESTAQUE": C.gold,
-  "EXCLUSIVO": "#b8a0d4",
+  LANÇAMENTO: C.rose,
+  DESTAQUE: C.gold,
+  EXCLUSIVO: "#b8a0d4",
   "MAIS VENDIDO": "#80c8a0",
-  "COLEÇÃO": C.rose,
+  COLEÇÃO: C.rose,
 };
 
 export function NovidsadesPage() {
@@ -144,8 +147,7 @@ export function NovidsadesPage() {
             color: C.text,
           }}
         >
-          Novidades da{" "}
-          <span style={{ fontStyle: "italic", color: C.rose }}>Coleção</span>
+          Novidades da <span style={{ fontStyle: "italic", color: C.rose }}>Coleção</span>
         </h1>
         <p
           style={{
@@ -158,8 +160,8 @@ export function NovidsadesPage() {
             fontWeight: 300,
           }}
         >
-          As últimas peças que chegaram para renovar seu guarda-roupa íntimo.
-          Exclusividade e sofisticação em cada detalhe.
+          As últimas peças que chegaram para renovar seu guarda-roupa íntimo. Exclusividade e
+          sofisticação em cada detalhe.
         </p>
       </section>
 
@@ -420,8 +422,8 @@ export function NovidsadesPage() {
             fontFamily: "system-ui, sans-serif",
           }}
         >
-          Use o cupom <strong style={{ color: C.rose }}>NOVIDADE15</strong> e
-          ganhe 15% de desconto na sua primeira peça da coleção.
+          Use o cupom <strong style={{ color: C.rose }}>NOVIDADE15</strong> e ganhe 15% de desconto
+          na sua primeira peça da coleção.
         </p>
         <button
           style={{

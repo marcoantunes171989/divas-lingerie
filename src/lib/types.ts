@@ -10,7 +10,7 @@ export type Perfil = Database["public"]["Tables"]["tab_usuarios"]["Row"];
 // Mocks temporários para tipos removidos
 export type Posse = {
   id: string;
-  status: 'em_posse' | 'vendido' | 'devolvido';
+  status: "em_posse" | "vendido" | "devolvido";
   cliente_id: string;
   produto_id: string;
   quantidade: number;
@@ -26,7 +26,7 @@ export type Visita = {
   observacoes: string;
 };
 
-export type StatusPosse = 'em_posse' | 'vendido' | 'devolvido';
+export type StatusPosse = "em_posse" | "vendido" | "devolvido";
 
 export type LeadCRM = {
   id: string;

@@ -41,7 +41,14 @@ export function PublicHeader() {
         />
       </Link>
 
-      <nav style={{ display: "flex", gap: "clamp(1rem, 3vw, 2rem)", flexWrap: "wrap", justifyContent: "center" }}>
+      <nav
+        style={{
+          display: "flex",
+          gap: "clamp(1rem, 3vw, 2rem)",
+          flexWrap: "wrap",
+          justifyContent: "center",
+        }}
+      >
         {NAV_ITEMS.map(({ label, hash }) => (
           <Link
             key={hash}
@@ -78,8 +85,12 @@ export function PublicHeader() {
             color: C.rose,
             transition: "background 0.2s",
           }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(200,160,168,0.22)")}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(200,160,168,0.12)")}
+          onMouseEnter={(e) =>
+            ((e.currentTarget as HTMLButtonElement).style.background = "rgba(200,160,168,0.22)")
+          }
+          onMouseLeave={(e) =>
+            ((e.currentTarget as HTMLButtonElement).style.background = "rgba(200,160,168,0.12)")
+          }
         >
           <User size={17} />
         </button>

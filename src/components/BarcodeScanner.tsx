@@ -1,14 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/library';
-import Webcam from 'react-webcam';
-import { X, Camera, Zap, ZapOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import React, { useEffect, useRef, useState } from "react";
+import { BrowserMultiFormatReader } from "@zxing/library";
+import Webcam from "react-webcam";
+import { X, Camera, Zap, ZapOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void;
@@ -47,7 +42,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose,
       const videoElement = webcamRef.current.video;
       if (videoElement && videoElement.readyState === 4) {
         if (!hasTorch) await checkTorch();
-        
+
         try {
           const result = await codeReader.decodeFromVideoElement(videoElement);
           if (result && isScanning) {
@@ -84,7 +79,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose,
       const track = stream.getVideoTracks()[0];
       try {
         await track.applyConstraints({
-          advanced: [{ torch: !torchOn } as any]
+          advanced: [{ torch: !torchOn } as any],
         });
         setTorchOn(!torchOn);
       } catch (err) {
@@ -101,7 +96,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose,
             <Camera className="w-5 h-5" /> Escanear Produto
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="relative aspect-[3/4] bg-black flex items-center justify-center">
           <Webcam
             ref={webcamRef}
@@ -110,12 +105,12 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose,
             videoConstraints={{
               facingMode: "environment",
               width: { ideal: 1280 },
-              height: { ideal: 720 }
+              height: { ideal: 720 },
             }}
             className="w-full h-full object-cover"
             onUserMediaError={() => setError("Não foi possível acessar a câmera")}
           />
-          
+
           {/* Scanner Overlay */}
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
             <div className="w-64 h-64 border-2 border-primary/50 rounded-3xl relative">
@@ -131,7 +126,11 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose,
               className="absolute bottom-6 right-6 z-20 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full w-12 h-12 text-white border border-white/30"
               onClick={toggleTorch}
             >
-              {torchOn ? <ZapOff className="w-6 h-6 fill-yellow-400 text-yellow-400" /> : <Zap className="w-6 h-6" />}
+              {torchOn ? (
+                <ZapOff className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+              ) : (
+                <Zap className="w-6 h-6" />
+              )}
             </Button>
           )}
 
@@ -143,9 +142,9 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose,
         </div>
 
         <div className="p-6 bg-white">
-          <Button 
-            variant="outline" 
-            className="w-full h-14 rounded-2xl font-black uppercase tracking-widest border-2" 
+          <Button
+            variant="outline"
+            className="w-full h-14 rounded-2xl font-black uppercase tracking-widest border-2"
             onClick={onClose}
           >
             Cancelar

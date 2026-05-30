@@ -12,16 +12,10 @@ export function PageHeader({ title, description, action }: Props) {
           {title}
         </h1>
         {description && (
-          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
-            {description}
-          </p>
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">{description}</p>
         )}
       </div>
-      {action && (
-        <div className="flex shrink-0 items-center gap-2 w-full sm:w-auto">
-          {action}
-        </div>
-      )}
+      {action && <div className="flex shrink-0 items-center gap-2 w-full sm:w-auto">{action}</div>}
     </div>
   );
 }

@@ -29,7 +29,6 @@ export function Topbar() {
       <SidebarTrigger className="hidden md:inline-flex" />
       <div className="flex-1" />
       <div className="ml-auto flex items-center gap-2">
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar className="h-9 w-9 border border-border cursor-pointer transition-transform hover:scale-105">

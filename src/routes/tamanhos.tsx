@@ -2,7 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Ruler, Plus, Pencil, Trash2, Search, Loader2, ListFilter, LayoutGrid, List } from "lucide-react";
+import {
+  Ruler,
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  Loader2,
+  ListFilter,
+  LayoutGrid,
+  List,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,15 +35,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -66,10 +76,7 @@ function TamanhosPage() {
   const fetchTamanhos = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("tab_tamanhos")
-        .select("*")
-        .order("tam_nome");
+      const { data, error } = await supabase.from("tab_tamanhos").select("*").order("tam_nome");
 
       if (error) throw error;
       setTamanhos(data || []);
@@ -86,7 +93,7 @@ function TamanhosPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.tam_nome.trim()) {
       return toast.error("O nome do tamanho é obrigatório");
     }
@@ -106,9 +113,7 @@ function TamanhosPage() {
         if (error) throw error;
         toast.success("Tamanho atualizado com sucesso");
       } else {
-        const { error } = await supabase
-          .from("tab_tamanhos")
-          .insert([data]);
+        const { error } = await supabase.from("tab_tamanhos").insert([data]);
         if (error) throw error;
         toast.success("Tamanho criado com sucesso");
       }
@@ -125,25 +130,24 @@ function TamanhosPage() {
     if (!selectedTamanho) return;
     try {
       setSubmitting(true);
-      
+
       // Verificar se existem produtos vinculados
       const { count, error: countError } = await supabase
         .from("tab_produtos")
-        .select("*", { count: 'exact', head: true })
+        .select("*", { count: "exact", head: true })
         .eq("pro_tamanho_id", selectedTamanho.id);
 
       if (countError) throw countError;
 
       if (count && count > 0) {
-        toast.error(`Não é possível excluir: existem ${count} produto(s) vinculados a este tamanho.`);
+        toast.error(
+          `Não é possível excluir: existem ${count} produto(s) vinculados a este tamanho.`,
+        );
         setIsDeleteDialogOpenConfirm(false);
         return;
       }
 
-      const { error } = await supabase
-        .from("tab_tamanhos")
-        .delete()
-        .eq("id", selectedTamanho.id);
+      const { error } = await supabase.from("tab_tamanhos").delete().eq("id", selectedTamanho.id);
       if (error) throw error;
       toast.success("Tamanho excluído com sucesso");
       setIsDeleteDialogOpenConfirm(false);
@@ -199,13 +203,16 @@ function TamanhosPage() {
             description="Cadastre e organize as grades de tamanhos para seus produtos."
           />
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="px-3 py-1 text-xs font-semibold bg-primary/10 text-primary border-none">
-              {tamanhos.length} {tamanhos.length === 1 ? 'Tamanho' : 'Tamanhos'} no sistema
+            <Badge
+              variant="secondary"
+              className="px-3 py-1 text-xs font-semibold bg-primary/10 text-primary border-none"
+            >
+              {tamanhos.length} {tamanhos.length === 1 ? "Tamanho" : "Tamanhos"} no sistema
             </Badge>
           </div>
         </div>
-        <Button 
-          onClick={openAddDialog} 
+        <Button
+          onClick={openAddDialog}
           className="bg-primary hover:bg-primary/90 text-white font-bold px-6 py-6 rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
           <Plus className="mr-2 h-5 w-5" /> Adicionar Tamanho
@@ -226,12 +233,22 @@ function TamanhosPage() {
                 />
               </div>
               <div className="h-8 w-[1px] bg-border/50 hidden sm:block" />
-              <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)} className="w-full sm:w-auto">
+              <Tabs
+                value={viewMode}
+                onValueChange={(v: any) => setViewMode(v)}
+                className="w-full sm:w-auto"
+              >
                 <TabsList className="grid grid-cols-2 w-full h-11 bg-muted/50 p-1 rounded-xl">
-                  <TabsTrigger value="list" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                  <TabsTrigger
+                    value="list"
+                    className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+                  >
                     <List className="h-4 w-4 mr-2" /> Listagem
                   </TabsTrigger>
-                  <TabsTrigger value="grid" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                  <TabsTrigger
+                    value="grid"
+                    className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+                  >
                     <LayoutGrid className="h-4 w-4 mr-2" /> Grade
                   </TabsTrigger>
                 </TabsList>
@@ -262,8 +279,8 @@ function TamanhosPage() {
         ) : viewMode === "grid" ? (
           <div className="md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {paginatedTamanhos.map((tam) => (
-              <Card 
-                key={tam.id} 
+              <Card
+                key={tam.id}
                 className="group relative overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 border-border/50 bg-card/60 backdrop-blur-sm"
               >
                 <CardContent className="p-6">
@@ -284,7 +301,10 @@ function TamanhosPage() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 rounded-full text-red-500 hover:bg-red-50"
-                        onClick={() => { setSelectedTamanho(tam); setIsDeleteDialogOpenConfirm(true); }}
+                        onClick={() => {
+                          setSelectedTamanho(tam);
+                          setIsDeleteDialogOpenConfirm(true);
+                        }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -310,9 +330,15 @@ function TamanhosPage() {
               </TableHeader>
               <TableBody>
                 {paginatedTamanhos.map((tam) => (
-                  <TableRow key={tam.id} className="group hover:bg-primary/[0.02] transition-colors border-border/50">
+                  <TableRow
+                    key={tam.id}
+                    className="group hover:bg-primary/[0.02] transition-colors border-border/50"
+                  >
                     <TableCell>
-                      <Badge variant="outline" className="font-black text-base px-3 py-1 border-primary/20 bg-primary/5 text-primary">
+                      <Badge
+                        variant="outline"
+                        className="font-black text-base px-3 py-1 border-primary/20 bg-primary/5 text-primary"
+                      >
                         {tam.tam_nome}
                       </Badge>
                     </TableCell>
@@ -333,7 +359,10 @@ function TamanhosPage() {
                           variant="outline"
                           size="sm"
                           className="rounded-xl border-red-100 text-red-600 hover:bg-red-50 h-9"
-                          onClick={() => { setSelectedTamanho(tam); setIsDeleteDialogOpenConfirm(true); }}
+                          onClick={() => {
+                            setSelectedTamanho(tam);
+                            setIsDeleteDialogOpenConfirm(true);
+                          }}
                         >
                           <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir
                         </Button>
@@ -351,7 +380,7 @@ function TamanhosPage() {
       {!loading && filteredTamanhos.length > itemsPerPage && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-6 border-t border-dashed">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-             Mostrando <span className="text-foreground font-bold">{startIndex + 1}</span>-
+            Mostrando <span className="text-foreground font-bold">{startIndex + 1}</span>-
             <span className="text-foreground font-bold">
               {Math.min(startIndex + itemsPerPage, filteredTamanhos.length)}
             </span>{" "}
@@ -375,8 +404,8 @@ function TamanhosPage() {
                   size="sm"
                   onClick={() => setCurrentPage(page)}
                   className={`h-10 w-10 p-0 rounded-xl transition-all ${
-                    currentPage === page 
-                      ? "shadow-lg shadow-primary/20 scale-110 border-none" 
+                    currentPage === page
+                      ? "shadow-lg shadow-primary/20 scale-110 border-none"
                       : "border-border/50 hover:border-primary/50"
                   }`}
                 >
@@ -407,22 +436,37 @@ function TamanhosPage() {
               Defina as características principais desta variação de tamanho.
             </DialogDescription>
           </DialogHeader>
-          
+
           <form onSubmit={handleSave} className="p-8 pt-6 space-y-6">
             <div className="space-y-4">
               <div className="grid gap-2">
-                <Label htmlFor="tam_nome" className="text-sm font-bold text-muted-foreground uppercase tracking-widest px-1">Sigla / Nome</Label>
+                <Label
+                  htmlFor="tam_nome"
+                  className="text-sm font-bold text-muted-foreground uppercase tracking-widest px-1"
+                >
+                  Sigla / Nome
+                </Label>
                 <Input
                   id="tam_nome"
                   placeholder="Ex: GG, P, 42..."
                   value={formData.tam_nome}
-                  onChange={(e) => setFormData({ ...formData, tam_nome: e.target.value.toUpperCase().slice(0, 10) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      tam_nome: e.target.value.toUpperCase().slice(0, 10),
+                    })
+                  }
                   className="rounded-2xl h-14 bg-muted/30 border-none focus-visible:ring-2 focus-visible:ring-primary text-xl font-black px-5"
                   required
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="tam_descricao" className="text-sm font-bold text-muted-foreground uppercase tracking-widest px-1">Observações</Label>
+                <Label
+                  htmlFor="tam_descricao"
+                  className="text-sm font-bold text-muted-foreground uppercase tracking-widest px-1"
+                >
+                  Observações
+                </Label>
                 <Textarea
                   id="tam_descricao"
                   placeholder="Detalhes adicionais sobre as dimensões ou aplicação deste tamanho..."
@@ -434,17 +478,17 @@ function TamanhosPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Button 
-                type="button" 
-                variant="ghost" 
+              <Button
+                type="button"
+                variant="ghost"
                 onClick={() => setIsDialogOpen(false)}
                 className="flex-1 rounded-2xl h-12 font-bold hover:bg-muted"
               >
                 Voltar
               </Button>
-              <Button 
-                type="submit" 
-                disabled={submitting} 
+              <Button
+                type="submit"
+                disabled={submitting}
                 className="flex-[2] rounded-2xl h-12 bg-primary font-bold shadow-lg shadow-primary/20"
               >
                 {submitting ? (
@@ -471,9 +515,11 @@ function TamanhosPage() {
                 Você está prestes a excluir o tamanho{" "}
                 <span className="font-black text-foreground underline decoration-red-200 underline-offset-4">
                   "{selectedTamanho?.tam_nome}"
-                </span>.
+                </span>
+                .
                 <br />
-                Esta ação é <span className="text-red-600 font-bold">permanente</span> e pode afetar produtos vinculados.
+                Esta ação é <span className="text-red-600 font-bold">permanente</span> e pode afetar
+                produtos vinculados.
               </AlertDialogDescription>
             </div>
           </AlertDialogHeader>
@@ -486,7 +532,11 @@ function TamanhosPage() {
               className="w-full sm:w-auto flex-1 bg-red-500 hover:bg-red-600 rounded-2xl h-12 font-bold shadow-lg shadow-red-200"
               disabled={submitting}
             >
-              {submitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Trash2 className="mr-2 h-5 w-5" />}
+              {submitting ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-5 w-5" />
+              )}
               Confirmar Exclusão
             </AlertDialogAction>
           </AlertDialogFooter>

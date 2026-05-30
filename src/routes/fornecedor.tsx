@@ -2,15 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo, useEffect } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
-import { 
-  Building2, 
-  Search, 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  Loader2, 
-  MapPin, 
-  MoreVertical 
+import {
+  Building2,
+  Search,
+  Plus,
+  Pencil,
+  Trash2,
+  Loader2,
+  MapPin,
+  MoreVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,7 +71,7 @@ function FornecedorPage() {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
-    
+
     try {
       setSubmitting(true);
       const payload = {
@@ -100,9 +100,7 @@ function FornecedorPage() {
         if (error) throw error;
         toast.success("Fornecedor atualizado com sucesso!");
       } else {
-        const { error } = await supabase
-          .from("tab_fornecedores")
-          .insert([payload]);
+        const { error } = await supabase.from("tab_fornecedores").insert([payload]);
         if (error) throw error;
         toast.success("Fornecedor cadastrado com sucesso!");
       }
@@ -121,7 +119,7 @@ function FornecedorPage() {
     try {
       setIsDeleting(true);
       setDependencyError(null);
-      
+
       const { error } = await supabase
         .from("tab_fornecedores")
         .delete()
@@ -129,7 +127,9 @@ function FornecedorPage() {
 
       if (error) {
         if (error.code === "23503") {
-          setDependencyError("Este fornecedor não pode ser excluído pois possui registros vinculados no sistema (produtos ou compras).");
+          setDependencyError(
+            "Este fornecedor não pode ser excluído pois possui registros vinculados no sistema (produtos ou compras).",
+          );
           return;
         }
         throw error;
@@ -148,10 +148,7 @@ function FornecedorPage() {
 
   const fetchFornecedores = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("tab_fornecedores")
-      .select("*")
-      .order("for_razao_social");
+    const { data } = await supabase.from("tab_fornecedores").select("*").order("for_razao_social");
     setFornecedores((data as any) || []);
     setLoading(false);
   };
@@ -161,10 +158,11 @@ function FornecedorPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    return fornecedores.filter(f =>
-      f.for_razao_social?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.for_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.for_cidade?.toLowerCase().includes(searchTerm.toLowerCase())
+    return fornecedores.filter(
+      (f) =>
+        f.for_razao_social?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        f.for_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        f.for_cidade?.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [fornecedores, searchTerm]);
 
@@ -172,7 +170,13 @@ function FornecedorPage() {
     <div className="space-y-6 pb-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border shadow-sm">
         <PageHeader title="Fornecedores" description="Gerencie seus parceiros comerciais." />
-        <Button onClick={() => { setSelectedFornecedor(null); setIsDialogOpen(true); }} className="rounded-2xl bg-slate-900 hover:bg-slate-800 h-11 px-6 shadow-lg shadow-slate-900/10">
+        <Button
+          onClick={() => {
+            setSelectedFornecedor(null);
+            setIsDialogOpen(true);
+          }}
+          className="rounded-2xl bg-slate-900 hover:bg-slate-800 h-11 px-6 shadow-lg shadow-slate-900/10"
+        >
           <Plus className="w-4 h-4 mr-2" /> Novo Fornecedor
         </Button>
       </div>
@@ -199,27 +203,43 @@ function FornecedorPage() {
           </Card>
         ) : (
           filtered.map((f) => (
-            <Card key={f.id} className="p-6 rounded-3xl border-none shadow-sm bg-white hover:shadow-md transition-all">
+            <Card
+              key={f.id}
+              className="p-6 rounded-3xl border-none shadow-sm bg-white hover:shadow-md transition-all"
+            >
               <div className="flex justify-between items-start mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
                   <Building2 className="w-6 h-6" />
                 </div>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => { setSelectedFornecedor(f); setIsDialogOpen(true); }}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-lg"
+                    onClick={() => {
+                      setSelectedFornecedor(f);
+                      setIsDialogOpen(true);
+                    }}
+                  >
                     <Pencil className="w-4 h-4 text-slate-400" />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors" 
-                    onClick={() => { setFornecedorToDelete(f); setIsDeleteDialogOpen(true); }}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors"
+                    onClick={() => {
+                      setFornecedorToDelete(f);
+                      setIsDeleteDialogOpen(true);
+                    }}
                   >
                     <Trash2 className="w-4 h-4 text-slate-400" />
                   </Button>
                 </div>
               </div>
               <h3 className="font-black text-slate-900 leading-none mb-1">{f.for_razao_social}</h3>
-              <p className="text-sm text-slate-400 font-medium mb-4">{f.for_fantasia || "Sem fantasia"}</p>
+              <p className="text-sm text-slate-400 font-medium mb-4">
+                {f.for_fantasia || "Sem fantasia"}
+              </p>
               <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
                 <MapPin className="w-3 h-3" />
                 {f.for_cidade || "Cidade não informada"} - {f.for_estado || ""}
@@ -233,24 +253,38 @@ function FornecedorPage() {
         <DialogContent className="rounded-[2rem]">
           <form onSubmit={handleSave}>
             <DialogHeader>
-              <DialogTitle className="text-xl font-black">{selectedFornecedor ? "Editar Fornecedor" : "Novo Fornecedor"}</DialogTitle>
+              <DialogTitle className="text-xl font-black">
+                {selectedFornecedor ? "Editar Fornecedor" : "Novo Fornecedor"}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto px-1">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>Razão Social *</Label>
-                  <Input name="for_razao_social" defaultValue={selectedFornecedor?.for_razao_social} required className="uppercase" />
+                  <Input
+                    name="for_razao_social"
+                    defaultValue={selectedFornecedor?.for_razao_social}
+                    required
+                    className="uppercase"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Nome Fantasia</Label>
-                  <Input name="for_fantasia" defaultValue={selectedFornecedor?.for_fantasia || ""} className="uppercase" />
+                  <Input
+                    name="for_fantasia"
+                    defaultValue={selectedFornecedor?.for_fantasia || ""}
+                    className="uppercase"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>CNPJ / CPF</Label>
-                  <Input name="for_documento" defaultValue={selectedFornecedor?.for_documento || ""} />
+                  <Input
+                    name="for_documento"
+                    defaultValue={selectedFornecedor?.for_documento || ""}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>CEP</Label>
@@ -261,7 +295,11 @@ function FornecedorPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="md:col-span-3 space-y-1.5">
                   <Label>Endereço</Label>
-                  <Input name="for_endereco" defaultValue={selectedFornecedor?.for_endereco || ""} className="uppercase" />
+                  <Input
+                    name="for_endereco"
+                    defaultValue={selectedFornecedor?.for_endereco || ""}
+                    className="uppercase"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Número</Label>
@@ -272,25 +310,49 @@ function FornecedorPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <Label>Bairro</Label>
-                  <Input name="for_bairro" defaultValue={selectedFornecedor?.for_bairro || ""} className="uppercase" />
+                  <Input
+                    name="for_bairro"
+                    defaultValue={selectedFornecedor?.for_bairro || ""}
+                    className="uppercase"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Cidade</Label>
-                  <Input name="for_cidade" defaultValue={selectedFornecedor?.for_cidade || ""} className="uppercase" />
+                  <Input
+                    name="for_cidade"
+                    defaultValue={selectedFornecedor?.for_cidade || ""}
+                    className="uppercase"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Estado (UF)</Label>
-                  <Input name="for_estado" defaultValue={selectedFornecedor?.for_estado || ""} maxLength={2} className="uppercase" />
+                  <Input
+                    name="for_estado"
+                    defaultValue={selectedFornecedor?.for_estado || ""}
+                    maxLength={2}
+                    className="uppercase"
+                  />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <Label>Observação</Label>
-                <Textarea name="for_observacao" defaultValue={selectedFornecedor?.for_observacao || ""} className="resize-none" />
+                <Textarea
+                  name="for_observacao"
+                  defaultValue={selectedFornecedor?.for_observacao || ""}
+                  className="resize-none"
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" className="rounded-xl" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-xl"
+                onClick={() => setIsDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
               <Button type="submit" className="rounded-xl bg-slate-900" disabled={submitting}>
                 {submitting ? "Salvando..." : "Salvar"}
               </Button>
@@ -299,12 +361,15 @@ function FornecedorPage() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => {
-        setIsDeleteDialogOpen(open);
-        if (!open) {
-          setDependencyError(null);
-        }
-      }}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open);
+          if (!open) {
+            setDependencyError(null);
+          }
+        }}
+      >
         <AlertDialogContent className="rounded-[2rem]">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-black text-xl">
@@ -316,11 +381,18 @@ function FornecedorPage() {
                   <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-amber-800 text-sm font-medium">
                     {dependencyError}
                   </div>
-                  <p>Para excluir este fornecedor, você precisa primeiro remover ou alterar os registros que dependem dele.</p>
+                  <p>
+                    Para excluir este fornecedor, você precisa primeiro remover ou alterar os
+                    registros que dependem dele.
+                  </p>
                 </div>
               ) : (
                 <>
-                  Tem certeza que deseja remover o fornecedor <span className="font-bold text-slate-900">{fornecedorToDelete?.for_razao_social}</span>? Esta ação não pode ser desfeita.
+                  Tem certeza que deseja remover o fornecedor{" "}
+                  <span className="font-bold text-slate-900">
+                    {fornecedorToDelete?.for_razao_social}
+                  </span>
+                  ? Esta ação não pode ser desfeita.
                 </>
               )}
             </AlertDialogDescription>
@@ -330,11 +402,11 @@ function FornecedorPage() {
               {dependencyError ? "Fechar" : "Cancelar"}
             </AlertDialogCancel>
             {!dependencyError && (
-              <AlertDialogAction 
+              <AlertDialogAction
                 onClick={(e) => {
                   e.preventDefault();
                   handleDelete();
-                }} 
+                }}
                 className="rounded-xl bg-red-600 hover:bg-red-700 text-white border-none"
                 disabled={isDeleting}
               >
