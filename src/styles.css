@@ -240,6 +240,19 @@
   }
 }
 
+/* Neutraliza o fundo de autofill do navegador (Chrome/Edge deixam cinza/azulado).
+   Usa box-shadow inset pois background-color não sobrescreve o autofill. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--card) inset !important;
+  box-shadow: 0 0 0 1000px var(--card) inset !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 /* Hide Lovable badge */
 #lovable-badge,
 #lovable-badge-v2,
