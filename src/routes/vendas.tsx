@@ -634,12 +634,17 @@ export function PDVPage() {
       }));
       console.log('[VENDA] RPC chamada. Itens:', JSON.stringify(rpcItens));
 
+      // Combina todas as formas de pagamento distintas para o cabeçalho da venda
+      // (ex.: "DINHEIRO + PIX"). O detalhamento por forma fica em tab_vendas_pagamentos.
+      const formasDistintas = Array.from(new Set(pagamentos.map(p => p.forma)));
+      const formaPagamentoHeader = formasDistintas.join(" + ") || 'DINHEIRO';
+
       const { data: vendaId, error: rpcError } = await supabase.rpc('registrar_venda_completa' as any, {
         p_cliente_id: selectedClienteId === "default" ? null : selectedClienteId,
         p_usuario_id: null,
         p_valor_total: total,
         p_desconto: desconto,
-        p_forma_pagamento: pagamentos[0]?.forma || 'DINHEIRO',
+        p_forma_pagamento: formaPagamentoHeader,
         p_itens: rpcItens,
         p_pagamentos: pagamentos.map(p => {
           const fin = finalizadorasAtivas.find(f => f.fin_descricao.toLowerCase() === p.forma.toLowerCase());
@@ -770,14 +775,25 @@ export function PDVPage() {
               total: i.itv_valor_total,
             }));
           const subtotal = itens.reduce((s: number, i: any) => s + i.total, 0);
+
+          // Busca todas as formas de pagamento reais da venda (cupom único, vários pagamentos)
+          const { data: pags } = await (supabase as any)
+            .from("tab_vendas_pagamentos")
+            .select("vpa_forma_pagamento, vpa_valor")
+            .eq("vpa_venda_id", venda.id);
+          const pagamentosRecibo = (pags && pags.length > 0)
+            ? (pags as any[]).map((p) => ({ forma: p.vpa_forma_pagamento || "DINHEIRO", valor: Number(p.vpa_valor) || 0 }))
+            : [{ forma: venda.ven_forma_pagamento || "DINHEIRO", valor: venda.ven_valor_total ?? subtotal }];
+          const totalPagoRecibo = pagamentosRecibo.reduce((s, p) => s + p.valor, 0);
+
           const reciboData: ReciboVendaData = {
             cliente: clienteObj?.cli_nome || "Consumidor Final",
             itens,
             subtotal,
             desconto: Math.max(0, subtotal - (venda.ven_valor_total ?? subtotal)),
             total: venda.ven_valor_total ?? subtotal,
-            pagamentos: [{ forma: venda.ven_forma_pagamento || "DINHEIRO", valor: venda.ven_valor_total ?? subtotal }],
-            totalPago: venda.ven_valor_total ?? subtotal,
+            pagamentos: pagamentosRecibo,
+            totalPago: totalPagoRecibo,
             troco: 0,
             data: new Date(venda.created_at),
             cupomFiscal: venda.ven_cupom_fiscal,
