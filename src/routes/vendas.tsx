@@ -226,26 +226,6 @@ export function PDVPage() {
     onConfirm: () => {},
   });
 
-  // Abre a tela de Vendas em modo tela cheia (equivalente ao F11 do Windows).
-  // O usuário sai com ESC (comportamento nativo do navegador) ou ao trocar de página.
-  useEffect(() => {
-    const el = document.documentElement;
-    (async () => {
-      try {
-        if (el.requestFullscreen && !document.fullscreenElement) {
-          await el.requestFullscreen();
-        }
-      } catch {
-        /* o navegador pode bloquear sem gesto direto do usuário — ignora silenciosamente */
-      }
-    })();
-    return () => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen?.().catch(() => {});
-      }
-    };
-  }, []);
-
   useEffect(() => {
     if (receiptUrl && lastSaleData) {
       const regenerate = async () => {
@@ -905,7 +885,7 @@ export function PDVPage() {
   }
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 flex flex-col">
+    <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100svh-4rem)] overflow-hidden bg-slate-50 flex flex-col">
       {/* Header with Search */}
       <header className="sticky top-0 z-30 bg-slate-900 text-white px-4 py-4 shadow-lg">
         <div className="flex items-center justify-between mb-4">
@@ -958,7 +938,7 @@ export function PDVPage() {
       </header>
 
       {/* Product Catalog */}
-      <main className="flex-1 px-4 py-6">
+      <main className="flex-1 min-h-0 overflow-y-auto px-4 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="mb-6 px-1">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
             <Zap className="h-3 w-3 text-primary fill-current" /> Dica de Venda: <span className="text-slate-200 normal-case font-medium italic">{dicaAleatoria}</span>
