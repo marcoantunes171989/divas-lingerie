@@ -876,12 +876,20 @@ export function PDVPage() {
   };
 
   const addPagamento = (forma: string) => {
-    const vRestante = Math.max(0, total - totalPago);
-    if (vRestante <= 0) { 
-      toast.info("Venda já totalmente paga."); 
-      return; 
+    // Toggle: se a forma já está selecionada, desmarca e estorna o valor informado
+    const jaSelecionada = pagamentos.some(p => p.forma === forma);
+    if (jaSelecionada) {
+      setPagamentos(prev => prev.filter(p => p.forma !== forma));
+      return;
     }
-    
+
+    // Primeira seleção assume o total; as seguintes assumem o valor restante
+    const vRestante = Math.max(0, total - totalPago);
+    if (vRestante <= 0) {
+      toast.info("Venda já totalmente paga.");
+      return;
+    }
+
     const novo = { id: Math.random().toString(36).substr(2, 9), forma, valor: vRestante };
     setPagamentos([...pagamentos, novo]);
   };
@@ -1289,7 +1297,7 @@ export function PDVPage() {
               </div>
             </div>
 
-            <ScrollArea className="flex-1 px-5 py-4">
+            <ScrollArea className="flex-1 min-h-0 px-5 py-4">
               <div className="space-y-4">
                 <div className="bg-white p-3 rounded-2xl border border-slate-100 mb-4">
                   <div className="flex justify-between items-center mb-1">
