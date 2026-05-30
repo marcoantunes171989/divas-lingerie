@@ -187,6 +187,26 @@ export function PDVPage() {
     onConfirm: () => {},
   });
 
+  // Abre a tela de Vendas em modo tela cheia (equivalente ao F11 do Windows).
+  // O usuário sai com ESC (comportamento nativo do navegador) ou ao trocar de página.
+  useEffect(() => {
+    const el = document.documentElement;
+    (async () => {
+      try {
+        if (el.requestFullscreen && !document.fullscreenElement) {
+          await el.requestFullscreen();
+        }
+      } catch {
+        /* o navegador pode bloquear sem gesto direto do usuário — ignora silenciosamente */
+      }
+    })();
+    return () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen?.().catch(() => {});
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (receiptUrl && lastSaleData) {
       const regenerate = async () => {
@@ -844,7 +864,7 @@ export function PDVPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header with Search */}
       <header className="sticky top-0 z-30 bg-slate-900 text-white px-4 py-4 shadow-lg">
         <div className="flex items-center justify-between mb-4">
@@ -1004,8 +1024,8 @@ export function PDVPage() {
         )}
       </main>
 
-      {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 z-40 bg-white/80 backdrop-blur-xl border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] flex flex-col gap-2">
+      {/* Sticky Bottom Bar — fica no fluxo da área de vendas, sem sobrepor o menu lateral */}
+      <div className="sticky bottom-0 mt-auto p-4 z-40 bg-white/80 backdrop-blur-xl border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] flex flex-col gap-2">
         <div className="max-w-md mx-auto w-full">
           <Button
             variant="secondary"
