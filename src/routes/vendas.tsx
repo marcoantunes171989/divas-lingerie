@@ -74,6 +74,44 @@ export const shouldShowCancelCoupon = (cupomFiscal: string, items: { cancelado?:
   return !!cupomFiscal && items.some(i => !i.cancelado);
 };
 
+// Limite de cupons que podem ser reenviados de uma vez
+export const MAX_CUPONS_REENVIO = 3;
+
+// Opções do combo de período para o reenvio de recibos
+export const PERIODOS_REENVIO = [
+  { value: "hoje", label: "Hoje" },
+  { value: "semana", label: "Semana atual" },
+  { value: "mes_atual", label: "Mês atual" },
+  { value: "mes_anterior", label: "Mês anterior" },
+  { value: "tudo", label: "Tudo" },
+] as const;
+
+// Converte o período escolhido em um intervalo de datas (ISO). `ate` é exclusivo.
+export const getPeriodoRange = (periodo: string): { desde?: string; ate?: string } => {
+  const now = new Date();
+  const inicioDia = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+  switch (periodo) {
+    case "hoje":
+      return { desde: inicioDia(now).toISOString() };
+    case "semana": {
+      const d = inicioDia(now);
+      const diaSemana = (d.getDay() + 6) % 7; // 0 = segunda-feira
+      d.setDate(d.getDate() - diaSemana);
+      return { desde: d.toISOString() };
+    }
+    case "mes_atual":
+      return { desde: new Date(now.getFullYear(), now.getMonth(), 1).toISOString() };
+    case "mes_anterior":
+      return {
+        desde: new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString(),
+        ate: new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
+      };
+    case "tudo":
+    default:
+      return {};
+  }
+};
+
 export const getCancelDialogTitle = (items: { cancelado?: boolean }[]) => {
   const hasItems = items.length > 0;
   const allCancelled = hasItems && items.every(i => i.cancelado);
@@ -173,6 +211,7 @@ export function PDVPage() {
   const [selectedReenviarVendas, setSelectedReenviarVendas] = useState<any[]>([]);
   const [reenviarWhatsapp, setReenviarWhatsapp] = useState("");
   const [isEnviandoReenvio, setIsEnviandoReenvio] = useState(false);
+  const [reenviarPeriodo, setReenviarPeriodo] = useState<string>("");
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
@@ -365,20 +404,22 @@ export function PDVPage() {
   });
 
   const { data: vendasDoDia = [], isLoading: isLoadingVendasDia, error: errorVendasDia } = useQuery({
-    queryKey: ["vendas-dia-reenvio", isReenviarModalOpen],
+    queryKey: ["vendas-reenvio", isReenviarModalOpen, reenviarPeriodo],
     queryFn: async () => {
-      // Ultimas 24h — select * para evitar erro de coluna desconhecida
-      const desde = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { data, error } = await (supabase as any)
+      // Filtra pelo período escolhido no combo — select * para evitar erro de coluna desconhecida
+      const { desde, ate } = getPeriodoRange(reenviarPeriodo);
+      let query = (supabase as any)
         .from("tab_vendas")
         .select("*")
-        .gte("created_at", desde)
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(300);
+      if (desde) query = query.gte("created_at", desde);
+      if (ate) query = query.lt("created_at", ate);
+      const { data, error } = await query;
       if (error) throw new Error(error.message || JSON.stringify(error));
       return (data as any[]) || [];
     },
-    enabled: isReenviarModalOpen,
+    enabled: isReenviarModalOpen && !!reenviarPeriodo,
     staleTime: 0,
   });
 
@@ -1030,7 +1071,7 @@ export function PDVPage() {
           <Button
             variant="secondary"
             className="w-full h-10 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 shadow-sm"
-            onClick={() => { setIsReenviarModalOpen(true); setSelectedReenviarVendas([]); setReenviarWhatsapp(""); }}
+            onClick={() => { setIsReenviarModalOpen(true); setSelectedReenviarVendas([]); setReenviarWhatsapp(""); setReenviarPeriodo(""); }}
           >
             <Share2 className="w-3.5 h-3.5" />
             Reenviar Recibo (WhatsApp)
@@ -1631,19 +1672,21 @@ export function PDVPage() {
           </DialogContent>
         </Dialog>
 
-      {/* Modal — Reenviar Recibo do Dia */}
-      <Dialog open={isReenviarModalOpen} onOpenChange={(o) => { if (!o) { setIsReenviarModalOpen(false); setSelectedReenviarVendas([]); setReenviarWhatsapp(""); } }}>
+      {/* Modal — Reenviar Recibo (WhatsApp) */}
+      <Dialog open={isReenviarModalOpen} onOpenChange={(o) => { if (!o) { setIsReenviarModalOpen(false); setSelectedReenviarVendas([]); setReenviarWhatsapp(""); setReenviarPeriodo(""); } }}>
         <DialogContent className="sm:max-w-[420px] p-0 rounded-3xl overflow-hidden border-none shadow-2xl">
           {/* Header */}
           <div className="bg-slate-900 text-white px-5 py-4 flex items-center justify-between shrink-0">
             <div>
               <DialogTitle className="text-sm font-black uppercase tracking-widest text-white leading-none">
-                Vendas do Dia
+                Reenviar Recibo
               </DialogTitle>
               <p className="text-[10px] text-white/40 mt-0.5">
-                {selectedReenviarVendas.length > 0
-                  ? `${selectedReenviarVendas.length} cupom(ns) selecionado(s)`
-                  : "Toque para selecionar — pode escolher vários"}
+                {!reenviarPeriodo
+                  ? "Escolha o período das vendas"
+                  : selectedReenviarVendas.length > 0
+                    ? `${selectedReenviarVendas.length}/${MAX_CUPONS_REENVIO} cupom(ns) selecionado(s)`
+                    : `Selecione até ${MAX_CUPONS_REENVIO} cupons`}
               </p>
             </div>
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full h-8 w-8" onClick={() => setIsReenviarModalOpen(false)}>
@@ -1651,7 +1694,36 @@ export function PDVPage() {
             </Button>
           </div>
 
-          {/* Lista de vendas */}
+          {/* Combo de período */}
+          <div className="bg-white px-4 pt-4 pb-3 border-b border-slate-100">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+              Período
+            </label>
+            <Select
+              value={reenviarPeriodo}
+              onValueChange={(v) => { setReenviarPeriodo(v); setSelectedReenviarVendas([]); setReenviarWhatsapp(""); }}
+            >
+              <SelectTrigger className="h-11 rounded-xl">
+                <SelectValue placeholder="Selecione o período..." />
+              </SelectTrigger>
+              <SelectContent>
+                {PERIODOS_REENVIO.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Lista de vendas — só aparece após escolher o período */}
+          {!reenviarPeriodo ? (
+            <div className="bg-slate-100 p-3">
+              <div className="flex flex-col items-center justify-center py-10 text-slate-400 gap-2">
+                <Receipt className="w-8 h-8 opacity-30" />
+                <p className="text-sm font-bold">Escolha um período acima</p>
+                <p className="text-[10px] text-slate-400">para listar as vendas e reenviar os recibos</p>
+              </div>
+            </div>
+          ) : (
           <div className="bg-slate-100 max-h-[50vh] overflow-y-auto p-3 space-y-2">
             {isLoadingVendasDia ? (
               <div className="flex items-center justify-center py-10 gap-2 text-slate-400">
@@ -1667,7 +1739,7 @@ export function PDVPage() {
             ) : vendasDoDia.filter((v: any) => v.ven_status !== "cancelada").length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-slate-400 gap-2">
                 <Receipt className="w-8 h-8 opacity-30" />
-                <p className="text-sm font-bold">Nenhuma venda nas últimas 24h</p>
+                <p className="text-sm font-bold">Nenhuma venda no período</p>
               </div>
             ) : (
               vendasDoDia.filter((v: any) => v.ven_status !== "cancelada").map((venda: any) => {
@@ -1682,6 +1754,11 @@ export function PDVPage() {
                     onClick={() => {
                       setSelectedReenviarVendas(prev => {
                         const already = prev.some(s => s.id === venda.id);
+                        // Limite de cupons no reenvio
+                        if (!already && prev.length >= MAX_CUPONS_REENVIO) {
+                          toast.error(`Você pode selecionar até ${MAX_CUPONS_REENVIO} cupons por reenvio.`);
+                          return prev;
+                        }
                         const next = already ? prev.filter(s => s.id !== venda.id) : [...prev, venda];
                         // Pré-preenche WhatsApp com telefone do cliente do primeiro selecionado
                         if (next.length > 0 && !reenviarWhatsapp) {
@@ -1722,6 +1799,7 @@ export function PDVPage() {
               })
             )}
           </div>
+          )}
 
           {/* Seção WhatsApp — aparece quando há seleção */}
           {selectedReenviarVendas.length > 0 && (
