@@ -195,15 +195,29 @@ function RelatorioCancelamentosPage() {
                             <p className="text-xs text-slate-400 italic">Sem dados de estoque registrados.</p>
                           ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                              {c.can_estoque_snapshot.map((item, idx) => (
-                                <div key={idx} className="bg-white rounded-xl p-3 border border-slate-100 text-xs">
-                                  <p className="font-bold text-slate-800 truncate">{item.descricao}</p>
-                                  <div className="flex justify-between mt-1 text-slate-500">
-                                    <span>Qtd cancelada: <strong className="text-red-500">{item.quantidade_cancelada}</strong></span>
-                                    <span>Estoque era: <strong>{item.estoque_no_cancelamento}</strong></span>
+                              {c.can_estoque_snapshot.map((item, idx) => {
+                                const estoqueAntes = item.estoque_no_cancelamento;
+                                const estoqueDepois = estoqueAntes + item.quantidade_cancelada;
+                                return (
+                                  <div key={idx} className="bg-white rounded-xl p-3 border border-slate-100 text-xs">
+                                    <p className="font-bold text-slate-800 truncate">{item.descricao}</p>
+                                    <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+                                      <div className="rounded-lg bg-slate-50 py-1.5">
+                                        <p className="text-[9px] uppercase tracking-wide text-slate-400">Antes</p>
+                                        <p className="font-black text-slate-700">{estoqueAntes}</p>
+                                      </div>
+                                      <div className="rounded-lg bg-red-50 py-1.5">
+                                        <p className="text-[9px] uppercase tracking-wide text-red-400">Cancelada</p>
+                                        <p className="font-black text-red-500">+{item.quantidade_cancelada}</p>
+                                      </div>
+                                      <div className="rounded-lg bg-emerald-50 py-1.5">
+                                        <p className="text-[9px] uppercase tracking-wide text-emerald-500">Depois</p>
+                                        <p className="font-black text-emerald-600">{estoqueDepois}</p>
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           )}
                         </div>
