@@ -22,6 +22,7 @@ import {
   ShoppingBag,
   ArrowRight,
   Plus,
+  Boxes,
 } from "lucide-react";
 import { EmptyState } from "@/components/States";
 import {
@@ -220,6 +221,25 @@ function Dashboard() {
     },
   });
 
+  // Valor total do estoque atual = SUM(estoque_atual × preço de venda) de todos os produtos.
+  // pro_estoque_atual já reflete baixas de venda e estornos de cancelamento (valor atual real).
+  const { data: valorEstoque = 0 } = useQuery({
+    queryKey: ["valor-estoque-dashboard"],
+    refetchInterval: 30000,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase
+        .from("tab_produtos")
+        .select("pro_estoque_atual, pro_valor_venda")
+        .abortSignal(signal);
+      if (error) throw error;
+      return (data || []).reduce(
+        (s: number, p: any) =>
+          s + Number(p.pro_estoque_atual || 0) * Number(p.pro_valor_venda || 0),
+        0,
+      );
+    },
+  });
+
   const totals = useMemo(() => {
     const totalVendas = current.reduce((s: number, v: any) => s + Number(v.volume_vendas || 0), 0);
     const lucroTotal = current.reduce((s: number, v: any) => s + Number(v.lucro_total || 0), 0);
@@ -371,7 +391,7 @@ function Dashboard() {
       </div>
 
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         <StatCard
           title="Volume de Vendas"
           value={brl(totals.totalVendas)}
@@ -402,6 +422,13 @@ function Dashboard() {
           value={current.reduce((s, v) => s + Number(v.total_vendas || 0), 0).toString()}
           icon={Package}
           accent="muted"
+        />
+        <StatCard
+          title="Valor em Estoque"
+          value={brl(valorEstoque)}
+          hint="Estoque atual × preço de venda"
+          icon={Boxes}
+          accent="primary"
         />
       </div>
 
