@@ -59,7 +59,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 
 export const Route = createFileRoute("/produtos")({
@@ -98,6 +97,18 @@ type Categoria = { id: string; cat_nome: string };
 type Tamanho = { id: string; tam_nome: string };
 type Cor = { id: string; cor_nome: string };
 
+// Estado inicial limpo do formulário de produto (usado ao abrir "Novo Produto")
+const EMPTY_PRODUTO_FORM = {
+  pro_codigo: "",
+  pro_descricao: "",
+  pro_valor_venda: "0,00",
+  pro_estoque_atual: "0",
+  pro_categoria_id: "",
+  pro_tamanho_id: "",
+  pro_cor_id: "",
+  pro_codigo_barras: "",
+};
+
 function ProdutosPage() {
   const dicaAleatoria = useMemo(
     () => DICAS_PRODUTOS[Math.floor(Math.random() * DICAS_PRODUTOS.length)],
@@ -117,16 +128,7 @@ function ProdutosPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const [formData, setFormData] = useState({
-    pro_codigo: "",
-    pro_descricao: "",
-    pro_valor_venda: "",
-    pro_estoque_atual: "0",
-    pro_categoria_id: "",
-    pro_tamanho_id: "",
-    pro_cor_id: "",
-    pro_codigo_barras: "",
-  });
+  const [formData, setFormData] = useState({ ...EMPTY_PRODUTO_FORM });
 
   const handleCurrencyInput = (raw: string, field: string) => {
     const digits = raw.replace(/\D/g, "");
@@ -182,16 +184,7 @@ function ProdutosPage() {
         pro_codigo_barras: selectedProduto.pro_codigo_barras || "",
       });
     } else {
-      setFormData({
-        pro_codigo: "",
-        pro_descricao: "",
-        pro_valor_venda: "0,00",
-        pro_estoque_atual: "0",
-        pro_categoria_id: "",
-        pro_tamanho_id: "",
-        pro_cor_id: "",
-        pro_codigo_barras: "",
-      });
+      setFormData({ ...EMPTY_PRODUTO_FORM });
     }
   }, [selectedProduto]);
 
@@ -336,8 +329,9 @@ function ProdutosPage() {
         </div>
         <Button
           onClick={() => {
-            setIsDialogOpen(true);
             setSelectedProduto(null);
+            setFormData({ ...EMPTY_PRODUTO_FORM });
+            setIsDialogOpen(true);
           }}
           className="rounded-2xl shadow-lg shadow-primary/20 h-12 px-6 bg-slate-900 hover:bg-slate-800"
         >
@@ -511,29 +505,11 @@ function ProdutosPage() {
             </div>
 
             <div className="p-6">
-              <Tabs defaultValue="geral" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-8 bg-slate-100 rounded-xl p-1">
-                  <TabsTrigger
-                    value="geral"
-                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                  >
-                    <Info className="w-4 h-4 mr-2" /> Geral
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="financeiro"
-                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                  >
-                    <DollarSign className="w-4 h-4 mr-2" /> Valores
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="atributos"
-                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                  >
-                    <Layers className="w-4 h-4 mr-2" /> Atributos
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="geral" className="space-y-4 animate-in fade-in-50 duration-300">
+              <div className="space-y-8">
+                <section className="space-y-4">
+                  <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-slate-400">
+                    <Info className="w-4 h-4 text-primary" /> Geral
+                  </h3>
                   <div className="grid gap-2">
                     <Label htmlFor="pro_descricao" className="font-bold flex items-center gap-2">
                       <Package className="w-4 h-4 text-slate-400" /> Descrição do Produto *
@@ -581,55 +557,56 @@ function ProdutosPage() {
                       />
                     </div>
                   </div>
-                </TabsContent>
+                </section>
 
-                <TabsContent
-                  value="financeiro"
-                  className="space-y-4 animate-in fade-in-50 duration-300"
-                >
-                  <div className="grid gap-2">
-                    <Label htmlFor="pro_valor_venda" className="font-bold flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-green-500" /> Preço de Venda *
-                    </Label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-3.5 text-slate-500 font-medium">R$</span>
+                <Separator className="opacity-50" />
+
+                <section className="space-y-4">
+                  <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-slate-400">
+                    <DollarSign className="w-4 h-4 text-primary" /> Valores
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="pro_valor_venda" className="font-bold flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-green-500" /> Preço de Venda *
+                      </Label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-3.5 text-slate-500 font-medium">R$</span>
+                        <Input
+                          id="pro_valor_venda"
+                          inputMode="numeric"
+                          value={formData.pro_valor_venda}
+                          onChange={(e) => handleCurrencyInput(e.target.value, "pro_valor_venda")}
+                          className="pl-10 rounded-xl h-12 bg-slate-50 border-slate-200 focus:bg-white transition-all font-bold text-green-600 text-lg"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="pro_estoque_atual" className="font-bold flex items-center gap-2">
+                        <Boxes className="w-4 h-4 text-slate-400" /> Estoque Atual *
+                      </Label>
                       <Input
-                        id="pro_valor_venda"
-                        inputMode="numeric"
-                        value={formData.pro_valor_venda}
-                        onChange={(e) => handleCurrencyInput(e.target.value, "pro_valor_venda")}
-                        className="pl-10 rounded-xl h-12 bg-slate-50 border-slate-200 focus:bg-white transition-all font-bold text-green-600 text-lg"
+                        id="pro_estoque_atual"
+                        type="number"
+                        min="0"
+                        value={formData.pro_estoque_atual}
+                        onChange={(e) =>
+                          setFormData({ ...formData, pro_estoque_atual: e.target.value })
+                        }
+                        className="rounded-xl h-12 bg-slate-50 border-slate-200 focus:bg-white transition-all text-center text-lg font-bold"
                       />
                     </div>
                   </div>
+                </section>
 
-                  <Separator className="my-4 opacity-50" />
+                <Separator className="opacity-50" />
 
-                  <div className="grid gap-2">
-                    <Label
-                      htmlFor="pro_estoque_atual"
-                      className="font-bold flex items-center gap-2"
-                    >
-                      <Boxes className="w-4 h-4 text-slate-400" /> Estoque Atual *
-                    </Label>
-                    <Input
-                      id="pro_estoque_atual"
-                      type="number"
-                      min="0"
-                      value={formData.pro_estoque_atual}
-                      onChange={(e) =>
-                        setFormData({ ...formData, pro_estoque_atual: e.target.value })
-                      }
-                      className="rounded-xl h-12 bg-slate-50 border-slate-200 focus:bg-white transition-all text-center text-lg font-bold"
-                    />
-                  </div>
-                </TabsContent>
-
-                <TabsContent
-                  value="atributos"
-                  className="space-y-4 animate-in fade-in-50 duration-300"
-                >
-                  <div className="grid gap-2">
+                <section className="space-y-4">
+                  <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-slate-400">
+                    <Layers className="w-4 h-4 text-primary" /> Atributos
+                  </h3>
+                  <div className="grid gap-4">
                     <div className="grid gap-2">
                       <Label
                         htmlFor="pro_categoria_id"
@@ -705,8 +682,8 @@ function ProdutosPage() {
                       </div>
                     </div>
                   </div>
-                </TabsContent>
-              </Tabs>
+                </section>
+              </div>
             </div>
 
             <DialogFooter className="p-6 bg-slate-50 flex flex-col-reverse sm:flex-row justify-end gap-3 border-t">
