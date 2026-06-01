@@ -21,6 +21,7 @@ import {
   ArrowDownRight,
   ShoppingBag,
   CalendarDays,
+  Ban,
 } from "lucide-react";
 import { ChartSkeleton } from "@/components/ChartSkeleton";
 import { EmptyState, ErrorState } from "@/components/States";
@@ -29,6 +30,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   ResponsiveContainer,
   BarChart,
@@ -99,7 +108,13 @@ function DeltaBadge({ value }: { value: number }) {
   );
 }
 
-function VendaCard({ venda }: { venda: any }) {
+function VendaCard({
+  venda,
+  onCancel,
+}: {
+  venda: any;
+  onCancel: (venda: any, motivo: string) => Promise<void>;
+}) {
   const hora = new Date(venda.created_at).toLocaleTimeString("pt-BR", {
     hour: "2-digit",
     minute: "2-digit",
@@ -108,6 +123,20 @@ function VendaCard({ venda }: { venda: any }) {
   const itens: any[] = venda.tab_itens_venda || [];
   const isCancelled = venda.ven_status === "cancelada";
   const hasDesc = Number(venda.ven_desconto || 0) > 0;
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const [cancelling, setCancelling] = useState(false);
+
+  const confirmarCancelamento = async () => {
+    setCancelling(true);
+    try {
+      await onCancel(venda, motivo);
+      setCancelOpen(false);
+      setMotivo("");
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   return (
     <Card
@@ -187,6 +216,64 @@ function VendaCard({ venda }: { venda: any }) {
           ))}
         </div>
       )}
+
+      {!isCancelled && (
+        <div className="border-t border-slate-100 px-4 py-2 flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1.5 text-[11px] font-bold text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg"
+            onClick={() => setCancelOpen(true)}
+          >
+            <Ban className="h-3.5 w-3.5" /> Cancelar venda
+          </Button>
+        </div>
+      )}
+
+      <Dialog open={cancelOpen} onOpenChange={(o) => !cancelling && setCancelOpen(o)}>
+        <DialogContent className="sm:max-w-[420px] rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg font-black">
+              <Ban className="h-5 w-5 text-destructive" /> Cancelar venda
+            </DialogTitle>
+            <DialogDescription className="pt-1 text-sm">
+              Cancelar o cupom <strong>Nº {venda.ven_cupom_fiscal || "——"}</strong> de{" "}
+              <strong>{brl(venda.ven_valor_total)}</strong>? Os itens voltam ao estoque
+              (estorno) e a venda é registrada como cancelada.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Motivo (opcional)
+            </label>
+            <Input
+              placeholder="Ex: desistência do cliente"
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              className="rounded-xl"
+            />
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              className="w-full sm:flex-1 rounded-xl font-bold"
+              onClick={() => setCancelOpen(false)}
+              disabled={cancelling}
+            >
+              Voltar
+            </Button>
+            <Button
+              variant="destructive"
+              className="w-full sm:flex-1 rounded-xl font-bold gap-2"
+              onClick={confirmarCancelamento}
+              disabled={cancelling}
+            >
+              {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+              Confirmar cancelamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
@@ -365,6 +452,37 @@ function RelatoriosPage() {
       setHasMore(false);
     }
   }, [newVendas, loadingVendas]);
+
+  // ── Cancelamento de venda (com estorno de estoque) ──────────────────────────
+  const handleCancelVenda = async (venda: any, motivo: string) => {
+    const { error } = await supabase.rpc("cancelar_venda" as any, {
+      p_venda_id: venda.id,
+      p_motivo: motivo || null,
+      p_cupom_fiscal: venda.ven_cupom_fiscal || null,
+    });
+    if (error) {
+      toast.error("Erro ao cancelar venda", { description: error.message });
+      return;
+    }
+    toast.success("Venda cancelada e estoque estornado.");
+    // Atualiza a lista local imediatamente
+    setAllVendas((prev) =>
+      prev.map((v) =>
+        v.id === venda.id
+          ? {
+              ...v,
+              ven_status: "cancelada",
+              tab_itens_venda: (v.tab_itens_venda || []).map((i: any) => ({
+                ...i,
+                itv_status: "cancelado",
+              })),
+            }
+          : v,
+      ),
+    );
+    // Recalcula gráficos, dashboard e estoque
+    queryClient.invalidateQueries();
+  };
 
   // ── Derived data ───────────────────────────────────────────────────────────
 
@@ -1034,7 +1152,7 @@ function RelatoriosPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {group.vendas.map((venda: any) => (
-                      <VendaCard key={venda.id} venda={venda} />
+                      <VendaCard key={venda.id} venda={venda} onCancel={handleCancelVenda} />
                     ))}
                   </div>
                 </div>
