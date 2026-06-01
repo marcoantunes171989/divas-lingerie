@@ -309,8 +309,22 @@ function ProdutosPage() {
   };
 
   const filteredProdutos = produtos.filter((p) => {
-    const s = searchTerm.toLowerCase();
-    return p.pro_descricao?.toLowerCase().includes(s) || p.pro_codigo?.toLowerCase().includes(s);
+    const s = searchTerm.trim().toLowerCase();
+    if (!s) return true;
+    // Busca em TODOS os campos da tela de cadastro de produto
+    const preco = Number(p.pro_valor_venda || 0);
+    const campos = [
+      p.pro_descricao, // nome
+      p.pro_codigo, // REF
+      p.pro_codigo_barras, // EAN
+      p.tab_categorias?.cat_nome, // categoria
+      p.tab_tamanhos?.tam_nome, // tamanho
+      p.tab_cores?.cor_nome, // cor
+      String(p.pro_estoque_atual ?? ""), // estoque
+      preco.toFixed(2), // preço "42.90"
+      preco.toLocaleString("pt-BR", { minimumFractionDigits: 2 }), // preço "42,90"
+    ];
+    return campos.some((c) => (c || "").toString().toLowerCase().includes(s));
   });
 
   const paginatedProdutos = filteredProdutos.slice(
@@ -344,9 +358,12 @@ function ProdutosPage() {
           <div className="relative">
             <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
             <Input
-              placeholder="Pesquise por nome, código ou EAN..."
+              placeholder="Pesquise por nome, código, EAN, categoria, tamanho, cor, preço ou estoque..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="pl-12 h-14 text-lg bg-slate-50 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-primary/20"
             />
           </div>
