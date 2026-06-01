@@ -707,6 +707,7 @@ export type Database = {
           id: string;
           updated_at: string;
           ven_cliente_id: string | null;
+          ven_cupom_fiscal: string | null;
           ven_desconto: number | null;
           ven_forma_pagamento: string | null;
           ven_status: string | null;
@@ -718,6 +719,7 @@ export type Database = {
           id?: string;
           updated_at?: string;
           ven_cliente_id?: string | null;
+          ven_cupom_fiscal?: string | null;
           ven_desconto?: number | null;
           ven_forma_pagamento?: string | null;
           ven_status?: string | null;
@@ -729,6 +731,7 @@ export type Database = {
           id?: string;
           updated_at?: string;
           ven_cliente_id?: string | null;
+          ven_cupom_fiscal?: string | null;
           ven_desconto?: number | null;
           ven_forma_pagamento?: string | null;
           ven_status?: string | null;
