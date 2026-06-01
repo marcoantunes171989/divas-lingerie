@@ -394,6 +394,34 @@ export function PDVPage() {
     },
   });
 
+  // Quantidades em consignação (em posse de sacoleiras) — não estão disponíveis para venda no PDV
+  const { data: consignadoData = [] } = useQuery({
+    queryKey: ["consignado-em-posse"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tab_consignacao")
+        .select("con_produto_id, con_quantidade")
+        .eq("con_status", "em_posse");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const consignadoPorProduto = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const c of consignadoData as any[]) {
+      m[c.con_produto_id] = (m[c.con_produto_id] || 0) + Number(c.con_quantidade || 0);
+    }
+    return m;
+  }, [consignadoData]);
+
+  // Estoque realmente disponível para venda no PDV = estoque - consignado em posse
+  const getDisponivel = (produto: any) =>
+    Math.max(
+      0,
+      (Number(produto?.pro_estoque_atual) || 0) - (consignadoPorProduto[produto?.id] || 0),
+    );
+
   const { data: clientesData = [], isLoading: isLoadingClientes } = useQuery({
     queryKey: ["clientes-pdv"],
     queryFn: async () => {
@@ -506,7 +534,7 @@ export function PDVPage() {
   }, [produtos, searchTerm]);
 
   const addItem = (produto: any) => {
-    const estoqueDisponivel = Number(produto.pro_estoque_atual) || 0;
+    const estoqueDisponivel = getDisponivel(produto);
     const itemAtivo = items.find((i) => i.produto_id === produto.id && !i.cancelado);
     const qtdAtualNoCarrinho = itemAtivo?.quantidade || 0;
 
@@ -567,7 +595,7 @@ export function PDVPage() {
       }
 
       const produto = produtos.find((p) => p.id === item.produto_id);
-      const estoqueDisponivel = Number(produto?.pro_estoque_atual) || 0;
+      const estoqueDisponivel = getDisponivel(produto);
       const novaQtd = item.quantidade + delta;
 
       if (novaQtd > estoqueDisponivel) {
@@ -1114,7 +1142,7 @@ export function PDVPage() {
                         variant="secondary"
                         className="bg-emerald-50 text-emerald-600 text-[9px] border-emerald-100 font-bold"
                       >
-                        {p.pro_estoque_atual} EM ESTOQUE
+                        {getDisponivel(p)} EM ESTOQUE
                       </Badge>
                     </div>
                   </div>
