@@ -2,7 +2,10 @@ export const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency",
 
 export const dateBR = (s: string) => {
   if (!s) return "";
-  const [y, m, d] = s.split("-");
+  // Aceita tanto "YYYY-MM-DD" quanto timestamp ISO "YYYY-MM-DDTHH:mm:ss±hh:mm"
+  const datePart = s.split("T")[0];
+  const [y, m, d] = datePart.split("-");
+  if (!y || !m || !d) return s;
   return `${d}/${m}/${y}`;
 };
 
