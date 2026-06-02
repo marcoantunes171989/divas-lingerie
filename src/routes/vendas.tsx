@@ -542,6 +542,12 @@ export function PDVPage() {
       })
       // Só mostra produtos com estoque disponível para venda (> 0, já descontando consignado)
       .filter((p) => getDisponivel(p) > 0)
+      // Sempre em ordem alfabética por descrição (pt-BR, ignora acentos/maiúsculas)
+      .sort((a: any, b: any) =>
+        (a.pro_descricao || "").localeCompare(b.pro_descricao || "", "pt-BR", {
+          sensitivity: "base",
+        }),
+      )
       .slice(0, 50);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [produtos, searchTerm, consignadoPorProduto]);
