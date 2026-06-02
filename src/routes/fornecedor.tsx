@@ -43,10 +43,16 @@ export const Route = createFileRoute("/fornecedor")({
 type Fornecedor = {
   id: string;
   for_documento: string | null;
+  for_inscricao_estadual: string | null;
   for_razao_social: string;
   for_fantasia: string | null;
+  for_contato: string | null;
+  for_telefone: string | null;
+  for_celular: string | null;
+  for_email: string | null;
   for_endereco: string | null;
   for_numero: string | null;
+  for_complemento: string | null;
   for_bairro: string | null;
   for_cidade: string | null;
   for_estado: string | null;
@@ -78,9 +84,15 @@ function FornecedorPage() {
         for_razao_social: (formData.get("for_razao_social") as string).toUpperCase(),
         for_fantasia: (formData.get("for_fantasia") as string)?.toUpperCase(),
         for_documento: formData.get("for_documento") as string,
+        for_inscricao_estadual: formData.get("for_inscricao_estadual") as string,
+        for_contato: (formData.get("for_contato") as string)?.toUpperCase(),
+        for_telefone: formData.get("for_telefone") as string,
+        for_celular: formData.get("for_celular") as string,
+        for_email: (formData.get("for_email") as string)?.toLowerCase(),
         for_cep: formData.get("for_cep") as string,
         for_endereco: (formData.get("for_endereco") as string)?.toUpperCase(),
         for_numero: formData.get("for_numero") as string,
+        for_complemento: (formData.get("for_complemento") as string)?.toUpperCase(),
         for_bairro: (formData.get("for_bairro") as string)?.toUpperCase(),
         for_cidade: (formData.get("for_cidade") as string)?.toUpperCase(),
         for_estado: (formData.get("for_estado") as string)?.toUpperCase(),
@@ -158,11 +170,21 @@ function FornecedorPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    return fornecedores.filter(
-      (f) =>
-        f.for_razao_social?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        f.for_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        f.for_cidade?.toLowerCase().includes(searchTerm.toLowerCase()),
+    const s = searchTerm.trim().toLowerCase();
+    if (!s) return fornecedores;
+    return fornecedores.filter((f) =>
+      [
+        f.for_razao_social,
+        f.for_fantasia,
+        f.for_documento,
+        f.for_contato,
+        f.for_telefone,
+        f.for_celular,
+        f.for_email,
+        f.for_cidade,
+        f.for_estado,
+        f.for_bairro,
+      ].some((c) => (c || "").toString().toLowerCase().includes(s)),
     );
   }, [fornecedores, searchTerm]);
 
@@ -250,99 +272,171 @@ function FornecedorPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="rounded-[2rem]">
+        <DialogContent className="rounded-[2rem] max-w-3xl w-[96vw]">
           <form onSubmit={handleSave}>
             <DialogHeader>
               <DialogTitle className="text-xl font-black">
                 {selectedFornecedor ? "Editar Fornecedor" : "Novo Fornecedor"}
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto px-1">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>Razão Social *</Label>
-                  <Input
-                    name="for_razao_social"
-                    defaultValue={selectedFornecedor?.for_razao_social}
-                    required
-                    className="uppercase"
-                  />
+            <div className="space-y-6 py-4 max-h-[72vh] overflow-y-auto px-1">
+              {/* Identificação */}
+              <section className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-[0.15em] text-slate-400">
+                  Identificação
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Razão Social *</Label>
+                    <Input
+                      name="for_razao_social"
+                      defaultValue={selectedFornecedor?.for_razao_social}
+                      required
+                      className="uppercase"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Nome Fantasia</Label>
+                    <Input
+                      name="for_fantasia"
+                      defaultValue={selectedFornecedor?.for_fantasia || ""}
+                      className="uppercase"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Nome Fantasia</Label>
-                  <Input
-                    name="for_fantasia"
-                    defaultValue={selectedFornecedor?.for_fantasia || ""}
-                    className="uppercase"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>CNPJ / CPF</Label>
+                    <Input
+                      name="for_documento"
+                      defaultValue={selectedFornecedor?.for_documento || ""}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Inscrição Estadual</Label>
+                    <Input
+                      name="for_inscricao_estadual"
+                      defaultValue={selectedFornecedor?.for_inscricao_estadual || ""}
+                    />
+                  </div>
                 </div>
-              </div>
+              </section>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>CNPJ / CPF</Label>
-                  <Input
-                    name="for_documento"
-                    defaultValue={selectedFornecedor?.for_documento || ""}
-                  />
+              {/* Contato */}
+              <section className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-[0.15em] text-slate-400">
+                  Contato
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Contato (responsável)</Label>
+                    <Input
+                      name="for_contato"
+                      defaultValue={selectedFornecedor?.for_contato || ""}
+                      className="uppercase"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>E-mail</Label>
+                    <Input
+                      name="for_email"
+                      type="email"
+                      defaultValue={selectedFornecedor?.for_email || ""}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>CEP</Label>
-                  <Input name="for_cep" defaultValue={selectedFornecedor?.for_cep || ""} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Telefone</Label>
+                    <Input
+                      name="for_telefone"
+                      defaultValue={selectedFornecedor?.for_telefone || ""}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Celular / WhatsApp</Label>
+                    <Input
+                      name="for_celular"
+                      defaultValue={selectedFornecedor?.for_celular || ""}
+                    />
+                  </div>
                 </div>
-              </div>
+              </section>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="md:col-span-3 space-y-1.5">
-                  <Label>Endereço</Label>
-                  <Input
-                    name="for_endereco"
-                    defaultValue={selectedFornecedor?.for_endereco || ""}
-                    className="uppercase"
-                  />
+              {/* Endereço */}
+              <section className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-[0.15em] text-slate-400">
+                  Endereço
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>CEP</Label>
+                    <Input name="for_cep" defaultValue={selectedFornecedor?.for_cep || ""} />
+                  </div>
+                  <div className="md:col-span-3 space-y-1.5">
+                    <Label>Endereço</Label>
+                    <Input
+                      name="for_endereco"
+                      defaultValue={selectedFornecedor?.for_endereco || ""}
+                      className="uppercase"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Número</Label>
-                  <Input name="for_numero" defaultValue={selectedFornecedor?.for_numero || ""} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Número</Label>
+                    <Input name="for_numero" defaultValue={selectedFornecedor?.for_numero || ""} />
+                  </div>
+                  <div className="md:col-span-2 space-y-1.5">
+                    <Label>Complemento</Label>
+                    <Input
+                      name="for_complemento"
+                      defaultValue={selectedFornecedor?.for_complemento || ""}
+                      className="uppercase"
+                    />
+                  </div>
                 </div>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Bairro</Label>
+                    <Input
+                      name="for_bairro"
+                      defaultValue={selectedFornecedor?.for_bairro || ""}
+                      className="uppercase"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Cidade</Label>
+                    <Input
+                      name="for_cidade"
+                      defaultValue={selectedFornecedor?.for_cidade || ""}
+                      className="uppercase"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Estado (UF)</Label>
+                    <Input
+                      name="for_estado"
+                      defaultValue={selectedFornecedor?.for_estado || ""}
+                      maxLength={2}
+                      className="uppercase"
+                    />
+                  </div>
+                </div>
+              </section>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <Label>Bairro</Label>
-                  <Input
-                    name="for_bairro"
-                    defaultValue={selectedFornecedor?.for_bairro || ""}
-                    className="uppercase"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Cidade</Label>
-                  <Input
-                    name="for_cidade"
-                    defaultValue={selectedFornecedor?.for_cidade || ""}
-                    className="uppercase"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Estado (UF)</Label>
-                  <Input
-                    name="for_estado"
-                    defaultValue={selectedFornecedor?.for_estado || ""}
-                    maxLength={2}
-                    className="uppercase"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Observação</Label>
+              {/* Observação */}
+              <section className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-[0.15em] text-slate-400">
+                  Observação
+                </h3>
                 <Textarea
                   name="for_observacao"
                   defaultValue={selectedFornecedor?.for_observacao || ""}
                   className="resize-none"
+                  rows={3}
                 />
-              </div>
+              </section>
             </div>
             <DialogFooter>
               <Button
