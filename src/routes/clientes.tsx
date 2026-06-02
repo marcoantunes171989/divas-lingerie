@@ -122,7 +122,13 @@ function ClientesPage() {
       setIsDialogOpen(false);
       refetch();
     } catch (error: any) {
-      toast.error("Erro ao salvar cliente", { description: error.message || String(error) });
+      const isDuplicado =
+        error?.code === "23505" || /duplicate key|unique constraint/i.test(error?.message || "");
+      toast.error("Erro ao salvar cliente", {
+        description: isDuplicado
+          ? "Já existe um cliente com este documento (CNPJ/CPF)."
+          : error.message || String(error),
+      });
     } finally {
       setSubmitting(false);
     }
