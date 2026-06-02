@@ -11,6 +11,11 @@ import {
   Loader2,
   MapPin,
   MoreVertical,
+  Phone,
+  Smartphone,
+  Mail,
+  User,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -262,9 +267,46 @@ function FornecedorPage() {
               <p className="text-sm text-slate-400 font-medium mb-4">
                 {f.for_fantasia || "Sem fantasia"}
               </p>
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                <MapPin className="w-3 h-3" />
-                {f.for_cidade || "Cidade não informada"} - {f.for_estado || ""}
+
+              <div className="space-y-2 text-xs font-medium text-slate-600">
+                {f.for_documento && (
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{f.for_documento}</span>
+                  </div>
+                )}
+                {f.for_contato && (
+                  <div className="flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{f.for_contato}</span>
+                  </div>
+                )}
+                {f.for_telefone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{f.for_telefone}</span>
+                  </div>
+                )}
+                {f.for_celular && (
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span className="truncate">{f.for_celular}</span>
+                  </div>
+                )}
+                {f.for_email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate lowercase">{f.for_email}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider border-t border-slate-100 pt-3">
+                <MapPin className="w-3 h-3 shrink-0" />
+                <span className="truncate">
+                  {f.for_cidade || "Cidade não informada"}
+                  {f.for_estado ? ` - ${f.for_estado}` : ""}
+                </span>
               </div>
             </Card>
           ))
