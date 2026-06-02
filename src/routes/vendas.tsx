@@ -225,6 +225,7 @@ export function PDVPage() {
   const [reenviarWhatsapp, setReenviarWhatsapp] = useState("");
   const [isEnviandoReenvio, setIsEnviandoReenvio] = useState(false);
   const [reenviarPeriodo, setReenviarPeriodo] = useState<string>("");
+  const [reenviarBuscaCliente, setReenviarBuscaCliente] = useState("");
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
@@ -457,6 +458,20 @@ export function PDVPage() {
     enabled: isReenviarModalOpen && !!reenviarPeriodo,
     staleTime: 0,
   });
+
+  // Vendas do reenvio (não canceladas) já filtradas pela busca de cliente/cupom
+  const vendasReenvioFiltradas = useMemo(() => {
+    const s = reenviarBuscaCliente.trim().toLowerCase();
+    return (vendasDoDia as any[])
+      .filter((v: any) => v.ven_status !== "cancelada")
+      .filter((v: any) => {
+        if (!s) return true;
+        const nome = (
+          clientesData.find((c: any) => c.id === v.ven_cliente_id)?.cli_nome || "Consumidor Final"
+        ).toLowerCase();
+        return nome.includes(s) || String(v.ven_cupom_fiscal || "").includes(s);
+      });
+  }, [vendasDoDia, clientesData, reenviarBuscaCliente]);
 
   useEffect(() => {
     supabase
@@ -2027,6 +2042,7 @@ export function PDVPage() {
             setSelectedReenviarVendas([]);
             setReenviarWhatsapp("");
             setReenviarPeriodo("");
+            setReenviarBuscaCliente("");
           }
         }}
       >
@@ -2066,6 +2082,7 @@ export function PDVPage() {
                 setReenviarPeriodo(v);
                 setSelectedReenviarVendas([]);
                 setReenviarWhatsapp("");
+                setReenviarBuscaCliente("");
               }}
             >
               <SelectTrigger className="h-11 rounded-xl">
@@ -2079,6 +2096,19 @@ export function PDVPage() {
                 ))}
               </SelectContent>
             </Select>
+
+            {reenviarPeriodo && (
+              <div className="relative mt-3">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar por cliente ou cupom..."
+                  value={reenviarBuscaCliente}
+                  onChange={(e) => setReenviarBuscaCliente(e.target.value)}
+                  className="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+                />
+              </div>
+            )}
           </div>
 
           {/* Lista de vendas — só aparece após escolher o período */}
@@ -2107,15 +2137,17 @@ export function PDVPage() {
                     {(errorVendasDia as any)?.message || String(errorVendasDia)}
                   </p>
                 </div>
-              ) : vendasDoDia.filter((v: any) => v.ven_status !== "cancelada").length === 0 ? (
+              ) : vendasReenvioFiltradas.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-slate-400 gap-2">
                   <Receipt className="w-8 h-8 opacity-30" />
-                  <p className="text-sm font-bold">Nenhuma venda no período</p>
+                  <p className="text-sm font-bold">
+                    {reenviarBuscaCliente
+                      ? "Nenhuma venda para esse cliente/cupom"
+                      : "Nenhuma venda no período"}
+                  </p>
                 </div>
               ) : (
-                vendasDoDia
-                  .filter((v: any) => v.ven_status !== "cancelada")
-                  .map((venda: any) => {
+                vendasReenvioFiltradas.map((venda: any) => {
                     const isSelected = selectedReenviarVendas.some((s) => s.id === venda.id);
                     const hora = new Date(venda.created_at).toLocaleTimeString("pt-BR", {
                       hour: "2-digit",
