@@ -829,7 +829,7 @@ export function PDVPage() {
       setDesconto(0);
       setPagamentos([]);
       setValorPagoManual("0,00");
-      setSelectedClienteId("default");
+      setSelectedClienteId("");
       setCupomFiscal("");
 
       // Abre o dialog de sucesso APÓS o checkout fechar (evita conflito de overlay)
