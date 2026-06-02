@@ -1285,7 +1285,8 @@ export function PDVPage() {
               setIsReenviarModalOpen(true);
               setSelectedReenviarVendas([]);
               setReenviarWhatsapp("");
-              setReenviarPeriodo("");
+              setReenviarBuscaCliente("");
+              setReenviarPeriodo("hoje"); // abre já com "Hoje" selecionado (pode alterar)
             }}
           >
             <Share2 className="w-3.5 h-3.5" />
