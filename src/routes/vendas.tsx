@@ -1552,51 +1552,66 @@ export function PDVPage() {
                               showMotivo: true,
                               onConfirm: async (motivo) => {
                                 const cupomAtual = cupomFiscal;
-
-                                // Caso 1: venda já finalizada no banco → chama RPC
-                                if (
-                                  lastSaleData?.vendaId &&
-                                  lastSaleData?.cupomFiscal === cupomAtual
-                                ) {
-                                  await supabase.rpc("cancelar_venda" as any, {
-                                    p_venda_id: lastSaleData.vendaId,
-                                    p_motivo: motivo || null,
-                                    p_cupom_fiscal: cupomAtual,
-                                  });
-                                } else {
-                                  // Caso 2: venda NÃO finalizada → salva direto na tabela
-                                  const itensAtivos = items.filter((i) => !i.cancelado);
-                                  const snapshot = itensAtivos.map((i) => {
-                                    const prod = (produtos as any[]).find(
-                                      (p: any) => p.id === i.produto_id,
+                                try {
+                                  // Caso 1: venda já finalizada no banco → chama RPC
+                                  if (
+                                    lastSaleData?.vendaId &&
+                                    lastSaleData?.cupomFiscal === cupomAtual
+                                  ) {
+                                    const { error } = await supabase.rpc("cancelar_venda" as any, {
+                                      p_venda_id: lastSaleData.vendaId,
+                                      p_motivo: motivo || null,
+                                      p_cupom_fiscal: cupomAtual,
+                                    });
+                                    if (error) throw error;
+                                  } else {
+                                    // Caso 2: venda NÃO finalizada → salva direto na tabela
+                                    const itensAtivos = items.filter((i) => !i.cancelado);
+                                    const snapshot = itensAtivos.map((i) => {
+                                      const prod = (produtos as any[]).find(
+                                        (p: any) => p.id === i.produto_id,
+                                      );
+                                      return {
+                                        produto_id: i.produto_id,
+                                        descricao: i.descricao,
+                                        estoque_no_cancelamento: prod?.pro_estoque_atual ?? 0,
+                                        quantidade_cancelada: i.quantidade,
+                                      };
+                                    });
+                                    const valorTotal = itensAtivos.reduce(
+                                      (s, i) => s + i.total,
+                                      0,
                                     );
-                                    return {
-                                      produto_id: i.produto_id,
-                                      descricao: i.descricao,
-                                      estoque_no_cancelamento: prod?.pro_estoque_atual ?? 0,
-                                      quantidade_cancelada: i.quantidade,
-                                    };
-                                  });
-                                  const valorTotal = itensAtivos.reduce((s, i) => s + i.total, 0);
-                                  await supabase.from("tab_cancelamentos" as any).insert({
-                                    can_cupom_fiscal: cupomAtual,
-                                    can_tipo: "venda_completa",
-                                    can_motivo: motivo || null,
-                                    can_estoque_snapshot: snapshot,
-                                    can_valor_cancelado: valorTotal,
+                                    const { error } = await supabase
+                                      .from("tab_cancelamentos" as any)
+                                      .insert({
+                                        can_cupom_fiscal: cupomAtual,
+                                        can_tipo: "venda_completa",
+                                        can_motivo: motivo || null,
+                                        can_estoque_snapshot: snapshot,
+                                        can_valor_cancelado: valorTotal,
+                                      })
+                                      .select();
+                                    if (error) throw error;
+                                  }
+
+                                  // Só reseta o carrinho APÓS o cancelamento ser confirmado no banco
+                                  setItems([]);
+                                  setIsFinishing(false);
+                                  setIsCartOpen(false);
+                                  setDesconto(0);
+                                  setPagamentos([]);
+                                  setSelectedClienteId("");
+                                  setCupomFiscal("");
+                                  queryClient.invalidateQueries({ queryKey: ["produtos-pdv"] });
+                                  toast.success(
+                                    `Cupom Nº ${cupomAtual} cancelado e estoque restaurado`,
+                                  );
+                                } catch (e: any) {
+                                  toast.error("Erro ao cancelar cupom", {
+                                    description: e?.message || String(e),
                                   });
                                 }
-
-                                // Fecha painel e reseta carrinho
-                                setItems([]);
-                                setIsFinishing(false);
-                                setIsCartOpen(false);
-                                setDesconto(0);
-                                setPagamentos([]);
-                                setSelectedClienteId("");
-                                setCupomFiscal("");
-                                queryClient.invalidateQueries({ queryKey: ["produtos-pdv"] });
-                                toast.info(`Cupom Nº ${cupomAtual} cancelado e estoque restaurado`);
                               },
                             });
                           }}
