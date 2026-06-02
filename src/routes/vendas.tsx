@@ -387,7 +387,7 @@ export function PDVPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tab_produtos")
-        .select("*")
+        .select("*, tab_categorias(cat_nome), tab_tamanhos(tam_nome), tab_cores(cor_nome)")
         .order("pro_descricao");
       if (error) throw error;
       return data || [];
@@ -522,14 +522,24 @@ export function PDVPage() {
 
   const filteredProducts = useMemo(() => {
     if (!searchTerm) return []; // Mostra lista em branco se não houver pesquisa
-    const search = searchTerm.toLowerCase();
+    const s = searchTerm.trim().toLowerCase();
     return produtos
-      .filter(
-        (p) =>
-          p.pro_descricao?.toLowerCase().includes(search) ||
-          p.pro_codigo?.toLowerCase().includes(search) ||
-          p.pro_codigo_barras?.toLowerCase() === search,
-      )
+      .filter((p: any) => {
+        // Busca por TODOS os campos do produto
+        const preco = Number(p.pro_valor_venda || 0);
+        const campos = [
+          p.pro_descricao, // descrição
+          p.pro_codigo, // código (REF)
+          p.pro_codigo_barras, // EAN
+          p.tab_categorias?.cat_nome, // categoria
+          p.tab_tamanhos?.tam_nome, // tamanho
+          p.tab_cores?.cor_nome, // cor
+          String(p.pro_estoque_atual ?? ""), // estoque
+          preco.toFixed(2), // valor "42.90"
+          preco.toLocaleString("pt-BR", { minimumFractionDigits: 2 }), // valor "42,90"
+        ];
+        return campos.some((c) => (c || "").toString().toLowerCase().includes(s));
+      })
       // Só mostra produtos com estoque disponível para venda (> 0, já descontando consignado)
       .filter((p) => getDisponivel(p) > 0)
       .slice(0, 50);
@@ -1074,7 +1084,7 @@ export function PDVPage() {
           <Input
             ref={searchInputRef}
             className="h-14 pl-12 pr-28 rounded-2xl bg-white/10 border-none text-white placeholder:text-white/30 focus-visible:ring-2 focus-visible:ring-primary/50 text-lg uppercase"
-            placeholder="Buscar produto ou código de barras..."
+            placeholder="Buscar por nome, código, EAN, categoria, cor, tamanho, valor..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
             onKeyDown={(e) => {
