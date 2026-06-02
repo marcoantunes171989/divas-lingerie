@@ -193,7 +193,7 @@ export function PDVPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState<ItemVenda[]>([]);
-  const [selectedClienteId, setSelectedClienteId] = useState<string>("default");
+  const [selectedClienteId, setSelectedClienteId] = useState<string>("");
   const [isFinishing, setIsFinishing] = useState(false);
   const [desconto, setDesconto] = useState<number>(0);
   const [pagamentos, setPagamentos] = useState<{ id: string; forma: string; valor: number }[]>([]);
@@ -675,6 +675,13 @@ export function PDVPage() {
         return;
       }
 
+      if (!selectedClienteId) {
+        toast.error("Selecione o cliente para finalizar a venda.");
+        isProcessingRef.current = false;
+        setIsProcessingFinish(false);
+        return;
+      }
+
       if (valorFaltante > 0.01) {
         toast.error("Valor insuficiente", { description: `Falta receber ${brl(valorFaltante)}` });
         isProcessingRef.current = false;
@@ -725,7 +732,8 @@ export function PDVPage() {
       const { data: vendaId, error: rpcError } = await supabase.rpc(
         "registrar_venda_completa" as any,
         {
-          p_cliente_id: selectedClienteId === "default" ? null : selectedClienteId,
+          p_cliente_id:
+            selectedClienteId === "default" || !selectedClienteId ? null : selectedClienteId,
           p_usuario_id: null,
           p_valor_total: total,
           p_desconto: desconto,
@@ -1491,6 +1499,9 @@ export function PDVPage() {
                     value={selectedClienteId}
                     onChange={(e) => setSelectedClienteId(e.target.value)}
                   >
+                    <option value="" disabled className="text-slate-900">
+                      SELECIONE O CLIENTE...
+                    </option>
                     <option value="default" className="text-slate-900">
                       CONSUMIDOR FINAL
                     </option>
@@ -1569,7 +1580,7 @@ export function PDVPage() {
                                 setIsCartOpen(false);
                                 setDesconto(0);
                                 setPagamentos([]);
-                                setSelectedClienteId("default");
+                                setSelectedClienteId("");
                                 setCupomFiscal("");
                                 queryClient.invalidateQueries({ queryKey: ["produtos-pdv"] });
                                 toast.info(`Cupom Nº ${cupomAtual} cancelado e estoque restaurado`);
@@ -1709,7 +1720,7 @@ export function PDVPage() {
               </div>
 
               <Button
-                disabled={valorFaltante > 0.01 || isProcessingFinish}
+                disabled={valorFaltante > 0.01 || isProcessingFinish || !selectedClienteId}
                 className="w-full h-14 rounded-2xl font-black uppercase tracking-[0.1em] bg-slate-900 text-white shadow-lg shadow-slate-900/20 disabled:opacity-50 text-xs"
                 onClick={handleFinishVenda}
               >
