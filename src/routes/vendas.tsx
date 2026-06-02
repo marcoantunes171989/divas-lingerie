@@ -530,8 +530,11 @@ export function PDVPage() {
           p.pro_codigo?.toLowerCase().includes(search) ||
           p.pro_codigo_barras?.toLowerCase() === search,
       )
+      // Só mostra produtos com estoque disponível para venda (> 0, já descontando consignado)
+      .filter((p) => getDisponivel(p) > 0)
       .slice(0, 50);
-  }, [produtos, searchTerm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [produtos, searchTerm, consignadoPorProduto]);
 
   const addItem = (produto: any) => {
     const estoqueDisponivel = getDisponivel(produto);
