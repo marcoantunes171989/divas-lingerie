@@ -91,24 +91,38 @@ function ClientesPage() {
     try {
       setSubmitting(true);
       const payload = {
-        cli_nome: formData.get("cli_nome") as string,
-        cli_documento: formData.get("cli_documento") as string,
-        cli_email: formData.get("cli_email") as string,
-        cli_telefone: formData.get("cli_telefone") as string,
-        cli_cidade: formData.get("cli_cidade") as string,
+        cli_nome: ((formData.get("cli_nome") as string) || "").trim(),
+        cli_documento: (formData.get("cli_documento") as string) || null,
+        cli_email: ((formData.get("cli_email") as string) || "").trim() || null,
+        cli_telefone: (formData.get("cli_telefone") as string) || null,
+        cli_cidade: (formData.get("cli_cidade") as string) || null,
       };
 
+      if (!payload.cli_nome) {
+        toast.error("O nome do cliente é obrigatório.");
+        return;
+      }
+
       if (selectedCliente) {
-        await supabase.from("tab_clientes").update(payload).eq("id", selectedCliente.id);
+        const { error } = await supabase
+          .from("tab_clientes")
+          .update(payload)
+          .eq("id", selectedCliente.id);
+        if (error) throw error;
         toast.success("Cliente atualizado!");
       } else {
-        await supabase.from("tab_clientes").insert([payload]);
+        // .select() garante que a gravação retorne o registro criado (confirma o sucesso real)
+        const { data, error } = await supabase.from("tab_clientes").insert([payload]).select();
+        if (error) throw error;
+        if (!data || data.length === 0) {
+          throw new Error("O cliente não foi gravado. Verifique suas permissões e tente novamente.");
+        }
         toast.success("Cliente criado!");
       }
       setIsDialogOpen(false);
       refetch();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error("Erro ao salvar cliente", { description: error.message || String(error) });
     } finally {
       setSubmitting(false);
     }
