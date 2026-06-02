@@ -34,6 +34,8 @@ type EstoqueItem = {
   descricao: string;
   estoque_no_cancelamento: number;
   quantidade_cancelada: number;
+  valor_unitario?: number | null;
+  valor_cancelado?: number | null;
 };
 
 type Cancelamento = {
@@ -233,14 +235,33 @@ function RelatorioCancelamentosPage() {
                                 {c.can_estoque_snapshot.map((item, idx) => {
                                   const estoqueAntes = item.estoque_no_cancelamento;
                                   const estoqueDepois = estoqueAntes + item.quantidade_cancelada;
+                                  const valorCancelado =
+                                    item.valor_cancelado ??
+                                    (item.valor_unitario != null
+                                      ? item.valor_unitario * item.quantidade_cancelada
+                                      : null);
                                   return (
                                     <div
                                       key={idx}
                                       className="bg-white rounded-xl p-3 border border-slate-100 text-xs"
                                     >
-                                      <p className="font-bold text-slate-800 truncate">
-                                        {item.descricao}
-                                      </p>
+                                      <div className="flex items-start justify-between gap-2">
+                                        <p className="font-bold text-slate-800 truncate flex-1">
+                                          {item.descricao}
+                                        </p>
+                                        {valorCancelado != null && (
+                                          <div className="text-right shrink-0">
+                                            <p className="font-black text-red-500 leading-none">
+                                              {brl(valorCancelado)}
+                                            </p>
+                                            {item.valor_unitario != null && (
+                                              <p className="text-[9px] text-slate-400 mt-0.5">
+                                                {item.quantidade_cancelada}× {brl(item.valor_unitario)}
+                                              </p>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
                                       <div className="mt-2 grid grid-cols-3 gap-2 text-center">
                                         <div className="rounded-lg bg-slate-50 py-1.5">
                                           <p className="text-[9px] uppercase tracking-wide text-slate-400">
