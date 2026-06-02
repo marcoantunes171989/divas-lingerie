@@ -22,7 +22,11 @@ import {
   ShoppingBag,
   CalendarDays,
   Ban,
+  Printer,
+  Send,
+  ChevronDown,
 } from "lucide-react";
+import { gerarReciboVendaPDF, type ReciboVendaData } from "@/lib/recibo-venda";
 import { ChartSkeleton } from "@/components/ChartSkeleton";
 import { EmptyState, ErrorState } from "@/components/States";
 import { PageHeader } from "@/components/PageHeader";
@@ -108,6 +112,49 @@ function DeltaBadge({ value }: { value: number }) {
   );
 }
 
+// Reconstrói o recibo (cupom fiscal) a partir da venda, buscando as formas de pagamento reais
+async function gerarPdfDaVenda(venda: any) {
+  const itens = ((venda.tab_itens_venda || []) as any[])
+    .filter((i: any) => i.itv_status === "ativo")
+    .map((i: any) => ({
+      descricao: i.tab_produtos?.pro_descricao || "Produto",
+      codigo: i.tab_produtos?.pro_codigo,
+      quantidade: i.itv_quantidade,
+      valor: i.itv_valor_unitario ?? i.itv_valor_total / Math.max(1, i.itv_quantidade),
+      total: i.itv_valor_total,
+    }));
+  const subtotal = itens.reduce((s: number, i: any) => s + i.total, 0);
+  const { data: pags } = await (supabase as any)
+    .from("tab_vendas_pagamentos")
+    .select("vpa_forma_pagamento, vpa_valor")
+    .eq("vpa_venda_id", venda.id);
+  const pagamentos =
+    pags && pags.length > 0
+      ? (pags as any[]).map((p) => ({
+          forma: p.vpa_forma_pagamento || "DINHEIRO",
+          valor: Number(p.vpa_valor) || 0,
+        }))
+      : [
+          {
+            forma: venda.ven_forma_pagamento || "DINHEIRO",
+            valor: venda.ven_valor_total ?? subtotal,
+          },
+        ];
+  const reciboData: ReciboVendaData = {
+    cliente: venda.tab_clientes?.cli_nome || "Consumidor Final",
+    itens,
+    subtotal,
+    desconto: Math.max(0, subtotal - (venda.ven_valor_total ?? subtotal)),
+    total: venda.ven_valor_total ?? subtotal,
+    pagamentos,
+    totalPago: pagamentos.reduce((s: number, p: any) => s + p.valor, 0),
+    troco: 0,
+    data: new Date(venda.created_at),
+    cupomFiscal: venda.ven_cupom_fiscal,
+  };
+  return gerarReciboVendaPDF(reciboData);
+}
+
 function VendaCard({
   venda,
   onCancel,
@@ -126,6 +173,9 @@ function VendaCard({
   const [cancelOpen, setCancelOpen] = useState(false);
   const [motivo, setMotivo] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [printing, setPrinting] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const confirmarCancelamento = async () => {
     setCancelling(true);
@@ -138,6 +188,45 @@ function VendaCard({
     }
   };
 
+  const reimprimirCupom = async () => {
+    setPrinting(true);
+    try {
+      const { url } = await gerarPdfDaVenda(venda);
+      const win = window.open(url, "_blank");
+      // Dispara a impressão automaticamente quando o PDF carregar (se o navegador permitir)
+      if (win) win.onload = () => win.print();
+    } catch (e: any) {
+      toast.error("Erro ao gerar o cupom", { description: e?.message || String(e) });
+    } finally {
+      setPrinting(false);
+    }
+  };
+
+  const enviarWhatsApp = async () => {
+    setSending(true);
+    try {
+      const { blob } = await gerarPdfDaVenda(venda);
+      const file = new File([blob], `Divas-Cupom-${venda.ven_cupom_fiscal || "venda"}.pdf`, {
+        type: "application/pdf",
+      });
+      const msg =
+        `Olá, ${cliente}! 🌸\n\nSegue o cupom da sua compra na Divas Lingerie.\n` +
+        `Cupom Nº ${venda.ven_cupom_fiscal || "—"}\nTotal: ${brl(venda.ven_valor_total)}\n\n` +
+        `Obrigada pela preferência! 💕`;
+      const digits = (venda.tab_clientes?.cli_telefone || "").replace(/\D/g, "");
+      const phone = digits ? (digits.startsWith("55") ? digits : `55${digits}`) : "";
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Cupom Divas Lingerie", text: msg });
+      } else {
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+      }
+    } catch (e: any) {
+      toast.error("Erro ao enviar para o WhatsApp", { description: e?.message || String(e) });
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <Card
       className={cn(
@@ -145,55 +234,68 @@ function VendaCard({
         isCancelled && "opacity-55",
       )}
     >
-      <div className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="min-w-0 flex-1 mr-3">
-            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-              <span className="text-[10px] font-black text-primary/50 tracking-[0.15em] uppercase">
-                Nº {venda.ven_cupom_fiscal || "——"}
-              </span>
-              {isCancelled && (
-                <Badge variant="destructive" className="text-[9px] h-4 px-1.5 rounded-full">
-                  Cancelada
-                </Badge>
-              )}
-            </div>
-            <p className="font-black text-slate-900 text-sm leading-tight truncate">{cliente}</p>
-            <div className="flex items-center gap-2 mt-1.5">
-              <span className="text-[10px] text-muted-foreground font-medium">{hora}</span>
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full",
-                  paymentColor(venda.ven_forma_pagamento),
-                )}
-              >
-                <PaymentIcon forma={venda.ven_forma_pagamento} className="h-2.5 w-2.5" />
-                {venda.ven_forma_pagamento}
-              </span>
-            </div>
-          </div>
-          <div className="text-right shrink-0">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
-              Total
-            </p>
-            <p
-              className={cn(
-                "text-xl font-black",
-                isCancelled ? "text-muted-foreground line-through" : "text-primary",
-              )}
-            >
-              {brl(venda.ven_valor_total)}
-            </p>
-            {hasDesc && (
-              <p className="text-[10px] text-rose-500 font-bold mt-0.5">
-                -{brl(venda.ven_desconto)} desc
-              </p>
+      {/* Cabeçalho compacto — clique para abrir o cupom fiscal */}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full text-left p-4 flex items-start justify-between gap-3 hover:bg-slate-50/60 transition-colors"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+            <span className="text-[10px] font-black text-primary/50 tracking-[0.15em] uppercase">
+              Nº {venda.ven_cupom_fiscal || "——"}
+            </span>
+            {isCancelled && (
+              <Badge variant="destructive" className="text-[9px] h-4 px-1.5 rounded-full">
+                Cancelada
+              </Badge>
             )}
           </div>
+          <p className="font-black text-slate-900 text-sm leading-tight truncate">{cliente}</p>
+          <div className="flex items-center gap-2 mt-1.5">
+            <span className="text-[10px] text-muted-foreground font-medium">{hora}</span>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full",
+                paymentColor(venda.ven_forma_pagamento),
+              )}
+            >
+              <PaymentIcon forma={venda.ven_forma_pagamento} className="h-2.5 w-2.5" />
+              {venda.ven_forma_pagamento}
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              · {itens.length} {itens.length === 1 ? "item" : "itens"}
+            </span>
+          </div>
         </div>
-      </div>
+        <div className="text-right shrink-0">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
+            Total
+          </p>
+          <p
+            className={cn(
+              "text-xl font-black",
+              isCancelled ? "text-muted-foreground line-through" : "text-primary",
+            )}
+          >
+            {brl(venda.ven_valor_total)}
+          </p>
+          {hasDesc && (
+            <p className="text-[10px] text-rose-500 font-bold mt-0.5">
+              -{brl(venda.ven_desconto)} desc
+            </p>
+          )}
+        </div>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 text-slate-300 shrink-0 self-center transition-transform",
+            expanded && "rotate-180",
+          )}
+        />
+      </button>
 
-      {itens.length > 0 && (
+      {/* Itens do cupom — só ao abrir */}
+      {expanded && itens.length > 0 && (
         <div className="border-t border-dashed border-slate-100 px-4 py-3 bg-slate-50/50 space-y-1.5">
           {itens.map((item: any) => (
             <div
@@ -217,16 +319,47 @@ function VendaCard({
         </div>
       )}
 
-      {!isCancelled && (
-        <div className="border-t border-slate-100 px-4 py-2 flex justify-end">
+      {/* Ações — só ao abrir */}
+      {expanded && (
+        <div className="border-t border-slate-100 px-3 py-2 flex flex-wrap items-center justify-end gap-1">
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 gap-1.5 text-[11px] font-bold text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg"
-            onClick={() => setCancelOpen(true)}
+            className="h-8 gap-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-100 rounded-lg"
+            onClick={reimprimirCupom}
+            disabled={printing}
           >
-            <Ban className="h-3.5 w-3.5" /> Cancelar venda
+            {printing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Printer className="h-3.5 w-3.5" />
+            )}
+            Reimprimir cupom
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 rounded-lg"
+            onClick={enviarWhatsApp}
+            disabled={sending}
+          >
+            {sending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Send className="h-3.5 w-3.5" />
+            )}
+            WhatsApp
+          </Button>
+          {!isCancelled && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5 text-[11px] font-bold text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg"
+              onClick={() => setCancelOpen(true)}
+            >
+              <Ban className="h-3.5 w-3.5" /> Cancelar venda
+            </Button>
+          )}
         </div>
       )}
 
@@ -410,7 +543,7 @@ function RelatoriosPage() {
       let query = supabase
         .from("tab_vendas")
         .select(
-          "*, tab_clientes!ven_cliente_id(cli_nome), tab_itens_venda!itv_venda_id(*, tab_produtos(pro_descricao))",
+          "*, tab_clientes!ven_cliente_id(cli_nome, cli_telefone), tab_itens_venda!itv_venda_id(*, tab_produtos(pro_descricao, pro_codigo))",
         )
         .order("created_at", { ascending: false })
         .range(page * pageSize, (page + 1) * pageSize - 1);
