@@ -21,6 +21,7 @@ import {
   WalletCards,
   Settings,
   XCircle,
+  Undo2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
@@ -57,6 +58,7 @@ const menuItems = [
   { title: "Cores", url: "/cores", icon: Palette },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Fornecedor", url: "/fornecedor", icon: Truck },
+  { title: "Devolução", url: "/devolucao-fornecedor", icon: Undo2 },
   { title: "Finalizadoras", url: "/finalizadoras", icon: WalletCards },
   { title: "Mot. Cancelamento", url: "/motivos-cancelamento", icon: XCircle },
   { title: "Relatórios", url: "/relatorios", icon: BarChart3 },

@@ -22,6 +22,7 @@ import { Route as MotivosCancelamentoRouteImport } from './routes/motivos-cancel
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FornecedorRouteImport } from './routes/fornecedor'
 import { Route as FinalizadorasRouteImport } from './routes/finalizadoras'
+import { Route as DevolucaoFornecedorRouteImport } from './routes/devolucao-fornecedor'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CrmRouteImport } from './routes/crm'
 import { Route as CoresRouteImport } from './routes/cores'
@@ -98,6 +99,11 @@ const FinalizadorasRoute = FinalizadorasRouteImport.update({
   path: '/finalizadoras',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevolucaoFornecedorRoute = DevolucaoFornecedorRouteImport.update({
+  id: '/devolucao-fornecedor',
+  path: '/devolucao-fornecedor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/cores': typeof CoresRoute
   '/crm': typeof CrmRoute
   '/dashboard': typeof DashboardRoute
+  '/devolucao-fornecedor': typeof DevolucaoFornecedorRoute
   '/finalizadoras': typeof FinalizadorasRoute
   '/fornecedor': typeof FornecedorRoute
   '/login': typeof LoginRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/cores': typeof CoresRoute
   '/crm': typeof CrmRoute
   '/dashboard': typeof DashboardRoute
+  '/devolucao-fornecedor': typeof DevolucaoFornecedorRoute
   '/finalizadoras': typeof FinalizadorasRoute
   '/fornecedor': typeof FornecedorRoute
   '/login': typeof LoginRoute
@@ -211,6 +219,7 @@ export interface FileRoutesById {
   '/cores': typeof CoresRoute
   '/crm': typeof CrmRoute
   '/dashboard': typeof DashboardRoute
+  '/devolucao-fornecedor': typeof DevolucaoFornecedorRoute
   '/finalizadoras': typeof FinalizadorasRoute
   '/fornecedor': typeof FornecedorRoute
   '/login': typeof LoginRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/cores'
     | '/crm'
     | '/dashboard'
+    | '/devolucao-fornecedor'
     | '/finalizadoras'
     | '/fornecedor'
     | '/login'
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/cores'
     | '/crm'
     | '/dashboard'
+    | '/devolucao-fornecedor'
     | '/finalizadoras'
     | '/fornecedor'
     | '/login'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/cores'
     | '/crm'
     | '/dashboard'
+    | '/devolucao-fornecedor'
     | '/finalizadoras'
     | '/fornecedor'
     | '/login'
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   CoresRoute: typeof CoresRoute
   CrmRoute: typeof CrmRoute
   DashboardRoute: typeof DashboardRoute
+  DevolucaoFornecedorRoute: typeof DevolucaoFornecedorRoute
   FinalizadorasRoute: typeof FinalizadorasRoute
   FornecedorRoute: typeof FornecedorRoute
   LoginRoute: typeof LoginRoute
@@ -422,6 +435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinalizadorasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/devolucao-fornecedor': {
+      id: '/devolucao-fornecedor'
+      path: '/devolucao-fornecedor'
+      fullPath: '/devolucao-fornecedor'
+      preLoaderRoute: typeof DevolucaoFornecedorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -506,6 +526,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoresRoute: CoresRoute,
   CrmRoute: CrmRoute,
   DashboardRoute: DashboardRoute,
+  DevolucaoFornecedorRoute: DevolucaoFornecedorRoute,
   FinalizadorasRoute: FinalizadorasRoute,
   FornecedorRoute: FornecedorRoute,
   LoginRoute: LoginRoute,
