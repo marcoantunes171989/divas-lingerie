@@ -194,6 +194,8 @@ export function PDVPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState<ItemVenda[]>([]);
   const [selectedClienteId, setSelectedClienteId] = useState<string>("");
+  const [observacaoVenda, setObservacaoVenda] = useState<string>("");
+  const [previsaoPagamento, setPrevisaoPagamento] = useState<string>("");
   const [isFinishing, setIsFinishing] = useState(false);
   const [desconto, setDesconto] = useState<number>(0);
   const [pagamentos, setPagamentos] = useState<{ id: string; forma: string; valor: number }[]>([]);
@@ -801,6 +803,19 @@ export function PDVPage() {
         }
       }
 
+      // Persiste observação e previsão de pagamento na venda
+      if (vendaId && (observacaoVenda.trim() || previsaoPagamento)) {
+        try {
+          await supabase.rpc("definir_dados_venda" as any, {
+            p_venda_id: vendaId as string,
+            p_observacao: observacaoVenda.trim() || null,
+            p_previsao_pagamento: previsaoPagamento || null,
+          });
+        } catch (e) {
+          console.warn("[VENDA] Falha ao salvar observação/previsão na venda", e);
+        }
+      }
+
       // Se veio de uma consignação, marcar como vendida e salvar a referência da venda
       if (currentConsignacaoId) {
         await supabase
@@ -849,6 +864,8 @@ export function PDVPage() {
         troco: temDinheiro ? excedente : 0,
         data: new Date(),
         cupomFiscal: cupomFiscal,
+        observacao: observacaoVenda.trim() || null,
+        previsaoPagamento: previsaoPagamento || null,
       };
 
       // Salva os dados da venda e fecha o checkout dialog primeiro
@@ -864,6 +881,8 @@ export function PDVPage() {
       setPagamentos([]);
       setValorPagoManual("0,00");
       setSelectedClienteId("");
+      setObservacaoVenda("");
+      setPrevisaoPagamento("");
       setCupomFiscal("");
 
       // Abre o dialog de sucesso APÓS o checkout fechar (evita conflito de overlay)
@@ -944,6 +963,8 @@ export function PDVPage() {
             troco: 0,
             data: new Date(venda.created_at),
             cupomFiscal: venda.ven_cupom_fiscal,
+            observacao: venda.ven_observacao,
+            previsaoPagamento: venda.ven_previsao_pagamento,
           };
           const { blob } = await gerarReciboVendaPDF(reciboData);
           return new File(
@@ -1652,6 +1673,32 @@ export function PDVPage() {
                         </button>
                       )}
                     </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">
+                      Previsão de Pagamento
+                    </label>
+                    <input
+                      type="date"
+                      value={previsaoPagamento}
+                      onChange={(e) => setPrevisaoPagamento(e.target.value)}
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">
+                      Observação
+                    </label>
+                    <input
+                      type="text"
+                      value={observacaoVenda}
+                      onChange={(e) => setObservacaoVenda(e.target.value)}
+                      placeholder="Opcional (aparece no cupom)"
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
+                    />
                   </div>
                 </div>
 

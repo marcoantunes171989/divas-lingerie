@@ -151,6 +151,8 @@ async function gerarPdfDaVenda(venda: any) {
     troco: 0,
     data: new Date(venda.created_at),
     cupomFiscal: venda.ven_cupom_fiscal,
+    observacao: venda.ven_observacao,
+    previsaoPagamento: venda.ven_previsao_pagamento,
   };
   return gerarReciboVendaPDF(reciboData);
 }
@@ -316,6 +318,30 @@ function VendaCard({
               <span className="font-bold text-slate-900">{brl(item.itv_valor_total)}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Previsão de pagamento e observação — só ao abrir */}
+      {expanded && (venda.ven_previsao_pagamento || venda.ven_observacao) && (
+        <div className="border-t border-dashed border-slate-100 px-4 py-2.5 bg-slate-50/50 space-y-1 text-[11px]">
+          {venda.ven_previsao_pagamento && (
+            <div className="flex gap-2">
+              <span className="font-bold text-slate-500 uppercase tracking-wide text-[10px]">
+                Prev. pagamento:
+              </span>
+              <span className="font-bold text-slate-800">
+                {dateBR(venda.ven_previsao_pagamento)}
+              </span>
+            </div>
+          )}
+          {venda.ven_observacao && (
+            <div className="flex gap-2">
+              <span className="font-bold text-slate-500 uppercase tracking-wide text-[10px]">
+                Obs:
+              </span>
+              <span className="text-slate-700">{venda.ven_observacao}</span>
+            </div>
+          )}
         </div>
       )}
 

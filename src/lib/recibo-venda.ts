@@ -27,12 +27,22 @@ export interface ReciboVendaData {
   data?: Date;
   vendedor?: string;
   cupomFiscal?: string;
+  observacao?: string | null;
+  previsaoPagamento?: string | null; // "YYYY-MM-DD" ou ISO
 }
 
 // ─── HTML compartilhado entre preview, PDF e PNG ─────────────────────────────
 
+// Formata "YYYY-MM-DD" (ou ISO) em "DD/MM/YYYY"
+function fmtDataPt(s?: string | null): string {
+  if (!s) return "";
+  const [y, m, d] = s.split("T")[0].split("-");
+  return y && m && d ? `${d}/${m}/${y}` : s;
+}
+
 export function buildReceiptInnerHTML(data: ReciboVendaData): string {
   const dataStr = (data.data ?? new Date()).toLocaleString("pt-BR");
+  const previsaoStr = fmtDataPt(data.previsaoPagamento);
 
   const row = (label: string, value: string, bold = false) =>
     `<div style="display:flex;justify-content:space-between;font-size:10px;font-weight:${bold ? "bold" : "normal"};margin:2px 0;">
@@ -80,6 +90,11 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
     <div style="font-size:10px;margin:3px 0 4px;">
       <strong>CLIENTE:</strong> ${data.cliente || "CONSUMIDOR FINAL"}
     </div>
+    ${
+      previsaoStr
+        ? `<div style="font-size:10px;margin:0 0 4px;"><strong>PREVISÃO DE PAGAMENTO:</strong> ${previsaoStr}</div>`
+        : ""
+    }
 
     ${dashedLine}
 
@@ -108,6 +123,12 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
     ${trocoHTML}
 
     ${dashedLine}
+
+    ${
+      data.observacao
+        ? `<div style="font-size:10px;margin:2px 0;"><strong>OBS:</strong> ${data.observacao}</div>${dashedLine}`
+        : ""
+    }
 
     <div style="text-align:center;font-size:9px;margin-top:8px;line-height:1.7;color:#444;font-style:italic;">
       ✦ Obrigada pela preferência! ✦<br>
@@ -161,7 +182,12 @@ export async function gerarReciboVendaPDF(
   const MID = W / 2;
 
   // Estima a altura: ~8mm cabeçalho + 4mm por item + ~30mm restante
-  const estimH = 80 + data.itens.length * 5 + data.pagamentos.length * 4;
+  const estimH =
+    80 +
+    data.itens.length * 5 +
+    data.pagamentos.length * 4 +
+    (data.previsaoPagamento ? 5 : 0) +
+    (data.observacao ? 8 : 0);
   const pdf = new jsPDF({ unit: "mm", format: [W, estimH] });
 
   let y = 7;
@@ -227,6 +253,15 @@ export async function gerarReciboVendaPDF(
   pdf.text(clienteTrunc, L + 16, y);
   y += 4;
 
+  const previsaoStr = fmtDataPt(data.previsaoPagamento);
+  if (previsaoStr) {
+    pdf.setFont("courier", "bold");
+    pdf.text("PREV. PAGTO:", L, y);
+    pdf.setFont("courier", "normal");
+    pdf.text(previsaoStr, L + 24, y);
+    y += 4;
+  }
+
   dashedLine();
 
   // ── Cabeçalho de itens ────────────────────────────────────────────────────
@@ -277,6 +312,18 @@ export async function gerarReciboVendaPDF(
   if (data.troco > 0) row("TROCO", brl(data.troco), true);
 
   dashedLine();
+
+  // ── Observação ────────────────────────────────────────────────────────────
+  if (data.observacao) {
+    pdf.setFont("courier", "bold");
+    pdf.setFontSize(8);
+    pdf.text("OBS:", L, y);
+    pdf.setFont("courier", "normal");
+    const obsLinhas = pdf.splitTextToSize(data.observacao, R - L - 12);
+    pdf.text(obsLinhas, L + 12, y);
+    y += lh * (Array.isArray(obsLinhas) ? obsLinhas.length : 1) + 1;
+    dashedLine();
+  }
 
   // ── Rodapé ────────────────────────────────────────────────────────────────
   pdf.setFont("courier", "normal");
