@@ -1,7 +1,8 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Printer, Download, X } from "lucide-react";
-import { buildReceiptInnerHTML, type ReciboVendaData } from "@/lib/recibo-venda";
+import { printRecibo, type ReciboVendaData } from "@/lib/recibo-venda";
+import { ReceiptPreview } from "@/components/pos/ReceiptPreview";
 
 interface Props {
   open: boolean;
@@ -10,46 +11,7 @@ interface Props {
   onDownloadPDF?: () => void;
 }
 
-const RECEIPT_STYLE = `
-  width: 280px;
-  padding: 16px 14px 20px;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 11px;
-  color: #000;
-  background: #fff;
-`;
-
-const PRINT_CSS = `
-  @page { size: 80mm auto; margin: 0; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { width: 80mm; padding: 4mm; background: #fff; }
-  .receipt { ${RECEIPT_STYLE.replace(/\n/g, " ")} width: 100%; }
-`;
-
 export function CupomFiscalPreview({ open, onClose, data, onDownloadPDF }: Props) {
-  const handlePrint = () => {
-    if (!data) return;
-    const printWin = window.open("", "_blank", "width=420,height=750");
-    if (!printWin) return;
-    printWin.document.write(`<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8">
-  <title>Cupom – Divas Lingerie</title>
-  <style>${PRINT_CSS}</style>
-</head>
-<body>
-  <div class="receipt">${buildReceiptInnerHTML(data)}</div>
-</body>
-</html>`);
-    printWin.document.close();
-    printWin.focus();
-    setTimeout(() => {
-      printWin.print();
-      printWin.close();
-    }, 400);
-  };
-
   if (!data) return null;
 
   return (
@@ -75,24 +37,14 @@ export function CupomFiscalPreview({ open, onClose, data, onDownloadPDF }: Props
 
         {/* Receipt — usa o mesmo HTML gerado pelo PDF/PNG */}
         <div className="bg-slate-100 p-5 overflow-y-auto max-h-[60vh]">
-          <div
-            className="bg-white shadow-xl mx-auto rounded-sm"
-            style={{
-              width: "280px",
-              padding: "16px 14px 20px",
-              fontFamily: "'Courier New', Courier, monospace",
-              fontSize: "11px",
-              color: "#000",
-            }}
-            dangerouslySetInnerHTML={{ __html: buildReceiptInnerHTML(data) }}
-          />
+          <ReceiptPreview data={data} className="shadow-xl" />
         </div>
 
         {/* Actions */}
         <div className="p-4 bg-white border-t border-slate-100 flex flex-col gap-2">
           <Button
             className="w-full h-12 rounded-xl font-black uppercase text-xs bg-primary text-white shadow-lg shadow-primary/20"
-            onClick={handlePrint}
+            onClick={() => printRecibo(data)}
           >
             <Printer className="w-4 h-4 mr-2" /> Imprimir Cupom
           </Button>

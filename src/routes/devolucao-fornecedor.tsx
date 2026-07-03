@@ -15,15 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Search,
-  Loader2,
-  Undo2,
-  PackageX,
-  CalendarDays,
-  History,
-  Building2,
-} from "lucide-react";
+import { Search, Loader2, Undo2, PackageX, CalendarDays, History, Building2 } from "lucide-react";
 
 export const Route = createFileRoute("/devolucao-fornecedor")({
   component: DevolucaoFornecedorPage,
@@ -92,8 +84,7 @@ function DevolucaoFornecedorPage() {
     const s = search.trim().toLowerCase();
     if (!s) return produtos;
     return produtos.filter(
-      (p) =>
-        p.pro_descricao?.toLowerCase().includes(s) || p.pro_codigo?.toLowerCase().includes(s),
+      (p) => p.pro_descricao?.toLowerCase().includes(s) || p.pro_codigo?.toLowerCase().includes(s),
     );
   }, [produtos, search]);
 
@@ -204,7 +195,8 @@ function DevolucaoFornecedorPage() {
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
           <p className="text-sm text-slate-500">
-            <strong className="text-slate-900">{selecionados.size}</strong> produto(s) selecionado(s)
+            <strong className="text-slate-900">{selecionados.size}</strong> produto(s)
+            selecionado(s)
             {selecionados.size > 0 && (
               <>
                 {" "}
@@ -273,15 +265,11 @@ function DevolucaoFornecedorPage() {
                   >
                     <Checkbox checked={checked} onCheckedChange={() => toggle(p.id)} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-slate-800 text-sm truncate">
-                        {p.pro_descricao}
-                      </p>
+                      <p className="font-bold text-slate-800 text-sm truncate">{p.pro_descricao}</p>
                       <p className="text-[11px] text-slate-400">REF {p.pro_codigo}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-xs font-black text-slate-700">
-                        {p.pro_estoque_atual} un
-                      </p>
+                      <p className="text-xs font-black text-slate-700">{p.pro_estoque_atual} un</p>
                       <p className="text-[11px] text-slate-400">{brl(valorTotal)}</p>
                     </div>
                   </label>
@@ -312,7 +300,7 @@ function DevolucaoFornecedorPage() {
                       : ""}
                   </p>
                   <p className="text-[11px] text-slate-400 truncate">
-                    {(d.dev_snapshot?.length || 0)} produto(s)
+                    {d.dev_snapshot?.length || 0} produto(s)
                     {d.dev_motivo ? ` · ${d.dev_motivo}` : ""}
                   </p>
                 </div>

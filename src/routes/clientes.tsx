@@ -115,7 +115,9 @@ function ClientesPage() {
         const { data, error } = await supabase.from("tab_clientes").insert([payload]).select();
         if (error) throw error;
         if (!data || data.length === 0) {
-          throw new Error("O cliente não foi gravado. Verifique suas permissões e tente novamente.");
+          throw new Error(
+            "O cliente não foi gravado. Verifique suas permissões e tente novamente.",
+          );
         }
         toast.success("Cliente criado!");
       }

@@ -29,6 +29,12 @@ export interface ReciboVendaData {
   cupomFiscal?: string;
   observacao?: string | null;
   previsaoPagamento?: string | null; // "YYYY-MM-DD" ou ISO
+  operador?: string;
+  terminal?: string;
+  enderecoLoja?: string;
+  cnpjLoja?: string;
+  whatsappLoja?: string;
+  statusVenda?: string;
 }
 
 // ─── HTML compartilhado entre preview, PDF e PNG ─────────────────────────────
@@ -76,6 +82,9 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
     <div style="text-align:center;margin-bottom:12px;">
       <div style="font-size:17px;font-weight:900;letter-spacing:2px;line-height:1.2;">DIVAS LINGERIE</div>
       <div style="font-size:9px;color:#777;margin-top:3px;">Moda Íntima Premium</div>
+      ${data.enderecoLoja ? `<div style="font-size:9px;color:#777;">${data.enderecoLoja}</div>` : ""}
+      ${data.cnpjLoja ? `<div style="font-size:9px;color:#777;">CNPJ: ${data.cnpjLoja}</div>` : ""}
+      ${data.whatsappLoja ? `<div style="font-size:9px;color:#777;">WhatsApp: ${data.whatsappLoja}</div>` : ""}
       <div style="font-size:9px;color:#777;">contato@divaslingerie.com.br</div>
     </div>
 
@@ -87,6 +96,9 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
       <span>${dataStr}</span>
       <span>Nº ${data.cupomFiscal || "------"}</span>
     </div>
+    ${data.terminal ? row("TERMINAL", data.terminal) : ""}
+    ${data.operador ? row("OPERADOR", data.operador.toUpperCase()) : ""}
+    ${data.vendedor ? row("VENDEDOR", data.vendedor.toUpperCase()) : ""}
     <div style="font-size:10px;margin:3px 0 4px;">
       <strong>CLIENTE:</strong> ${data.cliente || "CONSUMIDOR FINAL"}
     </div>
@@ -95,6 +107,7 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
         ? `<div style="font-size:10px;margin:0 0 4px;"><strong>PREVISÃO DE PAGAMENTO:</strong> ${previsaoStr}</div>`
         : ""
     }
+    ${data.statusVenda ? row("STATUS", data.statusVenda.toUpperCase(), true) : ""}
 
     ${dashedLine}
 
@@ -134,6 +147,10 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
       ✦ Obrigada pela preferência! ✦<br>
       Volte Sempre!<br>
       <span style="font-weight:bold;font-style:normal;color:#000;font-size:10px;">Divas Lingerie</span>
+    </div>
+    <div style="text-align:center;font-size:8px;margin-top:6px;color:#777;">
+      Trocas somente com este comprovante.<br>
+      Cupom não fiscal — venda interna gerencial.
     </div>
   `;
 }
@@ -187,7 +204,14 @@ export async function gerarReciboVendaPDF(
     data.itens.length * 5 +
     data.pagamentos.length * 4 +
     (data.previsaoPagamento ? 5 : 0) +
-    (data.observacao ? 8 : 0);
+    (data.observacao ? 8 : 0) +
+    (data.enderecoLoja ? 4 : 0) +
+    (data.cnpjLoja ? 4 : 0) +
+    (data.whatsappLoja ? 4 : 0) +
+    (data.terminal ? 4 : 0) +
+    (data.operador ? 4 : 0) +
+    (data.statusVenda ? 4 : 0) +
+    8;
   const pdf = new jsPDF({ unit: "mm", format: [W, estimH] });
 
   let y = 7;
@@ -226,6 +250,18 @@ export async function gerarReciboVendaPDF(
   pdf.setFontSize(8);
   pdf.text("Moda Intima Premium", MID, y, { align: "center" });
   y += lh;
+  if (data.enderecoLoja) {
+    pdf.text(data.enderecoLoja, MID, y, { align: "center" });
+    y += lh;
+  }
+  if (data.cnpjLoja) {
+    pdf.text(`CNPJ: ${data.cnpjLoja}`, MID, y, { align: "center" });
+    y += lh;
+  }
+  if (data.whatsappLoja) {
+    pdf.text(`WhatsApp: ${data.whatsappLoja}`, MID, y, { align: "center" });
+    y += lh;
+  }
   pdf.text("contato@divaslingerie.com.br", MID, y, { align: "center" });
   y += 4;
 
@@ -246,7 +282,12 @@ export async function gerarReciboVendaPDF(
   pdf.text(`N ${data.cupomFiscal || "------"}`, R, y, { align: "right" });
   y += lh + 0.5;
 
+  if (data.terminal) row("TERMINAL", data.terminal);
+  if (data.operador) row("OPERADOR", data.operador.toUpperCase());
+  if (data.vendedor) row("VENDEDOR", data.vendedor.toUpperCase());
+
   pdf.setFont("courier", "bold");
+  pdf.setFontSize(8);
   pdf.text("CLIENTE:", L, y);
   pdf.setFont("courier", "normal");
   const clienteTrunc = (data.cliente || "CONSUMIDOR FINAL").substring(0, 28);
@@ -260,6 +301,10 @@ export async function gerarReciboVendaPDF(
     pdf.setFont("courier", "normal");
     pdf.text(previsaoStr, L + 24, y);
     y += 4;
+  }
+
+  if (data.statusVenda) {
+    row("STATUS", data.statusVenda.toUpperCase(), true);
   }
 
   dashedLine();
@@ -336,6 +381,13 @@ export async function gerarReciboVendaPDF(
   pdf.text("Divas Lingerie", MID, y, { align: "center" });
   y += 6;
 
+  pdf.setFont("courier", "normal");
+  pdf.setFontSize(7);
+  pdf.text("Trocas somente com este comprovante.", MID, y, { align: "center" });
+  y += 3.5;
+  pdf.text("Cupom nao fiscal - venda interna gerencial.", MID, y, { align: "center" });
+  y += 5;
+
   const blob = pdf.output("blob");
   return { blob, url: URL.createObjectURL(blob) };
 }
@@ -353,4 +405,44 @@ export async function gerarReciboVendaPNG(
       else reject(new Error("Falha ao gerar PNG"));
     }, "image/png");
   });
+}
+
+// ─── Impressão direta (janela de impressão do navegador) ─────────────────────
+
+const RECEIPT_PRINT_STYLE = `
+  width: 280px;
+  padding: 16px 14px 20px;
+  font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+  font-size: 11px;
+  color: #000;
+  background: #fff;
+`;
+
+export function printRecibo(data: ReciboVendaData) {
+  const printCss = `
+    @page { size: 80mm auto; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { width: 80mm; padding: 4mm; background: #fff; }
+    .receipt { ${RECEIPT_PRINT_STYLE.replace(/\n/g, " ")} width: 100%; }
+  `;
+
+  const printWin = window.open("", "_blank", "width=420,height=750");
+  if (!printWin) return;
+  printWin.document.write(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Cupom – Divas Lingerie</title>
+  <style>${printCss}</style>
+</head>
+<body>
+  <div class="receipt">${buildReceiptInnerHTML(data)}</div>
+</body>
+</html>`);
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(() => {
+    printWin.print();
+    printWin.close();
+  }, 400);
 }

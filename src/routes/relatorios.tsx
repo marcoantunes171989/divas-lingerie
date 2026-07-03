@@ -397,8 +397,8 @@ function VendaCard({
             </DialogTitle>
             <DialogDescription className="pt-1 text-sm">
               Cancelar o cupom <strong>Nº {venda.ven_cupom_fiscal || "——"}</strong> de{" "}
-              <strong>{brl(venda.ven_valor_total)}</strong>? Os itens voltam ao estoque
-              (estorno) e a venda é registrada como cancelada.
+              <strong>{brl(venda.ven_valor_total)}</strong>? Os itens voltam ao estoque (estorno) e
+              a venda é registrada como cancelada.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -427,7 +427,11 @@ function VendaCard({
               onClick={confirmarCancelamento}
               disabled={cancelling}
             >
-              {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+              {cancelling ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Ban className="h-4 w-4" />
+              )}
               Confirmar cancelamento
             </Button>
           </DialogFooter>

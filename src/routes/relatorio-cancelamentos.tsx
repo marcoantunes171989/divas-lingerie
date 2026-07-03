@@ -256,7 +256,8 @@ function RelatorioCancelamentosPage() {
                                             </p>
                                             {item.valor_unitario != null && (
                                               <p className="text-[9px] text-slate-400 mt-0.5">
-                                                {item.quantidade_cancelada}× {brl(item.valor_unitario)}
+                                                {item.quantidade_cancelada}×{" "}
+                                                {brl(item.valor_unitario)}
                                               </p>
                                             )}
                                           </div>

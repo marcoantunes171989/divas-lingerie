@@ -83,6 +83,118 @@ export type Database = {
         };
         Relationships: [];
       };
+      tab_caixa: {
+        Row: {
+          cai_data_abertura: string;
+          cai_data_fechamento: string | null;
+          cai_operador_id: string | null;
+          cai_status: string;
+          cai_terminal: string;
+          cai_valor_abertura: number;
+          cai_valor_fechamento: number | null;
+          created_at: string;
+          id: string;
+          updated_at: string;
+        };
+        Insert: {
+          cai_data_abertura?: string;
+          cai_data_fechamento?: string | null;
+          cai_operador_id?: string | null;
+          cai_status?: string;
+          cai_terminal?: string;
+          cai_valor_abertura?: number;
+          cai_valor_fechamento?: number | null;
+          created_at?: string;
+          id?: string;
+          updated_at?: string;
+        };
+        Update: {
+          cai_data_abertura?: string;
+          cai_data_fechamento?: string | null;
+          cai_operador_id?: string | null;
+          cai_status?: string;
+          cai_terminal?: string;
+          cai_valor_abertura?: number;
+          cai_valor_fechamento?: number | null;
+          created_at?: string;
+          id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tab_caixa_cai_operador_id_fkey";
+            columns: ["cai_operador_id"];
+            isOneToOne: false;
+            referencedRelation: "tab_usuarios";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tab_caixa_cai_operador_id_fkey";
+            columns: ["cai_operador_id"];
+            isOneToOne: false;
+            referencedRelation: "view_auditoria_detalhada";
+            referencedColumns: ["usuario_id"];
+          },
+        ];
+      };
+      tab_cancelamentos: {
+        Row: {
+          can_cupom_fiscal: string | null;
+          can_estoque_snapshot: Json | null;
+          can_itens_snapshot: Json | null;
+          can_motivo: string | null;
+          can_tipo: string;
+          can_valor_cancelado: number | null;
+          can_venda_id: string | null;
+          created_at: string | null;
+          id: string;
+        };
+        Insert: {
+          can_cupom_fiscal?: string | null;
+          can_estoque_snapshot?: Json | null;
+          can_itens_snapshot?: Json | null;
+          can_motivo?: string | null;
+          can_tipo?: string;
+          can_valor_cancelado?: number | null;
+          can_venda_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+        };
+        Update: {
+          can_cupom_fiscal?: string | null;
+          can_estoque_snapshot?: Json | null;
+          can_itens_snapshot?: Json | null;
+          can_motivo?: string | null;
+          can_tipo?: string;
+          can_valor_cancelado?: number | null;
+          can_venda_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tab_cancelamentos_can_venda_id_fkey";
+            columns: ["can_venda_id"];
+            isOneToOne: false;
+            referencedRelation: "tab_vendas";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tab_cancelamentos_can_venda_id_fkey";
+            columns: ["can_venda_id"];
+            isOneToOne: false;
+            referencedRelation: "view_auditoria_detalhada";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tab_cancelamentos_can_venda_id_fkey";
+            columns: ["can_venda_id"];
+            isOneToOne: false;
+            referencedRelation: "view_auditoria_detalhada";
+            referencedColumns: ["venda_id"];
+          },
+        ];
+      };
       tab_cargos: {
         Row: {
           created_at: string;
@@ -316,6 +428,44 @@ export type Database = {
         };
         Relationships: [];
       };
+      tab_devolucoes: {
+        Row: {
+          created_at: string;
+          dev_data: string;
+          dev_fornecedor_id: string | null;
+          dev_motivo: string | null;
+          dev_snapshot: Json;
+          dev_valor_total: number;
+          id: string;
+        };
+        Insert: {
+          created_at?: string;
+          dev_data?: string;
+          dev_fornecedor_id?: string | null;
+          dev_motivo?: string | null;
+          dev_snapshot?: Json;
+          dev_valor_total?: number;
+          id?: string;
+        };
+        Update: {
+          created_at?: string;
+          dev_data?: string;
+          dev_fornecedor_id?: string | null;
+          dev_motivo?: string | null;
+          dev_snapshot?: Json;
+          dev_valor_total?: number;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tab_devolucoes_dev_fornecedor_id_fkey";
+            columns: ["dev_fornecedor_id"];
+            isOneToOne: false;
+            referencedRelation: "tab_fornecedores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tab_finalizadoras: {
         Row: {
           created_at: string | null;
@@ -357,15 +507,21 @@ export type Database = {
           created_at: string;
           created_by: string | null;
           for_bairro: string | null;
+          for_celular: string | null;
           for_cep: string | null;
           for_cidade: string | null;
+          for_complemento: string | null;
+          for_contato: string | null;
           for_documento: string | null;
+          for_email: string | null;
           for_endereco: string | null;
           for_estado: string | null;
           for_fantasia: string | null;
+          for_inscricao_estadual: string | null;
           for_numero: string | null;
           for_observacao: string | null;
           for_razao_social: string;
+          for_telefone: string | null;
           id: string;
           updated_at: string;
           updated_by: string | null;
@@ -374,15 +530,21 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           for_bairro?: string | null;
+          for_celular?: string | null;
           for_cep?: string | null;
           for_cidade?: string | null;
+          for_complemento?: string | null;
+          for_contato?: string | null;
           for_documento?: string | null;
+          for_email?: string | null;
           for_endereco?: string | null;
           for_estado?: string | null;
           for_fantasia?: string | null;
+          for_inscricao_estadual?: string | null;
           for_numero?: string | null;
           for_observacao?: string | null;
           for_razao_social: string;
+          for_telefone?: string | null;
           id?: string;
           updated_at?: string;
           updated_by?: string | null;
@@ -391,15 +553,21 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           for_bairro?: string | null;
+          for_celular?: string | null;
           for_cep?: string | null;
           for_cidade?: string | null;
+          for_complemento?: string | null;
+          for_contato?: string | null;
           for_documento?: string | null;
+          for_email?: string | null;
           for_endereco?: string | null;
           for_estado?: string | null;
           for_fantasia?: string | null;
+          for_inscricao_estadual?: string | null;
           for_numero?: string | null;
           for_observacao?: string | null;
           for_razao_social?: string;
+          for_telefone?: string | null;
           id?: string;
           updated_at?: string;
           updated_by?: string | null;
@@ -482,36 +650,6 @@ export type Database = {
           },
         ];
       };
-      tab_log_mensagens: {
-        Row: {
-          conteudo: string | null;
-          created_at: string | null;
-          erro: string | null;
-          id: string;
-          metadata: Json | null;
-          numero_destino: string;
-          status: string | null;
-        };
-        Insert: {
-          conteudo?: string | null;
-          created_at?: string | null;
-          erro?: string | null;
-          id?: string;
-          metadata?: Json | null;
-          numero_destino: string;
-          status?: string | null;
-        };
-        Update: {
-          conteudo?: string | null;
-          created_at?: string | null;
-          erro?: string | null;
-          id?: string;
-          metadata?: Json | null;
-          numero_destino?: string;
-          status?: string | null;
-        };
-        Relationships: [];
-      };
       tab_maintenance_logs: {
         Row: {
           created_at: string | null;
@@ -541,6 +679,85 @@ export type Database = {
           status?: string;
         };
         Relationships: [];
+      };
+      tab_motivos_cancelamento: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          mot_ativo: boolean | null;
+          mot_codigo: number;
+          mot_descricao: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          mot_ativo?: boolean | null;
+          mot_codigo?: never;
+          mot_descricao: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          mot_ativo?: boolean | null;
+          mot_codigo?: never;
+          mot_descricao?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      tab_movimentacoes_caixa: {
+        Row: {
+          created_at: string;
+          id: string;
+          mov_caixa_id: string;
+          mov_motivo: string | null;
+          mov_operador_id: string | null;
+          mov_tipo: string;
+          mov_valor: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          mov_caixa_id: string;
+          mov_motivo?: string | null;
+          mov_operador_id?: string | null;
+          mov_tipo: string;
+          mov_valor: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          mov_caixa_id?: string;
+          mov_motivo?: string | null;
+          mov_operador_id?: string | null;
+          mov_tipo?: string;
+          mov_valor?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tab_movimentacoes_caixa_mov_caixa_id_fkey";
+            columns: ["mov_caixa_id"];
+            isOneToOne: false;
+            referencedRelation: "tab_caixa";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tab_movimentacoes_caixa_mov_operador_id_fkey";
+            columns: ["mov_operador_id"];
+            isOneToOne: false;
+            referencedRelation: "tab_usuarios";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tab_movimentacoes_caixa_mov_operador_id_fkey";
+            columns: ["mov_operador_id"];
+            isOneToOne: false;
+            referencedRelation: "view_auditoria_detalhada";
+            referencedColumns: ["usuario_id"];
+          },
+        ];
       };
       tab_produtos: {
         Row: {
@@ -614,6 +831,21 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      tab_sequencia_cupom: {
+        Row: {
+          id: number;
+          seq_atual: number;
+        };
+        Insert: {
+          id?: number;
+          seq_atual?: number;
+        };
+        Update: {
+          id?: number;
+          seq_atual?: number;
+        };
+        Relationships: [];
       };
       tab_tamanhos: {
         Row: {
@@ -706,37 +938,49 @@ export type Database = {
           created_at: string;
           id: string;
           updated_at: string;
+          ven_caixa_id: string | null;
           ven_cliente_id: string | null;
           ven_cupom_fiscal: string | null;
           ven_desconto: number | null;
           ven_forma_pagamento: string | null;
+          ven_observacao: string | null;
+          ven_previsao_pagamento: string | null;
           ven_status: string | null;
           ven_usuario_id: string | null;
           ven_valor_total: number;
+          ven_vendedor_id: string | null;
         };
         Insert: {
           created_at?: string;
           id?: string;
           updated_at?: string;
+          ven_caixa_id?: string | null;
           ven_cliente_id?: string | null;
           ven_cupom_fiscal?: string | null;
           ven_desconto?: number | null;
           ven_forma_pagamento?: string | null;
+          ven_observacao?: string | null;
+          ven_previsao_pagamento?: string | null;
           ven_status?: string | null;
           ven_usuario_id?: string | null;
           ven_valor_total: number;
+          ven_vendedor_id?: string | null;
         };
         Update: {
           created_at?: string;
           id?: string;
           updated_at?: string;
+          ven_caixa_id?: string | null;
           ven_cliente_id?: string | null;
           ven_cupom_fiscal?: string | null;
           ven_desconto?: number | null;
           ven_forma_pagamento?: string | null;
+          ven_observacao?: string | null;
+          ven_previsao_pagamento?: string | null;
           ven_status?: string | null;
           ven_usuario_id?: string | null;
           ven_valor_total?: number;
+          ven_vendedor_id?: string | null;
         };
         Relationships: [
           {
@@ -768,15 +1012,22 @@ export type Database = {
             referencedColumns: ["cliente_id"];
           },
           {
-            foreignKeyName: "tab_vendas_ven_usuario_id_fkey";
-            columns: ["ven_usuario_id"];
+            foreignKeyName: "tab_vendas_ven_caixa_id_fkey";
+            columns: ["ven_caixa_id"];
+            isOneToOne: false;
+            referencedRelation: "tab_caixa";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tab_vendas_ven_vendedor_id_fkey";
+            columns: ["ven_vendedor_id"];
             isOneToOne: false;
             referencedRelation: "tab_usuarios";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "tab_vendas_ven_usuario_id_fkey";
-            columns: ["ven_usuario_id"];
+            foreignKeyName: "tab_vendas_ven_vendedor_id_fkey";
+            columns: ["ven_vendedor_id"];
             isOneToOne: false;
             referencedRelation: "view_auditoria_detalhada";
             referencedColumns: ["usuario_id"];
@@ -1022,7 +1273,6 @@ export type Database = {
           produto_id: string | null;
           receita_total: number | null;
           total_vendido: number | null;
-          valor_total: number | null;
         };
         Relationships: [];
       };
@@ -1052,12 +1302,33 @@ export type Database = {
       };
     };
     Functions: {
+      abrir_caixa: {
+        Args: {
+          p_operador_id: string;
+          p_terminal?: string;
+          p_valor_abertura: number;
+        };
+        Returns: string;
+      };
       cancel_all_sales: { Args: never; Returns: undefined };
       cancelar_item_venda: { Args: { p_item_id: string }; Returns: undefined };
       cancelar_item_venda_pdv: {
         Args: { p_item_id: string };
         Returns: undefined;
       };
+      cancelar_venda:
+        | {
+            Args: { p_motivo?: string; p_venda_id: string };
+            Returns: undefined;
+          }
+        | {
+            Args: {
+              p_cupom_fiscal?: string;
+              p_motivo?: string;
+              p_venda_id: string;
+            };
+            Returns: undefined;
+          };
       cancelar_venda_inteira_pdv: {
         Args: { p_venda_id: string };
         Returns: undefined;
@@ -1091,6 +1362,22 @@ export type Database = {
         Args: { p_posse_id: string };
         Returns: string;
       };
+      definir_cupom_fiscal: {
+        Args: { p_cupom_fiscal: string; p_venda_id: string };
+        Returns: undefined;
+      };
+      definir_dados_venda: {
+        Args: {
+          p_observacao?: string;
+          p_previsao_pagamento?: string;
+          p_venda_id: string;
+        };
+        Returns: undefined;
+      };
+      fechar_caixa: {
+        Args: { p_caixa_id: string; p_valor_fechamento: number };
+        Returns: undefined;
+      };
       has_permission: { Args: { p_permission: string }; Returns: boolean };
       is_admin: { Args: never; Returns: boolean };
       marcar_posse_como_devolvida_transacional: {
@@ -1108,36 +1395,46 @@ export type Database = {
         };
         Returns: undefined;
       };
+      proximo_cupom_fiscal: { Args: never; Returns: number };
       recalcular_lucro_venda:
         | { Args: { p_venda_id: string }; Returns: undefined }
         | {
             Args: { p_motivo?: string; p_venda_id: string };
             Returns: undefined;
           };
-      registrar_venda_completa:
-        | {
-            Args: {
-              p_cliente_id: string;
-              p_desconto: number;
-              p_forma_pagamento: string;
-              p_itens: Json;
-              p_usuario_id: string;
-              p_valor_total: number;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              p_cliente_id: string;
-              p_desconto: number;
-              p_forma_pagamento: string;
-              p_itens: Json;
-              p_pagamentos?: Json;
-              p_usuario_id: string;
-              p_valor_total: number;
-            };
-            Returns: string;
-          };
+      registrar_devolucao_fornecedor: {
+        Args: {
+          p_data?: string;
+          p_fornecedor_id?: string;
+          p_motivo?: string;
+          p_produto_ids: string[];
+        };
+        Returns: string;
+      };
+      registrar_movimentacao_caixa: {
+        Args: {
+          p_caixa_id: string;
+          p_motivo: string;
+          p_operador_id: string;
+          p_tipo: string;
+          p_valor: number;
+        };
+        Returns: string;
+      };
+      registrar_venda_completa: {
+        Args: {
+          p_caixa_id?: string;
+          p_cliente_id: string;
+          p_desconto: number;
+          p_forma_pagamento: string;
+          p_itens: Json;
+          p_pagamentos?: Json;
+          p_usuario_id: string;
+          p_valor_total: number;
+          p_vendedor_id?: string;
+        };
+        Returns: string;
+      };
       registrar_venda_transacional:
         | {
             Args: {
@@ -1157,6 +1454,7 @@ export type Database = {
             Returns: string;
           };
       reset_database_data: { Args: never; Returns: undefined };
+      resetar_sequencia_cupom: { Args: never; Returns: undefined };
       show_limit: { Args: never; Returns: number };
       show_trgm: { Args: { "": string }; Returns: string[] };
       test_estoque_consistency: {

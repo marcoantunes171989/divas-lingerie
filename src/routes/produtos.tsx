@@ -584,11 +584,16 @@ function ProdutosPage() {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="pro_valor_venda" className="font-bold flex items-center gap-2">
+                      <Label
+                        htmlFor="pro_valor_venda"
+                        className="font-bold flex items-center gap-2"
+                      >
                         <TrendingUp className="w-4 h-4 text-green-500" /> Preço de Venda *
                       </Label>
                       <div className="relative">
-                        <span className="absolute left-4 top-3.5 text-slate-500 font-medium">R$</span>
+                        <span className="absolute left-4 top-3.5 text-slate-500 font-medium">
+                          R$
+                        </span>
                         <Input
                           id="pro_valor_venda"
                           inputMode="numeric"
@@ -600,7 +605,10 @@ function ProdutosPage() {
                     </div>
 
                     <div className="grid gap-2">
-                      <Label htmlFor="pro_estoque_atual" className="font-bold flex items-center gap-2">
+                      <Label
+                        htmlFor="pro_estoque_atual"
+                        className="font-bold flex items-center gap-2"
+                      >
                         <Boxes className="w-4 h-4 text-slate-400" /> Estoque Atual *
                       </Label>
                       <Input
