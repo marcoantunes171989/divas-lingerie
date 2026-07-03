@@ -33,7 +33,7 @@ export function CartPanel({
   const now = new Date();
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="border-b border-[var(--pdv-border)] p-4">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-sm font-extrabold uppercase tracking-wide text-[var(--pdv-graphite)]">
