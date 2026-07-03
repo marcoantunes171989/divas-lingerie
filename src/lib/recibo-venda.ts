@@ -59,15 +59,17 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
   const solidLine = `<div style="border-top:1px solid #000;margin:5px 0;"></div>`;
 
   const itensHTML = data.itens
-    .map(
-      (it) => `
-    <div style="display:flex;font-size:10px;margin:2px 0;align-items:flex-start;">
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;">${it.descricao.toUpperCase()}</span>
-      <span style="width:22px;text-align:center;">${it.quantidade}</span>
-      <span style="width:58px;text-align:right;">${brl(it.valor)}</span>
-      <span style="width:58px;text-align:right;">${brl(it.total)}</span>
-    </div>`,
-    )
+    .map((it) => {
+      const detalhe = `${it.codigo ? `REF ${it.codigo} &middot; ` : ""}${it.quantidade} UN x ${brl(it.valor)}`;
+      return `
+    <div style="font-size:10px;margin:4px 0;">
+      <div style="font-weight:bold;word-break:break-word;">${it.descricao.toUpperCase()}</div>
+      <div style="display:flex;justify-content:space-between;color:#555;margin-top:1px;">
+        <span>${detalhe}</span>
+        <span style="font-weight:bold;color:#000;">${brl(it.total)}</span>
+      </div>
+    </div>`;
+    })
     .join("");
 
   const pagamentosHTML = data.pagamentos
@@ -111,11 +113,8 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
 
     ${dashedLine}
 
-    <div style="display:flex;font-weight:bold;font-size:10px;border-bottom:1px solid #000;padding-bottom:3px;margin-bottom:4px;">
-      <span style="flex:1;">ITEM</span>
-      <span style="width:22px;text-align:center;">Q</span>
-      <span style="width:58px;text-align:right;">UN</span>
-      <span style="width:58px;text-align:right;">TOTAL</span>
+    <div style="font-weight:bold;font-size:10px;border-bottom:1px solid #000;padding-bottom:3px;margin-bottom:2px;letter-spacing:0.5px;">
+      ITENS DA VENDA
     </div>
 
     ${itensHTML}
@@ -198,10 +197,20 @@ export async function gerarReciboVendaPDF(
   const R = W - 4; // margem direita
   const MID = W / 2;
 
-  // Estima a altura: ~8mm cabeçalho + 4mm por item + ~30mm restante
+  // Pré-medição das descrições para estimar corretamente a altura (itens agora quebram em 2 linhas)
+  const measurer = new jsPDF({ unit: "mm", format: [W, 10] });
+  measurer.setFont("courier", "bold");
+  measurer.setFontSize(8);
+  const totalItemLinhas = data.itens.reduce(
+    (s, it) => s + measurer.splitTextToSize(it.descricao.toUpperCase(), R - L).length,
+    0,
+  );
+
+  // Estima a altura: ~8mm cabeçalho + linhas de descrição + linha de detalhe por item + ~30mm restante
   const estimH =
     80 +
-    data.itens.length * 5 +
+    totalItemLinhas * 3.8 +
+    data.itens.length * 5.5 +
     data.pagamentos.length * 4 +
     (data.previsaoPagamento ? 5 : 0) +
     (data.observacao ? 8 : 0) +
@@ -312,23 +321,24 @@ export async function gerarReciboVendaPDF(
   // ── Cabeçalho de itens ────────────────────────────────────────────────────
   pdf.setFont("courier", "bold");
   pdf.setFontSize(8);
-  pdf.text("ITEM", L, y);
-  pdf.text("Q", L + 44, y, { align: "center" });
-  pdf.text("UN", L + 58, y, { align: "right" });
-  pdf.text("TOTAL", R, y, { align: "right" });
+  pdf.text("ITENS DA VENDA", L, y);
   y += 1;
   solidLine();
 
-  // ── Itens ─────────────────────────────────────────────────────────────────
-  pdf.setFont("courier", "normal");
-  pdf.setFontSize(8);
+  // ── Itens (descrição completa + linha de código/qtd/valor unitário) ───────
   data.itens.forEach((it) => {
-    const desc = it.descricao.toUpperCase().substring(0, 22);
-    pdf.text(desc, L, y);
-    pdf.text(String(it.quantidade), L + 44, y, { align: "center" });
-    pdf.text(brl(it.valor), L + 58, y, { align: "right" });
+    pdf.setFont("courier", "bold");
+    pdf.setFontSize(8);
+    const descLinhas = pdf.splitTextToSize(it.descricao.toUpperCase(), R - L);
+    pdf.text(descLinhas, L, y);
+    y += lh * (Array.isArray(descLinhas) ? descLinhas.length : 1);
+
+    pdf.setFont("courier", "normal");
+    pdf.setFontSize(7.5);
+    const detalhe = `${it.codigo ? `REF ${it.codigo} - ` : ""}${it.quantidade} UN x ${brl(it.valor)}`;
+    pdf.text(detalhe, L, y);
     pdf.text(brl(it.total), R, y, { align: "right" });
-    y += lh;
+    y += lh + 0.7;
   });
 
   solidLine();
