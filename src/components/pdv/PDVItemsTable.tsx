@@ -37,14 +37,14 @@ export function PDVItemsTable({
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-[var(--pdv-border)] bg-white shadow-sm">
       <div className="min-h-0 flex-1 overflow-auto">
-        <table className="w-full min-w-[880px] border-collapse text-sm">
+        <table className="w-full min-w-[680px] border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-[var(--pdv-gray-light)]">
             <tr>
               {COLUMNS.map((col, i) => (
                 <th
                   key={col}
                   className={cn(
-                    "border-b border-[var(--pdv-border)] px-4 py-3 text-xs font-bold uppercase tracking-wide text-[var(--pdv-gray-text)]",
+                    "border-b border-[var(--pdv-border)] px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-[var(--pdv-gray-text)]",
                     i >= 4 && i <= 7 ? "text-right" : "text-left",
                     col === "Ações" && "text-center",
                   )}
@@ -87,16 +87,16 @@ export function PDVItemsTable({
                     )}
                   >
                     <td
-                      className={cn("px-4 py-3 font-medium", selected && "text-[var(--pdv-rose)]")}
+                      className={cn("px-3 py-2.5 font-medium", selected && "text-[var(--pdv-rose)]")}
                     >
                       {index + 1}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-[var(--pdv-gray-text)]">
+                    <td className="px-3 py-2.5 font-mono text-xs text-[var(--pdv-gray-text)]">
                       {item.codigo}
                     </td>
                     <td
                       className={cn(
-                        "px-4 py-3 font-semibold",
+                        "px-3 py-2.5 font-semibold",
                         selected ? "text-[var(--pdv-rose)]" : "text-[var(--pdv-graphite)]",
                         item.cancelado && "line-through",
                       )}
@@ -108,23 +108,23 @@ export function PDVItemsTable({
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-[var(--pdv-gray-text)]">UN</td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    <td className="px-3 py-2.5 text-[var(--pdv-gray-text)]">UN</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
                       {item.quantidade.toFixed(3)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums">{brl(item.valor)}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-[var(--pdv-rose)]">
+                    <td className="px-3 py-2.5 text-right tabular-nums">{brl(item.valor)}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-[var(--pdv-rose)]">
                       {brl(item.desconto || 0)}
                     </td>
                     <td
                       className={cn(
-                        "px-4 py-3 text-right font-bold tabular-nums",
+                        "px-3 py-2.5 text-right font-bold tabular-nums",
                         selected ? "text-[var(--pdv-rose)]" : "text-[var(--pdv-graphite)]",
                       )}
                     >
                       {brl(item.total - (item.desconto || 0))}
                     </td>
-                    <td className="px-2 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-2 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
@@ -175,7 +175,7 @@ export function PDVItemsTable({
         </table>
       </div>
 
-      <div className="flex shrink-0 items-center justify-between border-t border-[var(--pdv-border)] px-4 py-3">
+      <div className="flex shrink-0 items-center justify-between border-t border-[var(--pdv-border)] px-3 py-2.5">
         <span className="text-xs font-semibold text-[var(--pdv-gray-text)]">
           {itensAtivos.length} {itensAtivos.length === 1 ? "item" : "itens"}
         </span>
