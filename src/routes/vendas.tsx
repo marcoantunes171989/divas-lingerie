@@ -1085,7 +1085,7 @@ export function PDVPage() {
   };
 
   return (
-    <div className="-m-4 sm:-m-6 lg:-m-8 flex h-[calc(100svh-4rem)] flex-col gap-3 overflow-hidden bg-[var(--pdv-rose-bg)] p-3 sm:p-4">
+    <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden bg-[var(--pdv-rose-bg)] p-2 xl:gap-3 xl:p-3">
       <PDVHeader
         operadorNome={operadorNome}
         terminal={TERMINAL}
@@ -1115,7 +1115,7 @@ export function PDVPage() {
         </div>
       )}
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-[auto_1fr_360px]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 xl:gap-3 lg:grid-cols-[auto_1fr_auto]">
         <PDVFunctionsPanel
           open={isFunctionsPanelOpen}
           onClose={() => setIsFunctionsPanelOpen(false)}

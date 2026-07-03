@@ -13,9 +13,9 @@ export function PaymentButton({ label, icon: Icon, onClick, disabled }: PaymentB
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="flex h-16 flex-col items-center justify-center gap-1 rounded-xl border border-[var(--pdv-border)] bg-white text-xs font-semibold text-[var(--pdv-graphite)] transition-colors hover:border-[var(--pdv-rose)] hover:bg-[var(--pdv-rose-bg)] disabled:pointer-events-none disabled:opacity-40"
+      className="flex h-12 flex-col items-center justify-center gap-0.5 rounded-xl border border-[var(--pdv-border)] bg-white text-[11px] font-semibold text-[var(--pdv-graphite)] transition-colors hover:border-[var(--pdv-rose)] hover:bg-[var(--pdv-rose-bg)] disabled:pointer-events-none disabled:opacity-40 xl:h-16 xl:gap-1 xl:text-xs"
     >
-      <Icon className="h-5 w-5 text-[var(--pdv-rose)]" />
+      <Icon className="h-4 w-4 text-[var(--pdv-rose)] xl:h-5 xl:w-5" />
       {label}
     </button>
   );

@@ -86,6 +86,10 @@ function RootComponent() {
     return <Navigate to="/" />;
   }
 
+  // A tela de PDV usa a largura total da viewport (sem o container central
+  // limitado a 1600px) para aproveitar todo o espaço disponível no balcão.
+  const isFullBleed = pathname === "/vendas";
+
   // Autenticado → layout completo com sidebar
   return (
     <QueryClientProvider client={queryClient}>
@@ -94,8 +98,12 @@ function RootComponent() {
           <AppSidebar />
           <SidebarInset className="flex flex-1 flex-col min-w-0">
             <Topbar />
-            <main className="flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8">
-              <div className="mx-auto w-full max-w-[1600px]">
+            <main
+              className={
+                isFullBleed ? "flex-1 overflow-hidden" : "flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8"
+              }
+            >
+              <div className={isFullBleed ? "h-full w-full" : "mx-auto w-full max-w-[1600px]"}>
                 <Outlet />
               </div>
             </main>

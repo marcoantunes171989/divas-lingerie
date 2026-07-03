@@ -48,19 +48,20 @@ export function PDVSummaryPanel({
   const now = new Date();
 
   return (
-    <aside className="flex w-[360px] shrink-0 flex-col gap-4 overflow-y-auto rounded-2xl border border-[var(--pdv-border)] bg-white p-4 shadow-sm">
-      <h2 className="font-display text-sm font-bold text-[var(--pdv-graphite)]">Resumo da Venda</h2>
-
-      <div className="flex items-center gap-2 text-xs text-[var(--pdv-gray-text)]">
-        <CalendarClock className="h-4 w-4" />
-        {now.toLocaleDateString("pt-BR")}{" "}
-        {now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+    <aside className="flex w-[300px] shrink-0 flex-col gap-2 overflow-y-auto rounded-2xl border border-[var(--pdv-border)] bg-white p-3 shadow-sm xl:w-[340px] xl:gap-2.5 xl:p-4">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-sm font-bold text-[var(--pdv-graphite)]">Resumo da Venda</h2>
+        <div className="flex items-center gap-1.5 text-[11px] text-[var(--pdv-gray-text)]">
+          <CalendarClock className="h-3.5 w-3.5" />
+          {now.toLocaleDateString("pt-BR")}{" "}
+          {now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+        </div>
       </div>
 
       <button
         type="button"
         onClick={onSelecionarCliente}
-        className="flex items-center gap-2 rounded-xl bg-[var(--pdv-rose-light)] px-3 py-2.5 text-left text-sm font-semibold text-[var(--pdv-rose)]"
+        className="flex items-center gap-2 rounded-xl bg-[var(--pdv-rose-light)] px-3 py-2 text-left text-xs font-semibold text-[var(--pdv-rose)] xl:py-2.5 xl:text-sm"
       >
         <User className="h-4 w-4 shrink-0" />
         <span className="truncate">{clienteNome ?? "Cliente não identificado"}</span>
@@ -69,7 +70,7 @@ export function PDVSummaryPanel({
       <button
         type="button"
         onClick={onSelecionarVendedor}
-        className="flex items-center gap-2 rounded-xl border border-[var(--pdv-border)] bg-white px-3 py-2.5 text-left text-sm font-medium text-[var(--pdv-graphite)]"
+        className="flex items-center gap-2 rounded-xl border border-[var(--pdv-border)] bg-white px-3 py-2 text-left text-xs font-medium text-[var(--pdv-graphite)] xl:py-2.5 xl:text-sm"
       >
         <UserRound className="h-4 w-4 shrink-0 text-[var(--pdv-gray-text)]" />
         <span className="min-w-0 flex-1 truncate">
@@ -78,7 +79,7 @@ export function PDVSummaryPanel({
         <Pencil className="h-3.5 w-3.5 shrink-0 text-[var(--pdv-gray-text)]" />
       </button>
 
-      <div className="space-y-2 border-t border-[var(--pdv-border)] pt-3 text-sm">
+      <div className="space-y-1 border-t border-[var(--pdv-border)] pt-2 text-xs xl:text-sm">
         <div className="flex justify-between text-[var(--pdv-gray-text)]">
           <span>Quantidade total de itens</span>
           <span className="font-semibold text-[var(--pdv-graphite)]">{quantidadeItens}</span>
@@ -97,16 +98,16 @@ export function PDVSummaryPanel({
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-2xl bg-[var(--pdv-rose-light)] px-4 py-4">
-        <span className="font-display text-sm font-bold uppercase tracking-wide text-[var(--pdv-rose)]">
+      <div className="flex items-center justify-between rounded-2xl bg-[var(--pdv-rose-light)] px-4 py-2.5 xl:py-3">
+        <span className="font-display text-xs font-bold uppercase tracking-wide text-[var(--pdv-rose)] xl:text-sm">
           Total
         </span>
-        <span className="font-display text-3xl font-extrabold text-[var(--pdv-rose)]">
+        <span className="font-display text-2xl font-extrabold text-[var(--pdv-rose)] xl:text-3xl">
           {brl(total)}
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-1.5 xl:gap-2">
         <PaymentButton
           label="PIX"
           icon={QrCode}
@@ -136,7 +137,7 @@ export function PDVSummaryPanel({
       <Button
         disabled={disabled}
         onClick={onFinalizar}
-        className="h-14 w-full gap-2 rounded-2xl bg-[var(--pdv-rose-dark)] text-base font-bold uppercase tracking-wide text-white hover:bg-[var(--pdv-rose)]"
+        className="h-11 w-full gap-2 rounded-2xl bg-[var(--pdv-rose-dark)] text-sm font-bold uppercase tracking-wide text-white hover:bg-[var(--pdv-rose)] xl:h-14 xl:text-base"
       >
         Finalizar Venda
         <span className="rounded-md bg-white/20 px-1.5 py-0.5 text-[11px] font-bold">
@@ -148,7 +149,7 @@ export function PDVSummaryPanel({
         type="button"
         disabled={disabled}
         onClick={onCancelarVenda}
-        className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--pdv-border)] text-sm font-semibold text-[var(--pdv-gray-text)] hover:bg-[var(--pdv-gray-light)] disabled:pointer-events-none disabled:opacity-40"
+        className="flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-[var(--pdv-border)] text-xs font-semibold text-[var(--pdv-gray-text)] hover:bg-[var(--pdv-gray-light)] disabled:pointer-events-none disabled:opacity-40 xl:h-11 xl:text-sm"
       >
         <XCircle className="h-4 w-4" /> Cancelar venda
         <span className="rounded-md bg-[var(--pdv-gray-light)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--pdv-gray-text)]">
