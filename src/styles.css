@@ -61,16 +61,19 @@
   --font-mono-receipt: "JetBrains Mono", "Courier New", ui-monospace, monospace;
 
   /* Tokens de marca do PDV (tela de Vendas) — paleta premium Divas Lingerie */
-  --pdv-rose: #d9468f;
-  --pdv-rose-dark: #9d174d;
-  --pdv-rose-light: #fce7f3;
-  --pdv-rose-bg: #fff5f9;
+  --pdv-rose: #db3f91;
+  --pdv-rose-dark: #d83b8c;
+  --pdv-rose-light: #fdeaf4;
+  --pdv-rose-bg: #fff7fb;
   --pdv-graphite: #111827;
-  --pdv-gray-text: #6b7280;
+  --pdv-gray-text: #64748b;
   --pdv-success: #10b981;
+  --pdv-success-bg: #dcfce7;
   --pdv-danger: #ef4444;
   --pdv-warning: #f59e0b;
-  --pdv-border: #e5e7eb;
+  --pdv-border: #e8dde5;
+  --pdv-gray-light: #f8fafc;
+  --pdv-gray-medium: #cbd5e1;
 
   --background: oklch(0.99 0.005 20);
   --foreground: oklch(0.22 0.03 350);

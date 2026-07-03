@@ -1,5 +1,5 @@
 import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 
 const vendasSearchSchema = z.object({
@@ -11,12 +11,7 @@ import { Loader2 as LoaderIcon, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { brl } from "@/lib/format";
-import {
-  gerarReciboVendaPDF,
-  gerarReciboVendaPNG,
-  printRecibo,
-  type ReciboVendaData,
-} from "@/lib/recibo-venda";
+import { gerarReciboVendaPDF, printRecibo, type ReciboVendaData } from "@/lib/recibo-venda";
 import {
   Dialog,
   DialogContent,
@@ -37,15 +32,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { useAuth } from "@/lib/auth";
-import { COMPANY_ADDRESS, COMPANY_CNPJ, COMPANY_NAME, COMPANY_PHONE } from "@/lib/constants";
+import { COMPANY_ADDRESS, COMPANY_CNPJ, COMPANY_PHONE } from "@/lib/constants";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
-import { POSHeader } from "@/components/pos/POSHeader";
-import { POSSearchBar } from "@/components/pos/POSSearchBar";
-import { ProductFilters } from "@/components/pos/ProductFilters";
-import { ProductGrid } from "@/components/pos/ProductGrid";
-import { CartPanel } from "@/components/pos/CartPanel";
-import { SaleSummary } from "@/components/pos/SaleSummary";
 import { CustomerSelectorModal } from "@/components/pos/CustomerSelectorModal";
 import { SellerSelectorModal } from "@/components/pos/SellerSelectorModal";
 import { DiscountModal } from "@/components/pos/DiscountModal";
@@ -53,9 +42,16 @@ import { PaymentModal } from "@/components/pos/PaymentModal";
 import { SaleSuccessModal, type LastSaleSummary } from "@/components/pos/SaleSuccessModal";
 import { CashOpenCloseModal } from "@/components/pos/CashOpenCloseModal";
 import { CashMovementModal } from "@/components/pos/CashMovementModal";
-import { LastSalesPanel, type VendaResumo } from "@/components/pos/LastSalesPanel";
-import { KeyboardShortcutsBar } from "@/components/pos/KeyboardShortcutsBar";
 import type { ItemVenda, ProdutoPDV } from "@/components/pos/types";
+
+import { PDVHeader } from "@/components/pdv/PDVHeader";
+import { PDVFunctionsPanel } from "@/components/pdv/PDVFunctionsPanel";
+import { PDVActionBar } from "@/components/pdv/PDVActionBar";
+import { PDVItemsTable } from "@/components/pdv/PDVItemsTable";
+import { PDVSummaryPanel } from "@/components/pdv/PDVSummaryPanel";
+import { PDVShortcutBar } from "@/components/pdv/PDVShortcutBar";
+import { QuantityModal } from "@/components/pdv/QuantityModal";
+import { shortcutConfig } from "@/components/pdv/shortcuts";
 
 export const shouldShowCancelCoupon = (cupomFiscal: string, items: { cancelado?: boolean }[]) => {
   return !!cupomFiscal && items.some((i) => !i.cancelado);
@@ -187,8 +183,8 @@ export function PDVPage() {
 
   // ── Carrinho / venda em andamento ──────────────────────────────────────────
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null);
   const [items, setItems] = useState<ItemVenda[]>([]);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedClienteId, setSelectedClienteId] = useState<string>("");
   const [selectedVendedorId, setSelectedVendedorId] = useState<string | null>(null);
   const [observacaoVenda, setObservacaoVenda] = useState("");
@@ -200,12 +196,14 @@ export function PDVPage() {
   const isProcessingRef = useRef(false);
 
   // ── Modais ──────────────────────────────────────────────────────────────────
+  const [isFunctionsPanelOpen, setIsFunctionsPanelOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
   const [clienteSearchTerm, setClienteSearchTerm] = useState("");
   const [discountTarget, setDiscountTarget] = useState<{ itemId: string | null } | null>(null);
+  const [quantityTargetId, setQuantityTargetId] = useState<string | null>(null);
   const [isPriceCheckOpen, setIsPriceCheckOpen] = useState(false);
   const [priceCheckTerm, setPriceCheckTerm] = useState("");
   const [cashModal, setCashModal] = useState<{ mode: "abrir" | "fechar" } | null>(null);
@@ -263,18 +261,6 @@ export function PDVPage() {
         .order("pro_descricao");
       if (error) throw error;
       return (data || []) as unknown as ProdutoPDV[];
-    },
-  });
-
-  const { data: categorias = [] } = useQuery({
-    queryKey: ["categorias-pdv"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tab_categorias")
-        .select("id, cat_nome")
-        .order("cat_nome");
-      if (error) throw error;
-      return data || [];
     },
   });
 
@@ -345,81 +331,6 @@ export function PDVPage() {
     },
   });
 
-  const { data: vendasRecentesRaw = [] } = useQuery({
-    queryKey: ["vendas-recentes"],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("tab_vendas")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(12);
-      if (error) throw error;
-      return (data as any[]) || [];
-    },
-  });
-
-  const vendasRecentes: VendaResumo[] = useMemo(
-    () =>
-      vendasRecentesRaw.map((v: any) => ({
-        id: v.id,
-        numero: v.ven_cupom_fiscal || v.id.slice(0, 8),
-        clienteNome:
-          clientesData.find((c: any) => c.id === v.ven_cliente_id)?.cli_nome || "Consumidor Final",
-        valor: Number(v.ven_valor_total) || 0,
-        formaPagamento: v.ven_forma_pagamento || "—",
-        horario: new Date(v.created_at).toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        status: v.ven_status,
-      })),
-    [vendasRecentesRaw, clientesData],
-  );
-
-  // Reenvio de recibo em lote (por período)
-  const [isReenviarModalOpen, setIsReenviarModalOpen] = useState(false);
-  const [selectedReenviarVendas, setSelectedReenviarVendas] = useState<any[]>([]);
-  const [reenviarWhatsapp, setReenviarWhatsapp] = useState("");
-  const [isEnviandoReenvio, setIsEnviandoReenvio] = useState(false);
-  const [reenviarPeriodo, setReenviarPeriodo] = useState("");
-  const [reenviarBuscaCliente, setReenviarBuscaCliente] = useState("");
-
-  const {
-    data: vendasDoPeriodo = [],
-    isLoading: isLoadingVendasPeriodo,
-    error: errorVendasPeriodo,
-  } = useQuery({
-    queryKey: ["vendas-reenvio", isReenviarModalOpen, reenviarPeriodo],
-    queryFn: async () => {
-      const { desde, ate } = getPeriodoRange(reenviarPeriodo);
-      let query = (supabase as any)
-        .from("tab_vendas")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(300);
-      if (desde) query = query.gte("created_at", desde);
-      if (ate) query = query.lt("created_at", ate);
-      const { data, error } = await query;
-      if (error) throw new Error(error.message || JSON.stringify(error));
-      return (data as any[]) || [];
-    },
-    enabled: isReenviarModalOpen && !!reenviarPeriodo,
-    staleTime: 0,
-  });
-
-  const vendasReenvioFiltradas = useMemo(() => {
-    const s = reenviarBuscaCliente.trim().toLowerCase();
-    return (vendasDoPeriodo as any[])
-      .filter((v: any) => v.ven_status !== "cancelada")
-      .filter((v: any) => {
-        if (!s) return true;
-        const nome = (
-          clientesData.find((c: any) => c.id === v.ven_cliente_id)?.cli_nome || "Consumidor Final"
-        ).toLowerCase();
-        return nome.includes(s) || String(v.ven_cupom_fiscal || "").includes(s);
-      });
-  }, [vendasDoPeriodo, clientesData, reenviarBuscaCliente]);
-
   useState(() => {
     supabase
       .from("tab_motivos_cancelamento")
@@ -431,12 +342,58 @@ export function PDVPage() {
       });
   });
 
-  // ── Produtos filtrados ────────────────────────────────────────────────────────
-  const filteredProducts = useMemo(() => {
+  // Carregar consignação se houver ID na URL (venda originada da tela de Consignação)
+  useEffect(() => {
+    if (!searchParams.consignacao_id || produtos.length === 0) return;
+    const consignacaoId = searchParams.consignacao_id;
+
+    const loadConsignacao = async () => {
+      const { data, error } = await supabase
+        .from("tab_consignacao")
+        .select("*, tab_produtos(*)")
+        .eq("id", consignacaoId)
+        .single();
+
+      if (error) {
+        toast.error("Erro ao carregar consignação");
+        return;
+      }
+
+      if (data && data.con_status === "em_posse") {
+        const produto = (data as any).tab_produtos;
+        const valor = Number(produto.pro_valor_venda) || 0;
+        const novoId = Math.random().toString(36).substring(2, 11);
+
+        setItems([
+          {
+            id: novoId,
+            produto_id: data.con_produto_id,
+            descricao: produto.pro_descricao,
+            codigo: produto.pro_codigo,
+            valor,
+            quantidade: data.con_quantidade,
+            total: valor * data.con_quantidade,
+            added_at: Date.now(),
+          },
+        ]);
+        setSelectedItemId(novoId);
+        setSelectedClienteId(data.con_cliente_id);
+        setCurrentConsignacaoId(data.id);
+        setIsPaymentModalOpen(true);
+        toast.success("Itens da consignação carregados!");
+
+        navigate({ search: { consignacao_id: undefined } as any, replace: true });
+      }
+    };
+    loadConsignacao();
+  }, [searchParams.consignacao_id, produtos, navigate]);
+
+  // ── Sugestões de busca (autocomplete, sem grade de produtos) ────────────────
+  const searchSuggestions = useMemo(() => {
     const s = searchTerm.trim().toLowerCase();
+    if (!s) return [];
     return produtos
       .filter((p) => {
-        if (!s) return true;
         const preco = Number(p.pro_valor_venda || 0);
         const campos = [
           p.pro_descricao,
@@ -445,21 +402,19 @@ export function PDVPage() {
           p.tab_categorias?.cat_nome,
           p.tab_tamanhos?.tam_nome,
           p.tab_cores?.cor_nome,
-          String(p.pro_estoque_atual ?? ""),
           preco.toFixed(2),
           preco.toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
         ];
         return campos.some((c) => (c || "").toString().toLowerCase().includes(s));
       })
-      .filter((p) => !categoriaAtiva || p.pro_categoria_id === categoriaAtiva)
       .filter((p) => getDisponivel(p) > 0)
       .sort((a, b) =>
         (a.pro_descricao || "").localeCompare(b.pro_descricao || "", "pt-BR", {
           sensitivity: "base",
         }),
       )
-      .slice(0, 50);
-  }, [produtos, searchTerm, categoriaAtiva, getDisponivel]);
+      .slice(0, 8);
+  }, [produtos, searchTerm, getDisponivel]);
 
   // ── Carrinho ──────────────────────────────────────────────────────────────────
   const addItem = useCallback(
@@ -476,32 +431,53 @@ export function PDVPage() {
       }
 
       const valor = Number(produto.pro_valor_venda) || 0;
-      setItems((prev) => {
-        const existingIndex = prev.findIndex((i) => i.produto_id === produto.id && !i.cancelado);
-        if (existingIndex !== -1) {
-          const updated = [...prev];
-          const item = updated[existingIndex];
-          const newQty = item.quantidade + 1;
-          updated[existingIndex] = { ...item, quantidade: newQty, total: newQty * item.valor };
-          return updated;
-        }
-        return [
-          {
-            id: Math.random().toString(36).substring(2, 11),
-            produto_id: produto.id,
-            descricao: produto.pro_descricao,
-            codigo: produto.pro_codigo,
-            valor,
-            quantidade: 1,
-            total: valor,
-            added_at: Date.now(),
-          },
-          ...prev,
-        ];
-      });
+      if (itemAtivo) {
+        setSelectedItemId(itemAtivo.id);
+        setItems((prev) =>
+          prev.map((i) =>
+            i.id === itemAtivo.id
+              ? { ...i, quantidade: i.quantidade + 1, total: (i.quantidade + 1) * i.valor }
+              : i,
+          ),
+        );
+        return;
+      }
+
+      const novoId = Math.random().toString(36).substring(2, 11);
+      setItems((prev) => [
+        {
+          id: novoId,
+          produto_id: produto.id,
+          descricao: produto.pro_descricao,
+          codigo: produto.pro_codigo,
+          valor,
+          quantidade: 1,
+          total: valor,
+          added_at: Date.now(),
+        },
+        ...prev,
+      ]);
+      setSelectedItemId(novoId);
     },
     [items, getDisponivel],
   );
+
+  const handleSearchEnter = () => {
+    const term = searchTerm.trim().toUpperCase();
+    if (!term) return;
+    const exact = produtos.find(
+      (p) => p.pro_codigo_barras === term || p.pro_codigo?.toUpperCase() === term,
+    );
+    if (exact) {
+      addItem(exact);
+      setSearchTerm("");
+      return;
+    }
+    if (searchSuggestions.length === 1) {
+      addItem(searchSuggestions[0]);
+      setSearchTerm("");
+    }
+  };
 
   const cancelItem = useCallback(
     (id: string) => {
@@ -525,32 +501,39 @@ export function PDVPage() {
     [items],
   );
 
-  const updateQuantity = useCallback(
-    (id: string, delta: number) => {
-      setItems((prev) => {
-        const item = prev.find((i) => i.id === id);
-        if (!item || item.cancelado) return prev;
+  const restoreItem = (id: string) => {
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === id ? { ...i, cancelado: false, total: i.quantidade * i.valor } : i,
+      ),
+    );
+    toast.success("Item restaurado");
+  };
 
-        if (item.quantidade === 1 && delta === -1) {
-          cancelItem(id);
-          return prev;
-        }
+  const setItemQuantity = useCallback(
+    (id: string, novaQtd: number) => {
+      const item = items.find((i) => i.id === id);
+      if (!item || item.cancelado) return;
 
-        const produto = produtos.find((p) => p.id === item.produto_id);
-        const estoqueDisponivel = produto ? getDisponivel(produto) : 0;
-        const novaQtd = item.quantidade + delta;
+      if (novaQtd <= 0) {
+        cancelItem(id);
+        return;
+      }
 
-        if (novaQtd > estoqueDisponivel) {
-          toast.error("Estoque insuficiente", { description: `Disponível: ${estoqueDisponivel}` });
-          return prev;
-        }
+      const produto = produtos.find((p) => p.id === item.produto_id);
+      const estoqueDisponivel = produto ? getDisponivel(produto) : 0;
+      if (novaQtd > estoqueDisponivel) {
+        toast.error("Estoque insuficiente", { description: `Disponível: ${estoqueDisponivel}` });
+        return;
+      }
 
-        return prev.map((i) =>
+      setItems((prev) =>
+        prev.map((i) =>
           i.id === id ? { ...i, quantidade: novaQtd, total: novaQtd * i.valor } : i,
-        );
-      });
+        ),
+      );
     },
-    [produtos, getDisponivel, cancelItem],
+    [items, produtos, getDisponivel, cancelItem],
   );
 
   const applyItemDiscount = (id: string, valor: number) => {
@@ -615,7 +598,7 @@ export function PDVPage() {
     );
   };
 
-  const abrirPagamentoRapido = (forma: "PIX" | "DINHEIRO" | "CARTAO") => {
+  const abrirPagamentoRapido = (forma: "PIX" | "DINHEIRO" | "CARTAO" | "OUTROS") => {
     if (!caixaAtual) {
       toast.error("Abra o caixa antes de iniciar uma venda.");
       return;
@@ -624,19 +607,20 @@ export function PDVPage() {
       toast.error("Adicione itens à venda.");
       return;
     }
-    const mapa: Record<string, string> = { PIX: "PIX", DINHEIRO: "DINHEIRO", CARTAO: "CARTÃO" };
-    const finalizadora = finalizadorasAtivas.find(
-      (f) => f.fin_descricao.toUpperCase() === mapa[forma],
-    );
     setIsPaymentModalOpen(true);
-    if (finalizadora && pagamentos.length === 0) {
-      addPagamento(finalizadora.fin_descricao);
-    }
+    if (forma === "OUTROS" || pagamentos.length > 0) return;
+
+    const mapa: Record<string, string> = { PIX: "PIX", DINHEIRO: "DINHEIRO", CARTAO: "CARTÃO" };
+    const finalizadora = finalizadorasAtivas.find((f) =>
+      f.fin_descricao.toUpperCase().includes(mapa[forma]),
+    );
+    if (finalizadora) addPagamento(finalizadora.fin_descricao);
   };
 
   // ── Finalizar venda ──────────────────────────────────────────────────────────
   const resetVenda = () => {
     setItems([]);
+    setSelectedItemId(null);
     setDesconto(0);
     setPagamentos([]);
     setSelectedClienteId("");
@@ -767,7 +751,6 @@ export function PDVPage() {
 
       toast.success("Venda finalizada com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["produtos-pdv"] });
-      queryClient.invalidateQueries({ queryKey: ["vendas-recentes"] });
 
       const cliente = clientesData.find((c: any) => c.id === selectedClienteId);
       const clienteNome = cliente?.cli_nome || "Consumidor";
@@ -885,117 +868,6 @@ export function PDVPage() {
     });
   };
 
-  // ── Cupom individual (reimpressão / reenvio de uma venda do histórico) ──────
-  const fetchReciboFromVenda = async (vendaId: string): Promise<ReciboVendaData> => {
-    const { data: vf } = await (supabase as any)
-      .from("tab_vendas")
-      .select("*, tab_itens_venda!itv_venda_id(*, tab_produtos(pro_descricao, pro_codigo))")
-      .eq("id", vendaId)
-      .single();
-
-    const clienteObj = clientesData.find((c: any) => c.id === vf.ven_cliente_id);
-    const itens = ((vf?.tab_itens_venda || []) as any[])
-      .filter((i: any) => i.itv_status === "ativo")
-      .map((i: any) => ({
-        descricao: i.tab_produtos?.pro_descricao || "Produto",
-        codigo: i.tab_produtos?.pro_codigo,
-        quantidade: i.itv_quantidade,
-        valor: i.itv_valor_unitario ?? i.itv_valor_total / Math.max(1, i.itv_quantidade),
-        total: i.itv_valor_total,
-      }));
-    const subtotalRecibo = itens.reduce((s: number, i: any) => s + i.total, 0);
-
-    const { data: pags } = await (supabase as any)
-      .from("tab_vendas_pagamentos")
-      .select("vpa_forma_pagamento, vpa_valor")
-      .eq("vpa_venda_id", vendaId);
-    const pagamentosRecibo =
-      pags && pags.length > 0
-        ? (pags as any[]).map((p) => ({
-            forma: p.vpa_forma_pagamento || "DINHEIRO",
-            valor: Number(p.vpa_valor) || 0,
-          }))
-        : [
-            {
-              forma: vf.ven_forma_pagamento || "DINHEIRO",
-              valor: vf.ven_valor_total ?? subtotalRecibo,
-            },
-          ];
-
-    return {
-      cliente: clienteObj?.cli_nome || "Consumidor Final",
-      itens,
-      subtotal: subtotalRecibo,
-      desconto: Math.max(0, subtotalRecibo - (vf.ven_valor_total ?? subtotalRecibo)),
-      total: vf.ven_valor_total ?? subtotalRecibo,
-      pagamentos: pagamentosRecibo,
-      totalPago: pagamentosRecibo.reduce((s, p) => s + p.valor, 0),
-      troco: 0,
-      data: new Date(vf.created_at),
-      cupomFiscal: vf.ven_cupom_fiscal,
-      observacao: vf.ven_observacao,
-      terminal: TERMINAL,
-      statusVenda: vf.ven_status === "cancelada" ? "Cancelada" : "Concluída",
-    };
-  };
-
-  const handleReimprimirVenda = async (venda: VendaResumo) => {
-    try {
-      const recibo = await fetchReciboFromVenda(venda.id);
-      printRecibo(recibo);
-    } catch {
-      toast.error("Erro ao gerar cupom para reimpressão");
-    }
-  };
-
-  const handleReenviarVendaIndividual = async (venda: VendaResumo) => {
-    try {
-      const recibo = await fetchReciboFromVenda(venda.id);
-      const { blob } = await gerarReciboVendaPDF(recibo);
-      const clienteObj = clientesData.find((c: any) => c.cli_nome === recibo.cliente);
-      const telefone = clienteObj?.cli_telefone ? formatPhoneBR(clienteObj.cli_telefone) : "";
-      const file = new File([blob], `Divas-Cupom-${venda.numero}.pdf`, { type: "application/pdf" });
-      const totalStr = brl(recibo.total);
-      const message = `Olá! Segue o comprovante da sua compra na Divas Lingerie.\n\nVenda: Nº ${venda.numero}\nTotal: ${totalStr}\n\nObrigada pela preferência!\nDivas Lingerie`;
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: `Cupom Nº ${venda.numero}`, text: message });
-        return;
-      }
-      if (!telefone) {
-        toast.error("Cliente sem WhatsApp cadastrado");
-        return;
-      }
-      window.open(buildWhatsappUrl(telefone, message), "_blank");
-    } catch {
-      toast.error("Erro ao reenviar cupom");
-    }
-  };
-
-  const handleCancelarVendaHistorico = (venda: VendaResumo) => {
-    setConfirmDialog({
-      open: true,
-      title: "CANCELAR VENDA?",
-      description: `Deseja cancelar a venda Nº ${venda.numero}? O estoque será restaurado.`,
-      showMotivo: true,
-      onConfirm: async (motivo) => {
-        try {
-          const { error } = await supabase.rpc("cancelar_venda" as any, {
-            p_venda_id: venda.id,
-            p_motivo: motivo || null,
-            p_cupom_fiscal: venda.numero,
-          });
-          if (error) throw error;
-          queryClient.invalidateQueries({ queryKey: ["produtos-pdv"] });
-          queryClient.invalidateQueries({ queryKey: ["vendas-recentes"] });
-          toast.success(`Venda Nº ${venda.numero} cancelada e estoque restaurado`);
-        } catch (e: any) {
-          toast.error("Erro ao cancelar venda", { description: e?.message || String(e) });
-        }
-      },
-    });
-  };
-
   // ── WhatsApp / PDF (venda recém-finalizada) ─────────────────────────────────
   const handleWhatsAppShare = async () => {
     if (!whatsappNumber || !lastSaleData) return;
@@ -1055,60 +927,6 @@ export function PDVPage() {
       toast.error("Erro ao gerar PDF para download");
     } finally {
       setIsGeneratingPDF(false);
-    }
-  };
-
-  // ── Reenvio em lote (por período) ───────────────────────────────────────────
-  const handleReenviarWhatsAppLote = async () => {
-    if (selectedReenviarVendas.length === 0 || !reenviarWhatsapp) return;
-    setIsEnviandoReenvio(true);
-    try {
-      const files = await Promise.all(
-        selectedReenviarVendas.map(async (venda) => {
-          const recibo = await fetchReciboFromVenda(venda.id);
-          const { blob } = await gerarReciboVendaPDF(recibo);
-          return new File(
-            [blob],
-            `Divas-Cupom-${venda.ven_cupom_fiscal || venda.id.slice(0, 8)}.pdf`,
-            {
-              type: "application/pdf",
-            },
-          );
-        }),
-      );
-
-      const cupons = selectedReenviarVendas
-        .map((v) => v.ven_cupom_fiscal || v.id.slice(0, 8))
-        .join(", ");
-      const totalGeral = brl(
-        selectedReenviarVendas.reduce((s, v) => s + (v.ven_valor_total || 0), 0),
-      );
-      const clienteNome =
-        clientesData.find((c: any) => c.id === selectedReenviarVendas[0]?.ven_cliente_id)
-          ?.cli_nome || "cliente";
-      const message =
-        `Olá, ${clienteNome}!\n\n` +
-        (files.length === 1
-          ? `Segue o cupom da sua compra na Divas Lingerie.\nCupom Nº ${cupons}\nTotal: ${totalGeral}`
-          : `Seguem os ${files.length} cupons das suas compras na Divas Lingerie.\nCupons: ${cupons}\nTotal: ${totalGeral}`) +
-        `\n\nObrigada pela preferência!`;
-
-      const digits = reenviarWhatsapp.replace(/\D/g, "");
-      const phone = digits.startsWith("55") ? digits : `55${digits}`;
-
-      if (navigator.canShare && navigator.canShare({ files })) {
-        await navigator.share({ files, title: "Cupons Divas Lingerie", text: message });
-      } else {
-        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
-      }
-
-      setIsReenviarModalOpen(false);
-      setSelectedReenviarVendas([]);
-      setReenviarWhatsapp("");
-    } catch {
-      toast.error("Erro ao enviar via WhatsApp");
-    } finally {
-      setIsEnviandoReenvio(false);
     }
   };
 
@@ -1176,12 +994,19 @@ export function PDVPage() {
 
   // ── Atalhos de teclado ───────────────────────────────────────────────────────
   useKeyboardShortcuts({
+    onAllFunctions: () => setIsFunctionsPanelOpen((v) => !v),
     onBuscarProduto: () => searchInputRef.current?.focus(),
     onConsultarPreco: () => setIsPriceCheckOpen(true),
     onSelecionarCliente: () => setIsCustomerModalOpen(true),
-    onDesconto: () => setDiscountTarget({ itemId: null }),
+    onDesconto: () => setDiscountTarget({ itemId: selectedItemId }),
     onPagamento: () => {
       if (caixaAtual && items.filter((i) => !i.cancelado).length > 0) setIsPaymentModalOpen(true);
+    },
+    onAlterarQuantidade: () => {
+      if (selectedItemId) setQuantityTargetId(selectedItemId);
+    },
+    onCancelarItem: () => {
+      if (selectedItemId) cancelItem(selectedItemId);
     },
     onCancelarVenda: handleCancelarVenda,
     onFinalizarVenda: () => {
@@ -1194,6 +1019,8 @@ export function PDVPage() {
       setIsScannerOpen(false);
       setIsPriceCheckOpen(false);
       setDiscountTarget(null);
+      setQuantityTargetId(null);
+      setIsFunctionsPanelOpen(false);
     },
   });
 
@@ -1218,9 +1045,48 @@ export function PDVPage() {
       ? (items.find((i) => i.id === discountTarget.itemId)?.desconto ?? 0)
       : desconto;
 
+  const quantityTargetItem = items.find((i) => i.id === quantityTargetId) ?? null;
+  const quantityTargetProduto = quantityTargetItem
+    ? produtos.find((p) => p.id === quantityTargetItem.produto_id)
+    : undefined;
+
+  const handleAllFunctionsShortcut = (key: string) => {
+    switch (key) {
+      case shortcutConfig.searchProduct:
+        searchInputRef.current?.focus();
+        break;
+      case shortcutConfig.priceCheck:
+        setIsPriceCheckOpen(true);
+        break;
+      case shortcutConfig.customer:
+        setIsCustomerModalOpen(true);
+        break;
+      case shortcutConfig.discount:
+        setDiscountTarget({ itemId: selectedItemId });
+        break;
+      case shortcutConfig.payment:
+        if (caixaAtual && activeItemsCount > 0) setIsPaymentModalOpen(true);
+        break;
+      case shortcutConfig.changeQuantity:
+        if (selectedItemId) setQuantityTargetId(selectedItemId);
+        break;
+      case shortcutConfig.cancelItem:
+        if (selectedItemId) cancelItem(selectedItemId);
+        break;
+      case shortcutConfig.cancelSale:
+        handleCancelarVenda();
+        break;
+      case shortcutConfig.finishSale:
+        if (caixaAtual && activeItemsCount > 0) setIsPaymentModalOpen(true);
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div className="-m-4 sm:-m-6 lg:-m-8 flex h-[calc(100svh-4rem)] flex-col gap-3 overflow-hidden bg-[var(--pdv-rose-bg)] p-3 sm:p-4">
-      <POSHeader
+      <PDVHeader
         operadorNome={operadorNome}
         terminal={TERMINAL}
         caixa={caixaAtual as any}
@@ -1236,7 +1102,7 @@ export function PDVPage() {
       />
 
       {!caixaAtual && (
-        <div className="flex items-center justify-between rounded-2xl border border-[var(--pdv-danger)]/30 bg-red-50 px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between rounded-2xl border border-[var(--pdv-danger)]/30 bg-red-50 px-4 py-3">
           <p className="text-sm font-semibold text-[var(--pdv-danger)]">
             Caixa fechado — abra o caixa para iniciar as vendas.
           </p>
@@ -1249,68 +1115,60 @@ export function PDVPage() {
         </div>
       )}
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-[1fr_380px]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-[auto_1fr_360px]">
+        <PDVFunctionsPanel
+          open={isFunctionsPanelOpen}
+          onClose={() => setIsFunctionsPanelOpen(false)}
+          onShortcutClick={handleAllFunctionsShortcut}
+        />
+
         <div className="flex min-h-0 flex-col gap-3">
-          <div className="flex flex-col gap-3 rounded-2xl border border-[var(--pdv-border)] bg-white p-3 shadow-sm">
-            <POSSearchBar
-              ref={searchInputRef}
-              value={searchTerm}
-              onChange={setSearchTerm}
-              onScan={() => setIsScannerOpen(true)}
-              onDesconto={() => setDiscountTarget({ itemId: null })}
-            />
-            <ProductFilters
-              categorias={categorias.map((c: any) => ({ id: c.id, nome: c.cat_nome }))}
-              categoriaAtiva={categoriaAtiva}
-              onSelectCategoria={setCategoriaAtiva}
-            />
-          </div>
-
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-            <ProductGrid
-              produtos={filteredProducts}
-              getDisponivel={getDisponivel}
-              onAdd={addItem}
-              searchTerm={searchTerm}
-              onClearSearch={() => setSearchTerm("")}
-              onCadastrarProduto={() => navigate({ to: "/produtos" })}
-            />
-            <LastSalesPanel
-              vendas={vendasRecentes}
-              onReimprimir={handleReimprimirVenda}
-              onReenviarWhatsapp={handleReenviarVendaIndividual}
-              onCancelar={handleCancelarVendaHistorico}
-            />
-            <KeyboardShortcutsBar />
-          </div>
-        </div>
-
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-[var(--pdv-border)] bg-white shadow-sm">
-          <CartPanel
-            items={items}
-            clienteNome={clienteSelecionadoNome}
+          <PDVActionBar
+            ref={searchInputRef}
+            value={searchTerm}
+            onChange={setSearchTerm}
+            onEnter={handleSearchEnter}
+            suggestions={searchSuggestions}
+            onSelectSuggestion={(p) => {
+              addItem(p);
+              setSearchTerm("");
+            }}
+            onScan={() => setIsScannerOpen(true)}
             onSelecionarCliente={() => setIsCustomerModalOpen(true)}
-            vendedorNome={vendedorSelecionadoNome}
-            onSelecionarVendedor={() => setIsSellerModalOpen(true)}
-            onLimparVenda={handleCancelarVenda}
-            onIncrement={(id) => updateQuantity(id, 1)}
-            onDecrement={(id) => updateQuantity(id, -1)}
-            onRemove={cancelItem}
-            onDescontoItem={(id) => setDiscountTarget({ itemId: id })}
+            onDesconto={() => setDiscountTarget({ itemId: selectedItemId })}
+            onToggleFunctions={() => setIsFunctionsPanelOpen((v) => !v)}
           />
-          <SaleSummary
-            quantidadeItens={activeItemsCount}
-            subtotal={subtotal}
-            desconto={desconto}
-            acrescimo={0}
-            total={total}
-            disabled={!caixaAtual || activeItemsCount === 0}
-            onFinalizar={() => setIsPaymentModalOpen(true)}
-            onPagamentoRapido={abrirPagamentoRapido}
-            onCancelarVenda={handleCancelarVenda}
+
+          <PDVItemsTable
+            items={items}
+            selectedItemId={selectedItemId}
+            onSelectRow={setSelectedItemId}
+            onAlterarQuantidade={setQuantityTargetId}
+            onDesconto={(id) => setDiscountTarget({ itemId: id })}
+            onCancelar={cancelItem}
+            onRestaurar={restoreItem}
+            onLimparTodos={handleCancelarVenda}
           />
         </div>
+
+        <PDVSummaryPanel
+          clienteNome={clienteSelecionadoNome}
+          onSelecionarCliente={() => setIsCustomerModalOpen(true)}
+          vendedorNome={vendedorSelecionadoNome}
+          onSelecionarVendedor={() => setIsSellerModalOpen(true)}
+          quantidadeItens={activeItemsCount}
+          subtotal={subtotal}
+          desconto={desconto}
+          acrescimo={0}
+          total={total}
+          disabled={!caixaAtual || activeItemsCount === 0}
+          onPagamentoRapido={abrirPagamentoRapido}
+          onFinalizar={() => setIsPaymentModalOpen(true)}
+          onCancelarVenda={handleCancelarVenda}
+        />
       </div>
+
+      <PDVShortcutBar />
 
       {/* Scanner de código de barras */}
       <BarcodeScanner
@@ -1354,6 +1212,21 @@ export function PDVPage() {
           else setDesconto(valor);
         }}
       />
+
+      {quantityTargetItem && (
+        <QuantityModal
+          open={!!quantityTargetId}
+          onClose={() => setQuantityTargetId(null)}
+          descricao={quantityTargetItem.descricao}
+          quantidadeAtual={quantityTargetItem.quantidade}
+          estoqueDisponivel={
+            quantityTargetProduto
+              ? getDisponivel(quantityTargetProduto) + quantityTargetItem.quantidade
+              : quantityTargetItem.quantidade
+          }
+          onApply={(qtd) => setItemQuantity(quantityTargetItem.id, qtd)}
+        />
+      )}
 
       <PaymentModal
         open={isPaymentModalOpen}
@@ -1524,172 +1397,6 @@ export function PDVPage() {
               Sim
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reenvio de recibo em lote, por período */}
-      <Dialog
-        open={isReenviarModalOpen}
-        onOpenChange={(o) => {
-          if (!o) {
-            setIsReenviarModalOpen(false);
-            setSelectedReenviarVendas([]);
-            setReenviarWhatsapp("");
-            setReenviarPeriodo("");
-            setReenviarBuscaCliente("");
-          }
-        }}
-      >
-        <DialogContent className="overflow-hidden rounded-3xl border-none p-0 shadow-2xl sm:max-w-[420px]">
-          <div className="bg-[var(--pdv-graphite)] px-5 py-4 text-white">
-            <DialogTitle className="text-sm font-bold uppercase tracking-widest">
-              Reenviar Recibo
-            </DialogTitle>
-            <p className="mt-0.5 text-[11px] text-white/50">
-              {!reenviarPeriodo
-                ? "Escolha o período das vendas"
-                : selectedReenviarVendas.length > 0
-                  ? `${selectedReenviarVendas.length}/${MAX_CUPONS_REENVIO} cupom(ns) selecionado(s)`
-                  : `Selecione até ${MAX_CUPONS_REENVIO} cupons`}
-            </p>
-          </div>
-
-          <div className="border-b border-[var(--pdv-border)] bg-white px-4 pb-3 pt-4">
-            <Label className="mb-1.5 block text-xs font-semibold uppercase text-[var(--pdv-gray-text)]">
-              Período
-            </Label>
-            <Select
-              value={reenviarPeriodo}
-              onValueChange={(v) => {
-                setReenviarPeriodo(v);
-                setSelectedReenviarVendas([]);
-                setReenviarWhatsapp("");
-                setReenviarBuscaCliente("");
-              }}
-            >
-              <SelectTrigger className="h-11 rounded-xl">
-                <SelectValue placeholder="Selecione o período..." />
-              </SelectTrigger>
-              <SelectContent>
-                {PERIODOS_REENVIO.map((p) => (
-                  <SelectItem key={p.value} value={p.value}>
-                    {p.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {reenviarPeriodo && (
-              <Input
-                value={reenviarBuscaCliente}
-                onChange={(e) => setReenviarBuscaCliente(e.target.value)}
-                placeholder="Buscar por cliente ou cupom..."
-                className="mt-3 h-10 rounded-xl"
-              />
-            )}
-          </div>
-
-          {!reenviarPeriodo ? (
-            <div className="flex flex-col items-center justify-center gap-2 bg-slate-50 py-10 text-[var(--pdv-gray-text)]">
-              <p className="text-sm font-bold">Escolha um período acima</p>
-            </div>
-          ) : (
-            <div className="max-h-[50vh] space-y-2 overflow-y-auto bg-slate-50 p-3">
-              {isLoadingVendasPeriodo ? (
-                <div className="flex items-center justify-center gap-2 py-10 text-[var(--pdv-gray-text)]">
-                  <LoaderIcon className="h-5 w-5 animate-spin" />
-                </div>
-              ) : errorVendasPeriodo ? (
-                <p className="py-10 text-center text-sm text-[var(--pdv-danger)]">
-                  Erro ao carregar vendas
-                </p>
-              ) : vendasReenvioFiltradas.length === 0 ? (
-                <p className="py-10 text-center text-sm text-[var(--pdv-gray-text)]">
-                  Nenhuma venda no período
-                </p>
-              ) : (
-                vendasReenvioFiltradas.map((venda: any) => {
-                  const isSelected = selectedReenviarVendas.some((s) => s.id === venda.id);
-                  const hora = new Date(venda.created_at).toLocaleTimeString("pt-BR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
-                  const clienteObj = clientesData.find((c: any) => c.id === venda.ven_cliente_id);
-                  return (
-                    <button
-                      key={venda.id}
-                      onClick={() => {
-                        setSelectedReenviarVendas((prev) => {
-                          const already = prev.some((s) => s.id === venda.id);
-                          if (!already && prev.length >= MAX_CUPONS_REENVIO) {
-                            toast.error(
-                              `Você pode selecionar até ${MAX_CUPONS_REENVIO} cupons por reenvio.`,
-                            );
-                            return prev;
-                          }
-                          const next = already
-                            ? prev.filter((s) => s.id !== venda.id)
-                            : [...prev, venda];
-                          if (next.length > 0 && !reenviarWhatsapp) {
-                            const primeiroCliente = clientesData.find(
-                              (c: any) => c.id === next[0].ven_cliente_id,
-                            );
-                            if (primeiroCliente?.cli_telefone)
-                              setReenviarWhatsapp(formatPhoneBR(primeiroCliente.cli_telefone));
-                          }
-                          if (next.length === 0) setReenviarWhatsapp("");
-                          return next;
-                        });
-                      }}
-                      className={`w-full rounded-2xl border-2 bg-white p-3.5 text-left transition-all ${
-                        isSelected
-                          ? "border-[var(--pdv-rose)] bg-[var(--pdv-rose-bg)]"
-                          : "border-transparent hover:border-[var(--pdv-border)]"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--pdv-rose-dark)]">
-                            Nº {venda.ven_cupom_fiscal || "---"} · {hora}
-                          </p>
-                          <p className="truncate text-sm font-semibold text-[var(--pdv-graphite)]">
-                            {clienteObj?.cli_nome || "Consumidor Final"}
-                          </p>
-                        </div>
-                        <span className="shrink-0 text-sm font-bold text-[var(--pdv-graphite)]">
-                          {brl(venda.ven_valor_total)}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          )}
-
-          {selectedReenviarVendas.length > 0 && (
-            <div className="space-y-3 border-t border-[var(--pdv-border)] bg-white px-4 pb-4 pt-3">
-              <Input
-                value={reenviarWhatsapp}
-                onChange={(e) => setReenviarWhatsapp(formatPhoneBR(e.target.value))}
-                placeholder="(00) 00000-0000"
-                className="h-11 rounded-xl"
-              />
-              <Button
-                className="h-12 w-full rounded-xl bg-[var(--pdv-success)] font-bold uppercase text-white hover:bg-[var(--pdv-success)]/90 disabled:opacity-40"
-                disabled={isEnviandoReenvio || reenviarWhatsapp.replace(/\D/g, "").length < 10}
-                onClick={handleReenviarWhatsAppLote}
-              >
-                {isEnviandoReenvio ? (
-                  <LoaderIcon className="h-4 w-4 animate-spin" />
-                ) : selectedReenviarVendas.length > 1 ? (
-                  `Enviar ${selectedReenviarVendas.length} PDFs via WhatsApp`
-                ) : (
-                  "Enviar PDF via WhatsApp"
-                )}
-              </Button>
-            </div>
-          )}
         </DialogContent>
       </Dialog>
     </div>

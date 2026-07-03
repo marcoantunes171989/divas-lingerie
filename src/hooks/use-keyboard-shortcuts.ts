@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 
 export interface KeyboardShortcutHandlers {
+  onAllFunctions?: () => void;
   onBuscarProduto?: () => void;
   onConsultarPreco?: () => void;
   onSelecionarCliente?: () => void;
   onDesconto?: () => void;
   onPagamento?: () => void;
+  onAlterarQuantidade?: () => void;
   onCancelarItem?: () => void;
   onCancelarVenda?: () => void;
   onFinalizarVenda?: () => void;
@@ -31,6 +33,10 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutHandlers, enabled
       if (isTypingTarget(e.target)) return;
 
       switch (e.key) {
+        case "F1":
+          e.preventDefault();
+          handlers.onAllFunctions?.();
+          break;
         case "F2":
           e.preventDefault();
           handlers.onBuscarProduto?.();
@@ -50,6 +56,10 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutHandlers, enabled
         case "F6":
           e.preventDefault();
           handlers.onPagamento?.();
+          break;
+        case "F7":
+          e.preventDefault();
+          handlers.onAlterarQuantidade?.();
           break;
         case "F8":
           e.preventDefault();
