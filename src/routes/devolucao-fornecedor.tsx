@@ -214,11 +214,14 @@ function DevolucaoFornecedorPage() {
         l.valorUnitario.toFixed(2),
         l.valorTotal.toFixed(2),
       ]);
+      const totalQuantidade = linhas.reduce((s, l) => s + l.quantidade, 0);
       const totalGeral = linhas.reduce((s, l) => s + l.valorTotal, 0);
       const csv = [
         headers.map(csvEscape).join(","),
         ...rows.map((r) => r.map(csvEscape).join(",")),
-        ["", "", "", "", "", "", "TOTAL GERAL", totalGeral.toFixed(2)].map(csvEscape).join(","),
+        ["", "", "", "", "TOTAL GERAL", totalQuantidade, "", totalGeral.toFixed(2)]
+          .map(csvEscape)
+          .join(","),
       ].join("\n");
       const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
       const a = document.createElement("a");
@@ -244,6 +247,7 @@ function DevolucaoFornecedorPage() {
         toast.error("Nenhuma devolução registrada para exportar.");
         return;
       }
+      const totalQuantidade = linhas.reduce((s, l) => s + l.quantidade, 0);
       const totalGeral = linhas.reduce((s, l) => s + l.valorTotal, 0);
       const doc = new SafejsPDF();
       const pw = doc.internal.pageSize.getWidth();
@@ -270,7 +274,7 @@ function DevolucaoFornecedorPage() {
           brl(l.valorUnitario),
           brl(l.valorTotal),
         ]),
-        foot: [["", "", "", "", "", "TOTAL GERAL", brl(totalGeral)]],
+        foot: [["", "", "TOTAL GERAL", "", String(totalQuantidade), "", brl(totalGeral)]],
         theme: "striped",
         headStyles: { fillColor: [219, 39, 119], textColor: [255, 255, 255] },
         footStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: "bold" },
