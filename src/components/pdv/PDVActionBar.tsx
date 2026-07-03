@@ -35,8 +35,8 @@ export const PDVActionBar = forwardRef<HTMLInputElement, PDVActionBarProps>(func
 
   return (
     <div className="relative shrink-0 rounded-2xl border border-[var(--pdv-border)] bg-white p-3 shadow-sm">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-2">
+        <div className="relative w-full">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-[var(--pdv-rose)]" />
           <Input
             ref={ref}
@@ -46,7 +46,7 @@ export const PDVActionBar = forwardRef<HTMLInputElement, PDVActionBarProps>(func
               if (e.key === "Enter") onEnter();
             }}
             placeholder="Buscar produto por código, EAN ou nome"
-            className="h-12 rounded-xl border-[var(--pdv-border)] bg-white pl-11 text-sm focus-visible:ring-[var(--pdv-rose)]"
+            className="h-12 w-full rounded-xl border-[var(--pdv-border)] bg-white pl-11 text-sm focus-visible:ring-[var(--pdv-rose)]"
           />
 
           {showSuggestions && (
@@ -56,9 +56,9 @@ export const PDVActionBar = forwardRef<HTMLInputElement, PDVActionBarProps>(func
                   key={p.id}
                   type="button"
                   onClick={() => onSelectSuggestion(p)}
-                  className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm hover:bg-[var(--pdv-rose-bg)]"
+                  className="flex w-full items-center justify-between gap-4 px-4 py-2.5 text-left text-sm hover:bg-[var(--pdv-rose-bg)]"
                 >
-                  <span className="min-w-0 flex-1 truncate">
+                  <span className="min-w-0 flex-1">
                     <span className="font-mono text-[11px] text-[var(--pdv-gray-text)]">
                       {p.pro_codigo}
                     </span>{" "}
@@ -80,7 +80,7 @@ export const PDVActionBar = forwardRef<HTMLInputElement, PDVActionBarProps>(func
             type="button"
             variant="outline"
             onClick={onScan}
-            className="h-12 gap-1.5 rounded-xl"
+            className="h-11 gap-1.5 rounded-xl"
           >
             <Barcode className="h-4 w-4 text-[var(--pdv-rose)]" /> Ler código
           </Button>
@@ -88,7 +88,7 @@ export const PDVActionBar = forwardRef<HTMLInputElement, PDVActionBarProps>(func
             type="button"
             variant="outline"
             onClick={onSelecionarCliente}
-            className="h-12 gap-1.5 rounded-xl"
+            className="h-11 gap-1.5 rounded-xl"
           >
             <User className="h-4 w-4 text-[var(--pdv-rose)]" /> Selecionar cliente
           </Button>
@@ -96,7 +96,7 @@ export const PDVActionBar = forwardRef<HTMLInputElement, PDVActionBarProps>(func
             type="button"
             variant="outline"
             onClick={onDesconto}
-            className="h-12 gap-1.5 rounded-xl"
+            className="h-11 gap-1.5 rounded-xl"
           >
             <Percent className="h-4 w-4 text-[var(--pdv-rose)]" /> Aplicar desconto
           </Button>
@@ -104,7 +104,7 @@ export const PDVActionBar = forwardRef<HTMLInputElement, PDVActionBarProps>(func
             type="button"
             variant="outline"
             onClick={onToggleFunctions}
-            className="h-12 gap-1.5 rounded-xl"
+            className="h-11 gap-1.5 rounded-xl"
           >
             <LayoutGrid className="h-4 w-4 text-[var(--pdv-rose)]" /> Todas as funções
           </Button>
