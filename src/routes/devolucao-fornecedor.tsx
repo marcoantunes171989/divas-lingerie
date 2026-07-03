@@ -27,7 +27,7 @@ import {
   FileText,
 } from "lucide-react";
 import { SafejsPDF } from "@/lib/pdf-utils";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { COMPANY_NAME } from "@/lib/constants";
 
 export const Route = createFileRoute("/devolucao-fornecedor")({
@@ -258,7 +258,7 @@ function DevolucaoFornecedorPage() {
       doc.setTextColor(120, 120, 120);
       doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, pw / 2, 30, { align: "center" });
 
-      (doc as any).autoTable({
+      autoTable(doc, {
         startY: 38,
         head: [["Data", "Fornecedor", "Produto", "Código", "Qtd", "Valor Unit.", "Valor Total"]],
         body: linhas.map((l) => [

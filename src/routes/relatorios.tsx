@@ -3,7 +3,7 @@ import { useMemo, useState, useEffect } from "react";
 import { brl, dateBR } from "@/lib/format";
 import { COMPANY_NAME } from "@/lib/constants";
 import { SafejsPDF } from "@/lib/pdf-utils";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import {
   BarChart3,
   Download,
@@ -791,7 +791,7 @@ function RelatoriosPage() {
       doc.text(brl(stats.totalLucro), 80, 58);
       doc.text(String(stats.totalItens), 140, 58);
 
-      (doc as any).autoTable({
+      autoTable(doc, {
         startY: 72,
         head: [["Data", "Pedidos", "Volume", "Lucro"]],
         body: resumoVendas.map((v) => [
