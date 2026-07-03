@@ -15,7 +15,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Loader2, Undo2, PackageX, CalendarDays, History, Building2 } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  Undo2,
+  PackageX,
+  CalendarDays,
+  History,
+  Building2,
+  Download,
+  FileText,
+} from "lucide-react";
+import { SafejsPDF } from "@/lib/pdf-utils";
+import "jspdf-autotable";
+import { COMPANY_NAME } from "@/lib/constants";
 
 export const Route = createFileRoute("/devolucao-fornecedor")({
   component: DevolucaoFornecedorPage,
@@ -54,6 +67,7 @@ function DevolucaoFornecedorPage() {
   const [motivo, setMotivo] = useState("");
   const [data, setData] = useState(hoje());
   const [submitting, setSubmitting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const fetchTudo = async () => {
     setLoading(true);
@@ -141,6 +155,141 @@ function DevolucaoFornecedorPage() {
   };
 
   const todosMarcados = filtrados.length > 0 && filtrados.every((p) => selecionados.has(p.id));
+
+  // ── Relatório gerencial de devoluções ─────────────────────────────────────
+
+  const fetchDevolucoesCompletas = async (): Promise<Devolucao[]> => {
+    const { data: rows, error } = await (supabase as any)
+      .from("tab_devolucoes")
+      .select("*, tab_fornecedores(for_razao_social)")
+      .order("dev_data", { ascending: false });
+    if (error) throw error;
+    return (rows as Devolucao[]) || [];
+  };
+
+  const flattenDevolucoes = (lista: Devolucao[]) =>
+    lista.flatMap((d) =>
+      (d.dev_snapshot || []).map((item: any) => ({
+        data: d.dev_data,
+        fornecedor: d.tab_fornecedores?.for_razao_social || "—",
+        motivo: d.dev_motivo || "—",
+        codigo: item.codigo || "",
+        descricao: item.descricao || "",
+        quantidade: Number(item.quantidade) || 0,
+        valorUnitario: Number(item.valor_unitario) || 0,
+        valorTotal: Number(item.valor_total) || 0,
+      })),
+    );
+
+  const csvEscape = (value: string | number) => {
+    const str = String(value);
+    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  };
+
+  const exportarRelatorioCSV = async () => {
+    setIsExporting(true);
+    try {
+      const linhas = flattenDevolucoes(await fetchDevolucoesCompletas());
+      if (linhas.length === 0) {
+        toast.error("Nenhuma devolução registrada para exportar.");
+        return;
+      }
+      const headers = [
+        "Data",
+        "Fornecedor",
+        "Motivo",
+        "Código",
+        "Produto",
+        "Quantidade",
+        "Valor Unitário",
+        "Valor Total",
+      ];
+      const rows = linhas.map((l) => [
+        dateBR(l.data),
+        l.fornecedor,
+        l.motivo,
+        l.codigo,
+        l.descricao,
+        l.quantidade,
+        l.valorUnitario.toFixed(2),
+        l.valorTotal.toFixed(2),
+      ]);
+      const totalGeral = linhas.reduce((s, l) => s + l.valorTotal, 0);
+      const csv = [
+        headers.map(csvEscape).join(","),
+        ...rows.map((r) => r.map(csvEscape).join(",")),
+        ["", "", "", "", "", "", "TOTAL GERAL", totalGeral.toFixed(2)].map(csvEscape).join(","),
+      ].join("\n");
+      const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `devolucoes_fornecedor_${Date.now()}.csv`;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast.success("Relatório CSV exportado com sucesso!");
+    } catch (e: any) {
+      toast.error("Erro ao exportar CSV", { description: e?.message || String(e) });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const exportarRelatorioPDF = async () => {
+    setIsExporting(true);
+    try {
+      const linhas = flattenDevolucoes(await fetchDevolucoesCompletas());
+      if (linhas.length === 0) {
+        toast.error("Nenhuma devolução registrada para exportar.");
+        return;
+      }
+      const totalGeral = linhas.reduce((s, l) => s + l.valorTotal, 0);
+      const doc = new SafejsPDF();
+      const pw = doc.internal.pageSize.getWidth();
+
+      doc.setFontSize(18);
+      doc.setTextColor(219, 39, 119);
+      doc.text(COMPANY_NAME, pw / 2, 16, { align: "center" });
+      doc.setFontSize(12);
+      doc.setTextColor(51, 51, 51);
+      doc.text("Relatório de Devolução ao Fornecedor", pw / 2, 24, { align: "center" });
+      doc.setFontSize(9);
+      doc.setTextColor(120, 120, 120);
+      doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, pw / 2, 30, { align: "center" });
+
+      (doc as any).autoTable({
+        startY: 38,
+        head: [["Data", "Fornecedor", "Produto", "Código", "Qtd", "Valor Unit.", "Valor Total"]],
+        body: linhas.map((l) => [
+          dateBR(l.data),
+          l.fornecedor,
+          l.descricao,
+          l.codigo,
+          l.quantidade,
+          brl(l.valorUnitario),
+          brl(l.valorTotal),
+        ]),
+        foot: [["", "", "", "", "", "TOTAL GERAL", brl(totalGeral)]],
+        theme: "striped",
+        headStyles: { fillColor: [219, 39, 119], textColor: [255, 255, 255] },
+        footStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: "bold" },
+        styles: { fontSize: 8 },
+        columnStyles: {
+          4: { halign: "right" },
+          5: { halign: "right" },
+          6: { halign: "right" },
+        },
+      });
+
+      doc.save(`devolucoes_fornecedor_${Date.now()}.pdf`);
+      toast.success("Relatório PDF gerado!");
+    } catch (e: any) {
+      toast.error("Erro ao gerar PDF", { description: e?.message || String(e) });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="space-y-6 p-6 lg:p-8 max-w-5xl mx-auto">
@@ -283,9 +432,41 @@ function DevolucaoFornecedorPage() {
       {/* Histórico de devoluções */}
       {devolucoes.length > 0 && (
         <Card className="border-none bg-white shadow-xl rounded-3xl p-5">
-          <h3 className="text-sm font-black text-slate-900 flex items-center gap-2 mb-3">
-            <History className="w-4 h-4 text-primary" /> Devoluções recentes
-          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+              <History className="w-4 h-4 text-primary" /> Devoluções recentes
+            </h3>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportarRelatorioCSV}
+                disabled={isExporting}
+                className="rounded-xl h-9 text-[11px] font-black uppercase tracking-wider gap-1.5"
+              >
+                {isExporting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Download className="w-3.5 h-3.5" />
+                )}
+                CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportarRelatorioPDF}
+                disabled={isExporting}
+                className="rounded-xl h-9 text-[11px] font-black uppercase tracking-wider gap-1.5"
+              >
+                {isExporting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <FileText className="w-3.5 h-3.5" />
+                )}
+                PDF
+              </Button>
+            </div>
+          </div>
           <div className="space-y-2">
             {devolucoes.map((d) => (
               <div
