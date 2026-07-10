@@ -40,6 +40,7 @@ import { SellerSelectorModal } from "@/components/pos/SellerSelectorModal";
 import { DiscountModal } from "@/components/pos/DiscountModal";
 import { AcrescimoModal } from "@/components/pos/AcrescimoModal";
 import { DuplicateProductModal } from "@/components/pos/DuplicateProductModal";
+import { RestoreVendaModal } from "@/components/pos/RestoreVendaModal";
 import { PaymentModal } from "@/components/pos/PaymentModal";
 import { SaleSuccessModal, type LastSaleSummary } from "@/components/pos/SaleSuccessModal";
 import { CashOpenCloseModal } from "@/components/pos/CashOpenCloseModal";
@@ -157,6 +158,22 @@ export const Route = createFileRoute("/vendas")({
 
 const TERMINAL = "01";
 
+const RASCUNHO_PREFIX = "pdv_rascunho_venda";
+
+interface VendaRascunho {
+  items: ItemVenda[];
+  selectedClienteId: string;
+  selectedVendedorId: string | null;
+  observacaoVenda: string;
+  desconto: number;
+  acrescimo: number;
+  pagamentos: { id: string; forma: string; valor: number }[];
+  cupomFiscal: string;
+}
+
+const getRascunhoKey = (terminal: string, operadorId: string, caixaId: string) =>
+  `${RASCUNHO_PREFIX}:${terminal}:${operadorId}:${caixaId}`;
+
 const formatPhoneBR = (value: string) => {
   const d = value.replace(/\D/g, "").slice(0, 11);
   if (d.length === 0) return "";
@@ -211,6 +228,8 @@ export function PDVPage() {
     produto: ProdutoPDV;
     itemExistenteId: string;
   } | null>(null);
+  const [restoreDraftPrompt, setRestoreDraftPrompt] = useState<VendaRascunho | null>(null);
+  const draftCheckedRef = useRef(false);
   const [quantityTargetId, setQuantityTargetId] = useState<string | null>(null);
   const [isPriceCheckOpen, setIsPriceCheckOpen] = useState(false);
   const [priceCheckTerm, setPriceCheckTerm] = useState("");
@@ -395,6 +414,77 @@ export function PDVPage() {
     };
     loadConsignacao();
   }, [searchParams.consignacao_id, produtos, navigate]);
+
+  // ── Rascunho da venda em aberto (preservar ao trocar de tela) ───────────────
+  useEffect(() => {
+    if (draftCheckedRef.current) return;
+    if (!caixaAtual || !user?.id) return;
+    draftCheckedRef.current = true;
+    try {
+      const raw = localStorage.getItem(getRascunhoKey(TERMINAL, user.id, caixaAtual.id));
+      if (raw) {
+        const parsed = JSON.parse(raw) as VendaRascunho;
+        if (parsed.items?.length > 0) setRestoreDraftPrompt(parsed);
+      }
+    } catch {
+      // rascunho corrompido: ignora
+    }
+  }, [caixaAtual, user?.id]);
+
+  useEffect(() => {
+    if (!caixaAtual || !user?.id) return;
+    if (restoreDraftPrompt) return; // aguardando decisao do usuario: nao mexe no rascunho salvo
+    const key = getRascunhoKey(TERMINAL, user.id, caixaAtual.id);
+    if (items.length === 0) {
+      localStorage.removeItem(key);
+      return;
+    }
+    const rascunho: VendaRascunho = {
+      items,
+      selectedClienteId,
+      selectedVendedorId,
+      observacaoVenda,
+      desconto,
+      acrescimo,
+      pagamentos,
+      cupomFiscal,
+    };
+    localStorage.setItem(key, JSON.stringify(rascunho));
+  }, [
+    items,
+    selectedClienteId,
+    selectedVendedorId,
+    observacaoVenda,
+    desconto,
+    acrescimo,
+    pagamentos,
+    cupomFiscal,
+    caixaAtual,
+    user?.id,
+    restoreDraftPrompt,
+  ]);
+
+  const handleContinuarVendaRascunho = () => {
+    if (!restoreDraftPrompt) return;
+    const r = restoreDraftPrompt;
+    setItems(r.items);
+    setSelectedClienteId(r.selectedClienteId || "");
+    setSelectedVendedorId(r.selectedVendedorId ?? null);
+    setObservacaoVenda(r.observacaoVenda || "");
+    setDesconto(r.desconto || 0);
+    setAcrescimo(r.acrescimo || 0);
+    setPagamentos(r.pagamentos || []);
+    setCupomFiscal(r.cupomFiscal || "");
+    setRestoreDraftPrompt(null);
+    toast.success("Venda em aberto restaurada.");
+  };
+
+  const handleDescartarVendaRascunho = () => {
+    if (caixaAtual && user?.id) {
+      localStorage.removeItem(getRascunhoKey(TERMINAL, user.id, caixaAtual.id));
+    }
+    setRestoreDraftPrompt(null);
+  };
 
   // ── Sugestões de busca (autocomplete, sem grade de produtos) ────────────────
   const searchSuggestions = useMemo(() => {
@@ -1004,6 +1094,7 @@ export function PDVPage() {
         p_valor_fechamento: valor,
       });
       if (error) throw error;
+      if (user?.id) localStorage.removeItem(getRascunhoKey(TERMINAL, user.id, caixaAtual.id));
       queryClient.invalidateQueries({ queryKey: ["caixa-atual", TERMINAL] });
       toast.success("Caixa fechado");
       setCashModal(null);
@@ -1289,6 +1380,12 @@ export function PDVPage() {
         onSomarQuantidade={handleSomarQuantidade}
         onIncluirSeparado={handleIncluirSeparado}
         onCancel={handleCancelarInclusaoDuplicada}
+      />
+
+      <RestoreVendaModal
+        open={!!restoreDraftPrompt}
+        onContinuar={handleContinuarVendaRascunho}
+        onDescartar={handleDescartarVendaRascunho}
       />
 
       {quantityTargetItem && (
