@@ -8,6 +8,7 @@ export interface ReciboItem {
   quantidade: number;
   valor: number;
   total: number;
+  desconto?: number;
   acrescimo?: number;
 }
 
@@ -63,6 +64,12 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
   const itensHTML = data.itens
     .map((it) => {
       const detalhe = `${it.codigo ? `REF ${it.codigo} &middot; ` : ""}${it.quantidade} UN x ${brl(it.valor)}`;
+      const descontoItemHTML =
+        it.desconto && it.desconto > 0
+          ? `<div style="display:flex;justify-content:space-between;color:#555;font-size:9px;">
+               <span>- Desconto</span><span>${brl(it.desconto)}</span>
+             </div>`
+          : "";
       const acrescimoItemHTML =
         it.acrescimo && it.acrescimo > 0
           ? `<div style="display:flex;justify-content:space-between;color:#555;font-size:9px;">
@@ -76,6 +83,7 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
         <span>${detalhe}</span>
         <span style="font-weight:bold;color:#000;">${brl(it.total)}</span>
       </div>
+      ${descontoItemHTML}
       ${acrescimoItemHTML}
     </div>`;
     })
@@ -224,6 +232,7 @@ export async function gerarReciboVendaPDF(
     totalItemLinhas * 3.8 +
     data.itens.length * 5.5 +
     data.itens.filter((it) => it.acrescimo && it.acrescimo > 0).length * 4 +
+    data.itens.filter((it) => it.desconto && it.desconto > 0).length * 4 +
     data.pagamentos.length * 4 +
     (data.previsaoPagamento ? 5 : 0) +
     (data.observacao ? 8 : 0) +
@@ -352,6 +361,13 @@ export async function gerarReciboVendaPDF(
     pdf.text(detalhe, L, y);
     pdf.text(brl(it.total), R, y, { align: "right" });
     y += lh + 0.7;
+
+    if (it.desconto && it.desconto > 0) {
+      pdf.setFontSize(7);
+      pdf.text(`- Desconto`, L, y);
+      pdf.text(brl(it.desconto), R, y, { align: "right" });
+      y += lh;
+    }
 
     if (it.acrescimo && it.acrescimo > 0) {
       pdf.setFontSize(7);

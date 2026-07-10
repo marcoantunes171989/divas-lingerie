@@ -13,6 +13,8 @@ export interface LastSaleSummary {
   formaPagamento: string;
   clienteNome: string;
   operadorNome: string;
+  vendedorNome: string;
+  status: string;
   dataHora: Date;
 }
 
@@ -65,7 +67,6 @@ export function SaleSuccessModal({
                 <h2 className="font-display text-lg font-extrabold text-[var(--pdv-graphite)]">
                   Venda finalizada com sucesso
                 </h2>
-                <p className="text-xs text-[var(--pdv-gray-text)]">Venda nº {sale.numero}</p>
               </div>
             </div>
 
@@ -78,9 +79,12 @@ export function SaleSuccessModal({
                   {brl(sale.total)}
                 </p>
               </div>
+              <SummaryCard label="Venda nº" value={sale.numero} />
               <SummaryCard label="Pagamento" value={sale.formaPagamento} />
               <SummaryCard label="Cliente" value={sale.clienteNome} />
               <SummaryCard label="Operador" value={sale.operadorNome} />
+              <SummaryCard label="Vendedor" value={sale.vendedorNome || "não selecionado"} />
+              <SummaryCard label="Status" value={sale.status} />
               <SummaryCard
                 label="Data/hora"
                 value={sale.dataHora.toLocaleString("pt-BR", {

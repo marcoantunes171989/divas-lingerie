@@ -995,6 +995,7 @@ export function PDVPage() {
           quantidade: it.quantidade,
           valor: it.valor,
           total: it.total - (it.desconto || 0) + (it.acrescimo || 0),
+          desconto: it.desconto || 0,
           acrescimo: it.acrescimo || 0,
         })),
         subtotal,
@@ -1023,6 +1024,8 @@ export function PDVPage() {
         formaPagamento: formaPagamentoHeader,
         clienteNome,
         operadorNome: operadorSelecionadoNome ?? "",
+        vendedorNome: vendedorSelecionadoNome ?? "",
+        status: "Concluída",
         dataHora: new Date(),
       });
       setReceiptUrl(null);
