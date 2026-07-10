@@ -479,11 +479,37 @@ export function PDVPage() {
     toast.success("Venda em aberto restaurada.");
   };
 
-  const handleDescartarVendaRascunho = () => {
+  const handleDescartarVendaRascunho = async () => {
+    const draft = restoreDraftPrompt;
+    if (draft?.cupomFiscal) {
+      try {
+        const itensAtivos = draft.items.filter((i) => !i.cancelado);
+        const snapshot = itensAtivos.map((i) => {
+          const prod = produtos.find((p) => p.id === i.produto_id);
+          return {
+            produto_id: i.produto_id,
+            descricao: i.descricao,
+            estoque_no_cancelamento: prod?.pro_estoque_atual ?? 0,
+            quantidade_cancelada: i.quantidade,
+          };
+        });
+        await supabase.from("tab_cancelamentos" as any).insert({
+          can_cupom_fiscal: draft.cupomFiscal,
+          can_tipo: "venda_completa",
+          can_motivo: "Desistência",
+          can_estoque_snapshot: snapshot,
+          can_valor_cancelado: itensAtivos.reduce((s, i) => s + i.total, 0),
+        });
+      } catch (e) {
+        console.warn("[VENDA] Falha ao registrar auditoria de desistência", e);
+      }
+    }
     if (caixaAtual && user?.id) {
       localStorage.removeItem(getRascunhoKey(TERMINAL, user.id, caixaAtual.id));
     }
+    resetVenda();
     setRestoreDraftPrompt(null);
+    toast.error("Venda descartada", { description: "Motivo: Desistência" });
   };
 
   // ── Sugestões de busca (autocomplete, sem grade de produtos) ────────────────
