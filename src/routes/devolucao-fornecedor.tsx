@@ -167,18 +167,26 @@ function DevolucaoFornecedorPage() {
     return (rows as Devolucao[]) || [];
   };
 
+  const porDescricaoAsc = (a: any, b: any) =>
+    String(a.descricao || "")
+      .trim()
+      .toLowerCase()
+      .localeCompare(String(b.descricao || "").trim().toLowerCase(), "pt-BR");
+
   const flattenDevolucoes = (lista: Devolucao[]) =>
     lista.flatMap((d) =>
-      (d.dev_snapshot || []).map((item: any) => ({
-        data: d.dev_data,
-        fornecedor: d.tab_fornecedores?.for_razao_social || "—",
-        motivo: d.dev_motivo || "—",
-        codigo: item.codigo || "",
-        descricao: item.descricao || "",
-        quantidade: Number(item.quantidade) || 0,
-        valorUnitario: Number(item.valor_unitario) || 0,
-        valorTotal: Number(item.valor_total) || 0,
-      })),
+      [...(d.dev_snapshot || [])]
+        .sort(porDescricaoAsc)
+        .map((item: any) => ({
+          data: d.dev_data,
+          fornecedor: d.tab_fornecedores?.for_razao_social || "—",
+          motivo: d.dev_motivo || "—",
+          codigo: item.codigo || "",
+          descricao: item.descricao || "",
+          quantidade: Number(item.quantidade) || 0,
+          valorUnitario: Number(item.valor_unitario) || 0,
+          valorTotal: Number(item.valor_total) || 0,
+        })),
     );
 
   const csvEscape = (value: string | number) => {
