@@ -39,6 +39,7 @@ import { CustomerSelectorModal } from "@/components/pos/CustomerSelectorModal";
 import { SellerSelectorModal } from "@/components/pos/SellerSelectorModal";
 import { DiscountModal } from "@/components/pos/DiscountModal";
 import { AcrescimoModal } from "@/components/pos/AcrescimoModal";
+import { DuplicateProductModal } from "@/components/pos/DuplicateProductModal";
 import { PaymentModal } from "@/components/pos/PaymentModal";
 import { SaleSuccessModal, type LastSaleSummary } from "@/components/pos/SaleSuccessModal";
 import { CashOpenCloseModal } from "@/components/pos/CashOpenCloseModal";
@@ -206,6 +207,10 @@ export function PDVPage() {
   const [clienteSearchTerm, setClienteSearchTerm] = useState("");
   const [discountTarget, setDiscountTarget] = useState<{ itemId: string | null } | null>(null);
   const [acrescimoTarget, setAcrescimoTarget] = useState<{ itemId: string | null } | null>(null);
+  const [duplicateProductTarget, setDuplicateProductTarget] = useState<{
+    produto: ProdutoPDV;
+    itemExistenteId: string;
+  } | null>(null);
   const [quantityTargetId, setQuantityTargetId] = useState<string | null>(null);
   const [isPriceCheckOpen, setIsPriceCheckOpen] = useState(false);
   const [priceCheckTerm, setPriceCheckTerm] = useState("");
@@ -420,6 +425,20 @@ export function PDVPage() {
   }, [produtos, searchTerm, getDisponivel]);
 
   // ── Carrinho ──────────────────────────────────────────────────────────────────
+  const criarLinhaItem = (produto: ProdutoPDV): ItemVenda => {
+    const valor = Number(produto.pro_valor_venda) || 0;
+    return {
+      id: Math.random().toString(36).substring(2, 11),
+      produto_id: produto.id,
+      descricao: produto.pro_descricao,
+      codigo: produto.pro_codigo,
+      valor,
+      quantidade: 1,
+      total: valor,
+      added_at: Date.now(),
+    };
+  };
+
   const addItem = useCallback(
     (produto: ProdutoPDV) => {
       const estoqueDisponivel = getDisponivel(produto);
@@ -433,37 +452,44 @@ export function PDVPage() {
         return;
       }
 
-      const valor = Number(produto.pro_valor_venda) || 0;
       if (itemAtivo) {
-        setSelectedItemId(itemAtivo.id);
-        setItems((prev) =>
-          prev.map((i) =>
-            i.id === itemAtivo.id
-              ? { ...i, quantidade: i.quantidade + 1, total: (i.quantidade + 1) * i.valor }
-              : i,
-          ),
-        );
+        setDuplicateProductTarget({ produto, itemExistenteId: itemAtivo.id });
         return;
       }
 
-      const novoId = Math.random().toString(36).substring(2, 11);
-      setItems((prev) => [
-        {
-          id: novoId,
-          produto_id: produto.id,
-          descricao: produto.pro_descricao,
-          codigo: produto.pro_codigo,
-          valor,
-          quantidade: 1,
-          total: valor,
-          added_at: Date.now(),
-        },
-        ...prev,
-      ]);
-      setSelectedItemId(novoId);
+      const novoItem = criarLinhaItem(produto);
+      setItems((prev) => [novoItem, ...prev]);
+      setSelectedItemId(novoItem.id);
     },
     [items, getDisponivel],
   );
+
+  const handleSomarQuantidade = () => {
+    if (!duplicateProductTarget) return;
+    const { itemExistenteId } = duplicateProductTarget;
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === itemExistenteId
+          ? { ...i, quantidade: i.quantidade + 1, total: (i.quantidade + 1) * i.valor }
+          : i,
+      ),
+    );
+    setSelectedItemId(itemExistenteId);
+    setDuplicateProductTarget(null);
+  };
+
+  const handleIncluirSeparado = () => {
+    if (!duplicateProductTarget) return;
+    const novoItem = criarLinhaItem(duplicateProductTarget.produto);
+    setItems((prev) => [novoItem, ...prev]);
+    setSelectedItemId(novoItem.id);
+    setDuplicateProductTarget(null);
+  };
+
+  const handleCancelarInclusaoDuplicada = () => {
+    setDuplicateProductTarget(null);
+    searchInputRef.current?.focus();
+  };
 
   const handleSearchEnter = () => {
     const term = searchTerm.trim().toUpperCase();
@@ -1039,6 +1065,7 @@ export function PDVPage() {
       setIsPriceCheckOpen(false);
       setDiscountTarget(null);
       setAcrescimoTarget(null);
+      setDuplicateProductTarget(null);
       setQuantityTargetId(null);
       setIsFunctionsPanelOpen(false);
     },
@@ -1254,6 +1281,14 @@ export function PDVPage() {
           if (acrescimoTarget?.itemId != null) applyItemAcrescimo(acrescimoTarget.itemId, valor);
           else setAcrescimo(valor);
         }}
+      />
+
+      <DuplicateProductModal
+        open={!!duplicateProductTarget}
+        produtoDescricao={duplicateProductTarget?.produto.pro_descricao}
+        onSomarQuantidade={handleSomarQuantidade}
+        onIncluirSeparado={handleIncluirSeparado}
+        onCancel={handleCancelarInclusaoDuplicada}
       />
 
       {quantityTargetItem && (
