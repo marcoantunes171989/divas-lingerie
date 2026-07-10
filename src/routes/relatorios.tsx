@@ -448,6 +448,7 @@ function RelatoriosPage() {
   const [periodo, setPeriodo] = useState("7d");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [showCancelled, setShowCancelled] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [activeTab, setActiveTab] = useState<"graficos" | "vendas">("graficos");
   const [buscaVenda, setBuscaVenda] = useState("");
@@ -466,15 +467,23 @@ function RelatoriosPage() {
     queryKey: ["relatorio-vendas-resumo", periodo, startDate, endDate],
     queryFn: async ({ signal }) => {
       let query = supabase.from("view_resumo_vendas_diario").select("*");
-      if (periodo === "7d") {
+      if (periodo === "hoje") {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        query = query.gte("data_referencia", d.toISOString().split("T")[0]);
+      } else if (periodo === "7d") {
         const d = new Date();
         d.setDate(d.getDate() - 7);
+        query = query.gte("data_referencia", d.toISOString().split("T")[0]);
+      } else if (periodo === "15d") {
+        const d = new Date();
+        d.setDate(d.getDate() - 15);
         query = query.gte("data_referencia", d.toISOString().split("T")[0]);
       } else if (periodo === "30d") {
         const d = new Date();
         d.setDate(d.getDate() - 30);
         query = query.gte("data_referencia", d.toISOString().split("T")[0]);
-      } else if (periodo === "custom" && startDate && endDate) {
+      } else if (periodo === "custom" && startDate && endDate && startDate <= endDate) {
         query = query.gte("data_referencia", startDate).lte("data_referencia", endDate);
       }
       const { data, error } = await query
@@ -489,11 +498,23 @@ function RelatoriosPage() {
     queryKey: ["relatorio-vendas-resumo-anterior", periodo, startDate, endDate],
     queryFn: async () => {
       let start: string, end: string;
-      if (periodo === "7d") {
+      if (periodo === "hoje") {
+        const d1 = new Date();
+        d1.setDate(d1.getDate() - 1);
+        start = d1.toISOString().split("T")[0];
+        end = start;
+      } else if (periodo === "7d") {
         const d1 = new Date();
         d1.setDate(d1.getDate() - 14);
         const d2 = new Date();
         d2.setDate(d2.getDate() - 7);
+        start = d1.toISOString().split("T")[0];
+        end = d2.toISOString().split("T")[0];
+      } else if (periodo === "15d") {
+        const d1 = new Date();
+        d1.setDate(d1.getDate() - 30);
+        const d2 = new Date();
+        d2.setDate(d2.getDate() - 15);
         start = d1.toISOString().split("T")[0];
         end = d2.toISOString().split("T")[0];
       } else if (periodo === "30d") {
@@ -503,7 +524,7 @@ function RelatoriosPage() {
         d2.setDate(d2.getDate() - 30);
         start = d1.toISOString().split("T")[0];
         end = d2.toISOString().split("T")[0];
-      } else if (periodo === "custom" && startDate && endDate) {
+      } else if (periodo === "custom" && startDate && endDate && startDate <= endDate) {
         const s = new Date(startDate);
         const e = new Date(endDate);
         const diff = e.getTime() - s.getTime();
@@ -544,15 +565,23 @@ function RelatoriosPage() {
         .from("tab_vendas")
         .select("ven_forma_pagamento, ven_valor_total")
         .neq("ven_status", "cancelada");
-      if (periodo === "7d") {
+      if (periodo === "hoje") {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        query = query.gte("created_at", d.toISOString());
+      } else if (periodo === "7d") {
         const d = new Date();
         d.setDate(d.getDate() - 7);
+        query = query.gte("created_at", d.toISOString());
+      } else if (periodo === "15d") {
+        const d = new Date();
+        d.setDate(d.getDate() - 15);
         query = query.gte("created_at", d.toISOString());
       } else if (periodo === "30d") {
         const d = new Date();
         d.setDate(d.getDate() - 30);
         query = query.gte("created_at", d.toISOString());
-      } else if (periodo === "custom" && startDate && endDate) {
+      } else if (periodo === "custom" && startDate && endDate && startDate <= endDate) {
         query = query
           .gte("created_at", `${startDate}T00:00:00`)
           .lte("created_at", `${endDate}T23:59:59`);
@@ -568,7 +597,7 @@ function RelatoriosPage() {
     isLoading: loadingVendas,
     isFetching: fetchingVendas,
   } = useQuery({
-    queryKey: ["relatorio-vendas-detalhado", periodo, startDate, endDate, page],
+    queryKey: ["relatorio-vendas-detalhado", periodo, startDate, endDate, page, showCancelled],
     queryFn: async ({ signal }) => {
       let query = supabase
         .from("tab_vendas")
@@ -577,15 +606,26 @@ function RelatoriosPage() {
         )
         .order("created_at", { ascending: false })
         .range(page * pageSize, (page + 1) * pageSize - 1);
-      if (periodo === "7d") {
+      if (!showCancelled) {
+        query = query.neq("ven_status", "cancelada");
+      }
+      if (periodo === "hoje") {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        query = query.gte("created_at", d.toISOString());
+      } else if (periodo === "7d") {
         const d = new Date();
         d.setDate(d.getDate() - 7);
+        query = query.gte("created_at", d.toISOString());
+      } else if (periodo === "15d") {
+        const d = new Date();
+        d.setDate(d.getDate() - 15);
         query = query.gte("created_at", d.toISOString());
       } else if (periodo === "30d") {
         const d = new Date();
         d.setDate(d.getDate() - 30);
         query = query.gte("created_at", d.toISOString());
-      } else if (periodo === "custom" && startDate && endDate) {
+      } else if (periodo === "custom" && startDate && endDate && startDate <= endDate) {
         query = query
           .gte("created_at", `${startDate}T00:00:00`)
           .lte("created_at", `${endDate}T23:59:59`);
@@ -602,7 +642,7 @@ function RelatoriosPage() {
     setAllVendas([]);
     setPage(0);
     setHasMore(true);
-  }, [periodo, startDate, endDate]);
+  }, [periodo, startDate, endDate, showCancelled]);
 
   useEffect(() => {
     if (newVendas.length > 0) {
@@ -761,11 +801,15 @@ function RelatoriosPage() {
       const doc = new SafejsPDF();
       const pw = doc.internal.pageSize.getWidth();
       const periodLabel =
-        periodo === "7d"
-          ? "Últimos 7 dias"
-          : periodo === "30d"
-            ? "Últimos 30 dias"
-            : `De ${dateBR(startDate)} até ${dateBR(endDate)}`;
+        periodo === "hoje"
+          ? "Hoje"
+          : periodo === "7d"
+            ? "Últimos 7 dias"
+            : periodo === "15d"
+              ? "Últimos 15 dias"
+              : periodo === "30d"
+                ? "Últimos 30 dias"
+                : `De ${dateBR(startDate)} até ${dateBR(endDate)}`;
 
       doc.setFontSize(22);
       doc.setTextColor(219, 39, 119);
@@ -861,7 +905,9 @@ function RelatoriosPage() {
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex items-center bg-muted rounded-2xl p-1 gap-1 shadow-inner">
           {[
+            { value: "hoje", label: "Hoje" },
             { value: "7d", label: "7 dias" },
+            { value: "15d", label: "15 dias" },
             { value: "30d", label: "30 dias" },
             { value: "custom", label: "Personalizado" },
           ].map((p) => (
@@ -881,22 +927,52 @@ function RelatoriosPage() {
         </div>
 
         {periodo === "custom" && (
-          <div className="flex items-center gap-2">
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-auto h-10 rounded-2xl border-none bg-card shadow-sm text-xs font-bold"
-            />
-            <span className="text-[10px] font-black text-muted-foreground">até</span>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-auto h-10 rounded-2xl border-none bg-card shadow-sm text-xs font-bold"
-            />
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-auto h-10 rounded-2xl border-none bg-card shadow-sm text-xs font-bold"
+              />
+              <span className="text-[10px] font-black text-muted-foreground">até</span>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-auto h-10 rounded-2xl border-none bg-card shadow-sm text-xs font-bold"
+              />
+            </div>
+            {startDate && endDate && startDate > endDate && (
+              <span className="text-[10px] font-bold text-destructive">
+                Data inicial deve ser menor ou igual à data final.
+              </span>
+            )}
           </div>
         )}
+
+        <div className="flex items-center bg-muted rounded-2xl p-1 gap-1 shadow-inner">
+          <span className="pl-2 pr-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+            Canceladas
+          </span>
+          {[
+            { value: false, label: "Não" },
+            { value: true, label: "Sim" },
+          ].map((opt) => (
+            <button
+              key={String(opt.value)}
+              onClick={() => setShowCancelled(opt.value)}
+              className={cn(
+                "px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
+                showCancelled === opt.value
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
 
         <div className="sm:ml-auto flex items-center bg-muted rounded-2xl p-1 gap-1 shadow-inner">
           <button

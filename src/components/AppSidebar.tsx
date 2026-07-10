@@ -104,16 +104,16 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" side={isMobile ? "right" : "left"}>
-      <SidebarHeader className="border-b border-sidebar-border bg-sidebar/50 backdrop-blur-sm">
-        <div className="flex items-center gap-3 px-4 py-5">
+      <SidebarHeader className="h-12 justify-center p-0 border-b border-sidebar-border bg-sidebar/50 backdrop-blur-sm">
+        <div className="flex items-center gap-2 px-3">
           <img
             src="/logo.png"
             alt={COMPANY_NAME}
-            className="h-10 w-10 shrink-0 object-contain rounded-lg"
+            className="h-8 w-8 shrink-0 object-contain rounded-lg"
           />
-          <div className="flex flex-col group-data-[collapsible=icon]:hidden overflow-hidden">
-            <span className="text-base font-bold leading-tight truncate">{COMPANY_NAME}</span>
-            <span className="text-xs text-muted-foreground mt-0.5">Controle de vendas</span>
+          <div className="flex flex-col group-data-[collapsible=icon]:hidden overflow-hidden leading-none">
+            <span className="text-sm font-bold leading-tight truncate">{COMPANY_NAME}</span>
+            <span className="text-[10px] text-muted-foreground mt-0.5">Controle de vendas</span>
           </div>
         </div>
       </SidebarHeader>
