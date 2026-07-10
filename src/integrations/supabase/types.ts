@@ -260,6 +260,7 @@ export type Database = {
           cli_estado: string | null
           cli_nome: string
           cli_numero: string | null
+          cli_observacao: string | null
           cli_telefone: string | null
           created_at: string
           created_by: string | null
@@ -277,6 +278,7 @@ export type Database = {
           cli_estado?: string | null
           cli_nome: string
           cli_numero?: string | null
+          cli_observacao?: string | null
           cli_telefone?: string | null
           created_at?: string
           created_by?: string | null
@@ -294,6 +296,7 @@ export type Database = {
           cli_estado?: string | null
           cli_nome?: string
           cli_numero?: string | null
+          cli_observacao?: string | null
           cli_telefone?: string | null
           created_at?: string
           created_by?: string | null
