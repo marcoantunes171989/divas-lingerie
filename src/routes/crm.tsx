@@ -18,7 +18,7 @@ import {
   ChevronRight,
   PackageX,
 } from "lucide-react";
-import { brl } from "@/lib/format";
+import { brl, normalizeSearch } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -176,7 +176,7 @@ function CRMPage() {
   }, [vendasTodas]);
 
   const vendasFiltradas = useMemo(() => {
-    const termo = debouncedSearch.trim().toLowerCase();
+    const termo = normalizeSearch(debouncedSearch);
     return vendasTodas.filter((v: any) => {
       if (filtroStatus !== "todas" && v.ven_status !== filtroStatus) return false;
 
@@ -205,7 +205,7 @@ function CRMPage() {
           ...itens.map((it: any) => it.tab_produtos?.pro_descricao),
           ...itens.map((it: any) => it.tab_produtos?.pro_codigo),
         ];
-        const bate = campos.some((c) => (c ?? "").toString().trim().toLowerCase().includes(termo));
+        const bate = campos.some((c) => normalizeSearch(c).includes(termo));
         if (!bate) return false;
       }
       return true;
@@ -356,7 +356,7 @@ function CRMPage() {
     <div className="space-y-6 pb-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border shadow-sm">
         <PageHeader
-          title="CRM Intelligence"
+          title="CRM Inteligente"
           description="Gestão de performance e análise de clientes."
         />
         <div className="flex gap-2">

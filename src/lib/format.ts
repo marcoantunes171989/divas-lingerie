@@ -12,6 +12,14 @@ export const parseCurrencyToNumber = (raw: string): number => {
   return digits ? parseInt(digits, 10) / 100 : 0;
 };
 
+// Normaliza texto para busca: ignora acentos, caixa e espacos nas pontas
+export const normalizeSearch = (value: unknown): string =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
 export const dateBR = (s: string) => {
   if (!s) return "";
   // Aceita tanto "YYYY-MM-DD" quanto timestamp ISO "YYYY-MM-DDTHH:mm:ss±hh:mm"
