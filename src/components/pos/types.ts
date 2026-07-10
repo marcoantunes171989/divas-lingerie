@@ -45,7 +45,14 @@ export interface ClientePDV {
 
 export interface VendedorPDV {
   id: string;
-  usu_nome: string;
+  vdr_nome: string;
+  vdr_telefone?: string | null;
+}
+
+export interface OperadorPDV {
+  id: string;
+  ope_nome: string;
+  ope_login?: string | null;
 }
 
 export interface CaixaAtual {

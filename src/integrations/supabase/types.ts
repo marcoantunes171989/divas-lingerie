@@ -771,6 +771,33 @@ export type Database = {
           },
         ]
       }
+      tab_operadores_pdv: {
+        Row: {
+          created_at: string
+          id: string
+          ope_ativo: boolean
+          ope_login: string | null
+          ope_nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ope_ativo?: boolean
+          ope_login?: string | null
+          ope_nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ope_ativo?: boolean
+          ope_login?: string | null
+          ope_nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tab_produtos: {
         Row: {
           created_at: string
@@ -957,6 +984,7 @@ export type Database = {
           ven_desconto: number | null
           ven_forma_pagamento: string | null
           ven_observacao: string | null
+          ven_operador_pdv_id: string | null
           ven_previsao_pagamento: string | null
           ven_status: string | null
           ven_usuario_id: string | null
@@ -974,6 +1002,7 @@ export type Database = {
           ven_desconto?: number | null
           ven_forma_pagamento?: string | null
           ven_observacao?: string | null
+          ven_operador_pdv_id?: string | null
           ven_previsao_pagamento?: string | null
           ven_status?: string | null
           ven_usuario_id?: string | null
@@ -991,6 +1020,7 @@ export type Database = {
           ven_desconto?: number | null
           ven_forma_pagamento?: string | null
           ven_observacao?: string | null
+          ven_operador_pdv_id?: string | null
           ven_previsao_pagamento?: string | null
           ven_status?: string | null
           ven_usuario_id?: string | null
@@ -1034,18 +1064,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tab_vendas_ven_vendedor_id_fkey"
-            columns: ["ven_vendedor_id"]
+            foreignKeyName: "tab_vendas_ven_operador_pdv_id_fkey"
+            columns: ["ven_operador_pdv_id"]
             isOneToOne: false
-            referencedRelation: "tab_usuarios"
+            referencedRelation: "tab_operadores_pdv"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tab_vendas_ven_vendedor_id_fkey"
             columns: ["ven_vendedor_id"]
             isOneToOne: false
-            referencedRelation: "view_auditoria_detalhada"
-            referencedColumns: ["usuario_id"]
+            referencedRelation: "tab_vendedores"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1125,6 +1155,33 @@ export type Database = {
             referencedColumns: ["venda_id"]
           },
         ]
+      }
+      tab_vendedores: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          vdr_ativo: boolean
+          vdr_nome: string
+          vdr_telefone: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          vdr_ativo?: boolean
+          vdr_nome: string
+          vdr_telefone?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          vdr_ativo?: boolean
+          vdr_nome?: string
+          vdr_telefone?: string | null
+        }
+        Relationships: []
       }
       tab_visitas: {
         Row: {
@@ -1459,6 +1516,22 @@ export type Database = {
               p_desconto: number
               p_forma_pagamento: string
               p_itens: Json
+              p_pagamentos?: Json
+              p_usuario_id: string
+              p_valor_total: number
+              p_vendedor_id?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_acrescimo?: number
+              p_caixa_id?: string
+              p_cliente_id: string
+              p_desconto: number
+              p_forma_pagamento: string
+              p_itens: Json
+              p_operador_pdv_id?: string
               p_pagamentos?: Json
               p_usuario_id: string
               p_valor_total: number

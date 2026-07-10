@@ -54,12 +54,12 @@ export function SellerSelectorModal({
                 className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm hover:bg-[var(--pdv-rose-bg)]"
               >
                 <UserRound className="h-4 w-4 text-[var(--pdv-rose)]" />
-                <span className="font-medium text-[var(--pdv-graphite)]">{vendedor.usu_nome}</span>
+                <span className="font-medium text-[var(--pdv-graphite)]">{vendedor.vdr_nome}</span>
               </button>
             ))}
             {vendedores.length === 0 && (
               <p className="px-3 py-6 text-center text-sm text-[var(--pdv-gray-text)]">
-                Nenhum usuário cadastrado.
+                Nenhum vendedor ativo cadastrado.
               </p>
             )}
           </div>

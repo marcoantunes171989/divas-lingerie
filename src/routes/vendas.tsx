@@ -37,6 +37,7 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
 import { CustomerSelectorModal } from "@/components/pos/CustomerSelectorModal";
 import { SellerSelectorModal } from "@/components/pos/SellerSelectorModal";
+import { OperadorSelectorModal } from "@/components/pos/OperadorSelectorModal";
 import { DiscountModal } from "@/components/pos/DiscountModal";
 import { AcrescimoModal } from "@/components/pos/AcrescimoModal";
 import { DuplicateProductModal } from "@/components/pos/DuplicateProductModal";
@@ -164,6 +165,7 @@ interface VendaRascunho {
   items: ItemVenda[];
   selectedClienteId: string;
   selectedVendedorId: string | null;
+  selectedOperadorPdvId: string | null;
   observacaoVenda: string;
   desconto: number;
   acrescimo: number;
@@ -173,6 +175,9 @@ interface VendaRascunho {
 
 const getRascunhoKey = (terminal: string, operadorId: string, caixaId: string) =>
   `${RASCUNHO_PREFIX}:${terminal}:${operadorId}:${caixaId}`;
+
+const OPERADOR_SESSAO_PREFIX = "pdv_operador_sessao";
+const getOperadorSessaoKey = (terminal: string) => `${OPERADOR_SESSAO_PREFIX}:${terminal}`;
 
 const formatPhoneBR = (value: string) => {
   const d = value.replace(/\D/g, "").slice(0, 11);
@@ -195,17 +200,14 @@ export function PDVPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const operadorNome = useMemo(
-    () => user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Operador",
-    [user],
-  );
-
   // ── Carrinho / venda em andamento ──────────────────────────────────────────
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState<ItemVenda[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedClienteId, setSelectedClienteId] = useState<string>("");
   const [selectedVendedorId, setSelectedVendedorId] = useState<string | null>(null);
+  const [selectedOperadorPdvId, setSelectedOperadorPdvId] = useState<string | null>(null);
+  const [isOperadorModalOpen, setIsOperadorModalOpen] = useState(false);
   const [observacaoVenda, setObservacaoVenda] = useState("");
   const [desconto, setDesconto] = useState(0);
   const [acrescimo, setAcrescimo] = useState(0);
@@ -336,11 +338,25 @@ export function PDVPage() {
     queryKey: ["vendedores-pdv"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tab_usuarios")
-        .select("id, usu_nome")
-        .order("usu_nome");
+        .from("tab_vendedores" as any)
+        .select("id, vdr_nome, vdr_telefone")
+        .eq("vdr_ativo", true)
+        .order("vdr_nome");
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as { id: string; vdr_nome: string; vdr_telefone: string | null }[];
+    },
+  });
+
+  const { data: operadoresPdvData = [] } = useQuery({
+    queryKey: ["operadores-pdv"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tab_operadores_pdv" as any)
+        .select("id, ope_nome, ope_login")
+        .eq("ope_ativo", true)
+        .order("ope_nome");
+      if (error) throw error;
+      return (data || []) as unknown as { id: string; ope_nome: string; ope_login: string | null }[];
     },
   });
 
@@ -443,6 +459,7 @@ export function PDVPage() {
       items,
       selectedClienteId,
       selectedVendedorId,
+      selectedOperadorPdvId,
       observacaoVenda,
       desconto,
       acrescimo,
@@ -454,6 +471,7 @@ export function PDVPage() {
     items,
     selectedClienteId,
     selectedVendedorId,
+    selectedOperadorPdvId,
     observacaoVenda,
     desconto,
     acrescimo,
@@ -464,12 +482,36 @@ export function PDVPage() {
     restoreDraftPrompt,
   ]);
 
+  // Operador PDV: persiste como "padrão da sessão" do terminal, independente da venda
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(getOperadorSessaoKey(TERMINAL));
+      if (raw) setSelectedOperadorPdvId(raw);
+    } catch {
+      // ignora
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (selectedOperadorPdvId) {
+        localStorage.setItem(getOperadorSessaoKey(TERMINAL), selectedOperadorPdvId);
+      } else {
+        localStorage.removeItem(getOperadorSessaoKey(TERMINAL));
+      }
+    } catch {
+      // ignora
+    }
+  }, [selectedOperadorPdvId]);
+
   const handleContinuarVendaRascunho = () => {
     if (!restoreDraftPrompt) return;
     const r = restoreDraftPrompt;
     setItems(r.items);
     setSelectedClienteId(r.selectedClienteId || "");
     setSelectedVendedorId(r.selectedVendedorId ?? null);
+    if (r.selectedOperadorPdvId) setSelectedOperadorPdvId(r.selectedOperadorPdvId);
     setObservacaoVenda(r.observacaoVenda || "");
     setDesconto(r.desconto || 0);
     setAcrescimo(r.acrescimo || 0);
@@ -558,6 +600,10 @@ export function PDVPage() {
 
   const addItem = useCallback(
     (produto: ProdutoPDV) => {
+      if (!selectedOperadorPdvId || !selectedVendedorId) {
+        toast.error("Selecione o operador e o vendedor para iniciar a venda.");
+        return;
+      }
       const estoqueDisponivel = getDisponivel(produto);
       const itemAtivo = items.find((i) => i.produto_id === produto.id && !i.cancelado);
       const qtdAtualNoCarrinho = itemAtivo?.quantidade || 0;
@@ -578,7 +624,7 @@ export function PDVPage() {
       setItems((prev) => [novoItem, ...prev]);
       setSelectedItemId(novoItem.id);
     },
-    [items, getDisponivel],
+    [items, getDisponivel, selectedOperadorPdvId, selectedVendedorId],
   );
 
   const handleSomarQuantidade = () => {
@@ -713,9 +759,16 @@ export function PDVPage() {
   }, [selectedClienteId, clientesData]);
 
   const vendedorSelecionadoNome = useMemo(
-    () => vendedoresData.find((v: any) => v.id === selectedVendedorId)?.usu_nome ?? null,
+    () => vendedoresData.find((v: any) => v.id === selectedVendedorId)?.vdr_nome ?? null,
     [vendedoresData, selectedVendedorId],
   );
+
+  const operadorSelecionadoNome = useMemo(
+    () => operadoresPdvData.find((o: any) => o.id === selectedOperadorPdvId)?.ope_nome ?? null,
+    [operadoresPdvData, selectedOperadorPdvId],
+  );
+
+  const podeVender = !!selectedOperadorPdvId && !!selectedVendedorId;
 
   const clientesFiltrados = useMemo(() => {
     const s = clienteSearchTerm.trim().toLowerCase();
@@ -760,6 +813,10 @@ export function PDVPage() {
       toast.error("Abra o caixa antes de iniciar uma venda.");
       return;
     }
+    if (!selectedOperadorPdvId || !selectedVendedorId) {
+      toast.error("Selecione o operador e o vendedor para iniciar a venda.");
+      return;
+    }
     if (items.filter((i) => !i.cancelado).length === 0) {
       toast.error("Adicione itens à venda.");
       return;
@@ -802,6 +859,10 @@ export function PDVPage() {
       }
       if (!caixaAtual) {
         toast.error("Abra o caixa antes de finalizar a venda.");
+        return;
+      }
+      if (!selectedOperadorPdvId || !selectedVendedorId) {
+        toast.error("Selecione o operador e o vendedor para iniciar a venda.");
         return;
       }
       if (!selectedClienteId) {
@@ -874,6 +935,7 @@ export function PDVPage() {
           p_vendedor_id: selectedVendedorId,
           p_caixa_id: caixaAtual.id,
           p_acrescimo: acrescimo,
+          p_operador_pdv_id: selectedOperadorPdvId,
         },
       );
 
@@ -945,7 +1007,7 @@ export function PDVPage() {
         data: new Date(),
         cupomFiscal: String(cupomGerado),
         observacao: observacaoVenda.trim() || null,
-        operador: operadorNome,
+        operador: operadorSelecionadoNome ?? undefined,
         vendedor: vendedorSelecionadoNome ?? undefined,
         terminal: TERMINAL,
         enderecoLoja: COMPANY_ADDRESS || undefined,
@@ -960,7 +1022,7 @@ export function PDVPage() {
         total,
         formaPagamento: formaPagamentoHeader,
         clienteNome,
-        operadorNome,
+        operadorNome: operadorSelecionadoNome ?? "",
         dataHora: new Date(),
       });
       setReceiptUrl(null);
@@ -1163,7 +1225,8 @@ export function PDVPage() {
     onSelecionarCliente: () => setIsCustomerModalOpen(true),
     onDesconto: () => setDiscountTarget({ itemId: selectedItemId }),
     onPagamento: () => {
-      if (caixaAtual && items.filter((i) => !i.cancelado).length > 0) setIsPaymentModalOpen(true);
+      if (caixaAtual && podeVender && items.filter((i) => !i.cancelado).length > 0)
+        setIsPaymentModalOpen(true);
     },
     onAlterarQuantidade: () => {
       if (selectedItemId) setQuantityTargetId(selectedItemId);
@@ -1173,12 +1236,14 @@ export function PDVPage() {
     },
     onCancelarVenda: handleCancelarVenda,
     onFinalizarVenda: () => {
-      if (caixaAtual && items.filter((i) => !i.cancelado).length > 0) setIsPaymentModalOpen(true);
+      if (caixaAtual && podeVender && items.filter((i) => !i.cancelado).length > 0)
+        setIsPaymentModalOpen(true);
     },
     onEscape: () => {
       setIsPaymentModalOpen(false);
       setIsCustomerModalOpen(false);
       setIsSellerModalOpen(false);
+      setIsOperadorModalOpen(false);
       setIsScannerOpen(false);
       setIsPriceCheckOpen(false);
       setDiscountTarget(null);
@@ -1239,7 +1304,7 @@ export function PDVPage() {
         setDiscountTarget({ itemId: selectedItemId });
         break;
       case shortcutConfig.payment:
-        if (caixaAtual && activeItemsCount > 0) setIsPaymentModalOpen(true);
+        if (caixaAtual && podeVender && activeItemsCount > 0) setIsPaymentModalOpen(true);
         break;
       case shortcutConfig.changeQuantity:
         if (selectedItemId) setQuantityTargetId(selectedItemId);
@@ -1251,7 +1316,7 @@ export function PDVPage() {
         handleCancelarVenda();
         break;
       case shortcutConfig.finishSale:
-        if (caixaAtual && activeItemsCount > 0) setIsPaymentModalOpen(true);
+        if (caixaAtual && podeVender && activeItemsCount > 0) setIsPaymentModalOpen(true);
         break;
       default:
         break;
@@ -1261,7 +1326,8 @@ export function PDVPage() {
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden bg-[var(--pdv-rose-bg)] p-2 xl:gap-3 xl:p-3">
       <PDVHeader
-        operadorNome={operadorNome}
+        operadorNome={operadorSelecionadoNome}
+        onSelecionarOperador={() => setIsOperadorModalOpen(true)}
         terminal={TERMINAL}
         caixa={caixaAtual as any}
         onNovaVenda={() => {
@@ -1286,6 +1352,32 @@ export function PDVPage() {
           >
             Abrir caixa
           </Button>
+        </div>
+      )}
+
+      {!!caixaAtual && !podeVender && (
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--pdv-danger)]/30 bg-red-50 px-4 py-3">
+          <p className="text-sm font-semibold text-[var(--pdv-danger)]">
+            Selecione o operador e o vendedor para iniciar a venda.
+          </p>
+          <div className="flex gap-2">
+            {!selectedOperadorPdvId && (
+              <Button
+                onClick={() => setIsOperadorModalOpen(true)}
+                className="h-9 rounded-xl bg-[var(--pdv-danger)] text-white hover:bg-[var(--pdv-danger)]/90"
+              >
+                Selecionar operador
+              </Button>
+            )}
+            {!selectedVendedorId && (
+              <Button
+                onClick={() => setIsSellerModalOpen(true)}
+                className="h-9 rounded-xl bg-[var(--pdv-danger)] text-white hover:bg-[var(--pdv-danger)]/90"
+              >
+                Selecionar vendedor
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
@@ -1337,7 +1429,7 @@ export function PDVPage() {
           desconto={descontoTotal}
           acrescimo={acrescimoTotal}
           total={total}
-          disabled={!caixaAtual || activeItemsCount === 0}
+          disabled={!caixaAtual || !podeVender || activeItemsCount === 0}
           onPagamentoRapido={abrirPagamentoRapido}
           onFinalizar={() => setIsPaymentModalOpen(true)}
           onCancelarVenda={handleCancelarVenda}
@@ -1375,6 +1467,13 @@ export function PDVPage() {
         onClose={() => setIsSellerModalOpen(false)}
         vendedores={vendedoresData as any}
         onSelect={setSelectedVendedorId}
+      />
+
+      <OperadorSelectorModal
+        open={isOperadorModalOpen}
+        onClose={() => setIsOperadorModalOpen(false)}
+        operadores={operadoresPdvData as any}
+        onSelect={setSelectedOperadorPdvId}
       />
 
       <DiscountModal

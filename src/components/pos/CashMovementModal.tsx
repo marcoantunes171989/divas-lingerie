@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { formatCurrencyInput, parseCurrencyToNumber } from "@/lib/format";
 
 interface CashMovementModalProps {
   open: boolean;
@@ -28,18 +29,18 @@ export function CashMovementModal({
   loading,
   onConfirm,
 }: CashMovementModalProps) {
-  const [valor, setValor] = useState("");
+  const [valor, setValor] = useState(() => formatCurrencyInput(0));
   const [motivo, setMotivo] = useState("");
 
   useEffect(() => {
     if (open) {
-      setValor("");
+      setValor(formatCurrencyInput(0));
       setMotivo("");
     }
   }, [open]);
 
   const isSangria = tipo === "sangria";
-  const numero = Number(valor.replace(",", ".")) || 0;
+  const numero = parseCurrencyToNumber(valor);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && !loading && onClose()}>
@@ -64,18 +65,17 @@ export function CashMovementModal({
           <Label htmlFor="mov-valor">Valor (R$)</Label>
           <Input
             id="mov-valor"
-            type="number"
-            min={0}
-            step="0.01"
+            type="text"
+            inputMode="numeric"
             autoFocus
             value={valor}
-            onChange={(e) => setValor(e.target.value)}
+            onChange={(e) => setValor(formatCurrencyInput(e.target.value))}
             className="h-12 rounded-xl text-lg"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="mov-motivo">Motivo</Label>
+          <Label htmlFor="mov-motivo">Motivo *</Label>
           <Textarea
             id="mov-motivo"
             value={motivo}
@@ -90,9 +90,9 @@ export function CashMovementModal({
             Cancelar
           </Button>
           <Button
-            disabled={loading || numero <= 0}
+            disabled={loading || numero <= 0 || !motivo.trim()}
             className="rounded-xl bg-[var(--pdv-rose)] hover:bg-[var(--pdv-rose-dark)]"
-            onClick={() => onConfirm(numero, motivo)}
+            onClick={() => onConfirm(numero, motivo.trim())}
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar"}
           </Button>

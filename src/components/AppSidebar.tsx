@@ -15,6 +15,8 @@ import {
   MapPin,
   ShieldCheck,
   UserCog,
+  UserRound,
+  Monitor,
   Ruler,
   Palette,
   LogOut,
@@ -48,6 +50,8 @@ import { Button } from "@/components/ui/button";
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Vendas", url: "/vendas", icon: ShoppingBag },
+  { title: "Operadores PDV", url: "/operadores-pdv", icon: Monitor },
+  { title: "Vendedores", url: "/vendedores", icon: UserRound },
   { title: "Visitas", url: "/visitas", icon: MapPin },
   { title: "Consignação", url: "/sacoleira", icon: HandCoins },
   { title: "Comissão", url: "/comissao", icon: Calculator },

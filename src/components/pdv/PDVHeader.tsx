@@ -13,7 +13,8 @@ import { cn } from "@/lib/utils";
 import type { CaixaAtual } from "@/components/pos/types";
 
 interface PDVHeaderProps {
-  operadorNome: string;
+  operadorNome: string | null;
+  onSelecionarOperador: () => void;
   terminal: string;
   caixa: CaixaAtual | null;
   onNovaVenda: () => void;
@@ -25,6 +26,7 @@ interface PDVHeaderProps {
 
 export function PDVHeader({
   operadorNome,
+  onSelecionarOperador,
   terminal,
   caixa,
   onNovaVenda,
@@ -75,10 +77,21 @@ export function PDVHeader({
       </div>
 
       <div className="flex flex-col gap-0.5 text-xs text-[var(--pdv-gray-text)]">
-        <span>
+        <button
+          type="button"
+          onClick={onSelecionarOperador}
+          className="text-left hover:underline"
+        >
           Operador:{" "}
-          <strong className="font-semibold text-[var(--pdv-graphite)]">{operadorNome}</strong>
-        </span>
+          <strong
+            className={cn(
+              "font-semibold",
+              operadorNome ? "text-[var(--pdv-graphite)]" : "text-[var(--pdv-danger)]",
+            )}
+          >
+            {operadorNome ?? "não selecionado"}
+          </strong>
+        </button>
         <span>
           Terminal: <strong className="font-semibold text-[var(--pdv-graphite)]">{terminal}</strong>
         </span>

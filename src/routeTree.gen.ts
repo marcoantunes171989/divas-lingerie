@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VisitasRouteImport } from './routes/visitas'
+import { Route as VendedoresRouteImport } from './routes/vendedores'
 import { Route as VendasRouteImport } from './routes/vendas'
 import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as TamanhosRouteImport } from './routes/tamanhos'
@@ -17,6 +18,7 @@ import { Route as SacoleiraRouteImport } from './routes/sacoleira'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as RelatorioCancelamentosRouteImport } from './routes/relatorio-cancelamentos'
 import { Route as ProdutosRouteImport } from './routes/produtos'
+import { Route as OperadoresPdvRouteImport } from './routes/operadores-pdv'
 import { Route as NovidadesRouteImport } from './routes/novidades'
 import { Route as MotivosCancelamentoRouteImport } from './routes/motivos-cancelamento'
 import { Route as LoginRouteImport } from './routes/login'
@@ -37,6 +39,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const VisitasRoute = VisitasRouteImport.update({
   id: '/visitas',
   path: '/visitas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VendedoresRoute = VendedoresRouteImport.update({
+  id: '/vendedores',
+  path: '/vendedores',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VendasRoute = VendasRouteImport.update({
@@ -72,6 +79,11 @@ const RelatorioCancelamentosRoute = RelatorioCancelamentosRouteImport.update({
 const ProdutosRoute = ProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OperadoresPdvRoute = OperadoresPdvRouteImport.update({
+  id: '/operadores-pdv',
+  path: '/operadores-pdv',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NovidadesRoute = NovidadesRouteImport.update({
@@ -172,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/motivos-cancelamento': typeof MotivosCancelamentoRoute
   '/novidades': typeof NovidadesRoute
+  '/operadores-pdv': typeof OperadoresPdvRoute
   '/produtos': typeof ProdutosRoute
   '/relatorio-cancelamentos': typeof RelatorioCancelamentosRoute
   '/relatorios': typeof RelatoriosRoute
@@ -179,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/tamanhos': typeof TamanhosRoute
   '/usuarios': typeof UsuariosRoute
   '/vendas': typeof VendasRoute
+  '/vendedores': typeof VendedoresRoute
   '/visitas': typeof VisitasRoute
 }
 export interface FileRoutesByTo {
@@ -198,6 +212,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/motivos-cancelamento': typeof MotivosCancelamentoRoute
   '/novidades': typeof NovidadesRoute
+  '/operadores-pdv': typeof OperadoresPdvRoute
   '/produtos': typeof ProdutosRoute
   '/relatorio-cancelamentos': typeof RelatorioCancelamentosRoute
   '/relatorios': typeof RelatoriosRoute
@@ -205,6 +220,7 @@ export interface FileRoutesByTo {
   '/tamanhos': typeof TamanhosRoute
   '/usuarios': typeof UsuariosRoute
   '/vendas': typeof VendasRoute
+  '/vendedores': typeof VendedoresRoute
   '/visitas': typeof VisitasRoute
 }
 export interface FileRoutesById {
@@ -225,6 +241,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/motivos-cancelamento': typeof MotivosCancelamentoRoute
   '/novidades': typeof NovidadesRoute
+  '/operadores-pdv': typeof OperadoresPdvRoute
   '/produtos': typeof ProdutosRoute
   '/relatorio-cancelamentos': typeof RelatorioCancelamentosRoute
   '/relatorios': typeof RelatoriosRoute
@@ -232,6 +249,7 @@ export interface FileRoutesById {
   '/tamanhos': typeof TamanhosRoute
   '/usuarios': typeof UsuariosRoute
   '/vendas': typeof VendasRoute
+  '/vendedores': typeof VendedoresRoute
   '/visitas': typeof VisitasRoute
 }
 export interface FileRouteTypes {
@@ -253,6 +271,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/motivos-cancelamento'
     | '/novidades'
+    | '/operadores-pdv'
     | '/produtos'
     | '/relatorio-cancelamentos'
     | '/relatorios'
@@ -260,6 +279,7 @@ export interface FileRouteTypes {
     | '/tamanhos'
     | '/usuarios'
     | '/vendas'
+    | '/vendedores'
     | '/visitas'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -279,6 +299,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/motivos-cancelamento'
     | '/novidades'
+    | '/operadores-pdv'
     | '/produtos'
     | '/relatorio-cancelamentos'
     | '/relatorios'
@@ -286,6 +307,7 @@ export interface FileRouteTypes {
     | '/tamanhos'
     | '/usuarios'
     | '/vendas'
+    | '/vendedores'
     | '/visitas'
   id:
     | '__root__'
@@ -305,6 +327,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/motivos-cancelamento'
     | '/novidades'
+    | '/operadores-pdv'
     | '/produtos'
     | '/relatorio-cancelamentos'
     | '/relatorios'
@@ -312,6 +335,7 @@ export interface FileRouteTypes {
     | '/tamanhos'
     | '/usuarios'
     | '/vendas'
+    | '/vendedores'
     | '/visitas'
   fileRoutesById: FileRoutesById
 }
@@ -332,6 +356,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MotivosCancelamentoRoute: typeof MotivosCancelamentoRoute
   NovidadesRoute: typeof NovidadesRoute
+  OperadoresPdvRoute: typeof OperadoresPdvRoute
   ProdutosRoute: typeof ProdutosRoute
   RelatorioCancelamentosRoute: typeof RelatorioCancelamentosRoute
   RelatoriosRoute: typeof RelatoriosRoute
@@ -339,6 +364,7 @@ export interface RootRouteChildren {
   TamanhosRoute: typeof TamanhosRoute
   UsuariosRoute: typeof UsuariosRoute
   VendasRoute: typeof VendasRoute
+  VendedoresRoute: typeof VendedoresRoute
   VisitasRoute: typeof VisitasRoute
 }
 
@@ -349,6 +375,13 @@ declare module '@tanstack/react-router' {
       path: '/visitas'
       fullPath: '/visitas'
       preLoaderRoute: typeof VisitasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vendedores': {
+      id: '/vendedores'
+      path: '/vendedores'
+      fullPath: '/vendedores'
+      preLoaderRoute: typeof VendedoresRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vendas': {
@@ -398,6 +431,13 @@ declare module '@tanstack/react-router' {
       path: '/produtos'
       fullPath: '/produtos'
       preLoaderRoute: typeof ProdutosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/operadores-pdv': {
+      id: '/operadores-pdv'
+      path: '/operadores-pdv'
+      fullPath: '/operadores-pdv'
+      preLoaderRoute: typeof OperadoresPdvRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/novidades': {
@@ -532,6 +572,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MotivosCancelamentoRoute: MotivosCancelamentoRoute,
   NovidadesRoute: NovidadesRoute,
+  OperadoresPdvRoute: OperadoresPdvRoute,
   ProdutosRoute: ProdutosRoute,
   RelatorioCancelamentosRoute: RelatorioCancelamentosRoute,
   RelatoriosRoute: RelatoriosRoute,
@@ -539,6 +580,7 @@ const rootRouteChildren: RootRouteChildren = {
   TamanhosRoute: TamanhosRoute,
   UsuariosRoute: UsuariosRoute,
   VendasRoute: VendasRoute,
+  VendedoresRoute: VendedoresRoute,
   VisitasRoute: VisitasRoute,
 }
 export const routeTree = rootRouteImport
