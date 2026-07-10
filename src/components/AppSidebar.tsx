@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-const menuItems = [
+export const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Vendas", url: "/vendas", icon: ShoppingBag },
   { title: "Operadores PDV", url: "/operadores-pdv", icon: Monitor },
