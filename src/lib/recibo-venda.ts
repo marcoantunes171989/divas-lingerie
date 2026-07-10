@@ -8,6 +8,7 @@ export interface ReciboItem {
   quantidade: number;
   valor: number;
   total: number;
+  acrescimo?: number;
 }
 
 export interface ReciboPagamento {
@@ -20,6 +21,7 @@ export interface ReciboVendaData {
   itens: ReciboItem[];
   subtotal: number;
   desconto: number;
+  acrescimo?: number;
   total: number;
   pagamentos: ReciboPagamento[];
   totalPago: number;
@@ -61,6 +63,12 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
   const itensHTML = data.itens
     .map((it) => {
       const detalhe = `${it.codigo ? `REF ${it.codigo} &middot; ` : ""}${it.quantidade} UN x ${brl(it.valor)}`;
+      const acrescimoItemHTML =
+        it.acrescimo && it.acrescimo > 0
+          ? `<div style="display:flex;justify-content:space-between;color:#555;font-size:9px;">
+               <span>+ Acréscimo</span><span>${brl(it.acrescimo)}</span>
+             </div>`
+          : "";
       return `
     <div style="font-size:10px;margin:4px 0;">
       <div style="font-weight:bold;word-break:break-word;">${it.descricao.toUpperCase()}</div>
@@ -68,6 +76,7 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
         <span>${detalhe}</span>
         <span style="font-weight:bold;color:#000;">${brl(it.total)}</span>
       </div>
+      ${acrescimoItemHTML}
     </div>`;
     })
     .join("");
@@ -77,6 +86,8 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
     .join("");
 
   const descontoHTML = data.desconto > 0 ? row("DESCONTO", `- ${brl(data.desconto)}`) : "";
+  const acrescimoHTML =
+    data.acrescimo && data.acrescimo > 0 ? row("ACRÉSCIMO", `+ ${brl(data.acrescimo)}`) : "";
 
   const trocoHTML = data.troco > 0 ? row("TROCO", brl(data.troco), true) : "";
 
@@ -123,6 +134,7 @@ export function buildReceiptInnerHTML(data: ReciboVendaData): string {
 
     ${row("SUBTOTAL", brl(data.subtotal))}
     ${descontoHTML}
+    ${acrescimoHTML}
     <div style="display:flex;justify-content:space-between;font-weight:900;font-size:14px;margin:4px 0;">
       <span>TOTAL</span><span>${brl(data.total)}</span>
     </div>
@@ -211,6 +223,7 @@ export async function gerarReciboVendaPDF(
     80 +
     totalItemLinhas * 3.8 +
     data.itens.length * 5.5 +
+    data.itens.filter((it) => it.acrescimo && it.acrescimo > 0).length * 4 +
     data.pagamentos.length * 4 +
     (data.previsaoPagamento ? 5 : 0) +
     (data.observacao ? 8 : 0) +
@@ -339,6 +352,13 @@ export async function gerarReciboVendaPDF(
     pdf.text(detalhe, L, y);
     pdf.text(brl(it.total), R, y, { align: "right" });
     y += lh + 0.7;
+
+    if (it.acrescimo && it.acrescimo > 0) {
+      pdf.setFontSize(7);
+      pdf.text(`+ Acrescimo`, L, y);
+      pdf.text(brl(it.acrescimo), R, y, { align: "right" });
+      y += lh;
+    }
   });
 
   solidLine();
@@ -346,6 +366,7 @@ export async function gerarReciboVendaPDF(
   // ── Totais ────────────────────────────────────────────────────────────────
   row("SUBTOTAL", brl(data.subtotal));
   if (data.desconto > 0) row("DESCONTO", `- ${brl(data.desconto)}`);
+  if (data.acrescimo && data.acrescimo > 0) row("ACRESCIMO", `+ ${brl(data.acrescimo)}`);
 
   pdf.setFont("courier", "bold");
   pdf.setFontSize(13);

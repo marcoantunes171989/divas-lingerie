@@ -1,4 +1,13 @@
-import { Hash, MoreVertical, RotateCcw, ShoppingCart, Tag, Trash2, XCircle } from "lucide-react";
+import {
+  Hash,
+  MoreVertical,
+  PlusCircle,
+  RotateCcw,
+  ShoppingCart,
+  Tag,
+  Trash2,
+  XCircle,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,12 +24,24 @@ interface PDVItemsTableProps {
   onSelectRow: (id: string) => void;
   onAlterarQuantidade: (id: string) => void;
   onDesconto: (id: string) => void;
+  onAcrescimo: (id: string) => void;
   onCancelar: (id: string) => void;
   onRestaurar: (id: string) => void;
   onLimparTodos: () => void;
 }
 
-const COLUMNS = ["Item", "Código", "Descrição", "UN", "Qtd", "Unitário", "Desc.", "Total", "Ações"];
+const COLUMNS = [
+  "Item",
+  "Código",
+  "Descrição",
+  "UN",
+  "Qtd",
+  "Unitário",
+  "Desc.",
+  "Acrésc.",
+  "Total",
+  "Ações",
+];
 
 export function PDVItemsTable({
   items,
@@ -28,6 +49,7 @@ export function PDVItemsTable({
   onSelectRow,
   onAlterarQuantidade,
   onDesconto,
+  onAcrescimo,
   onCancelar,
   onRestaurar,
   onLimparTodos,
@@ -45,7 +67,7 @@ export function PDVItemsTable({
                   key={col}
                   className={cn(
                     "border-b border-[var(--pdv-border)] px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-[var(--pdv-gray-text)]",
-                    i >= 4 && i <= 7 ? "text-right" : "text-left",
+                    i >= 4 && i <= 8 ? "text-right" : "text-left",
                     col === "Ações" && "text-center",
                   )}
                 >
@@ -116,13 +138,16 @@ export function PDVItemsTable({
                     <td className="px-3 py-2.5 text-right tabular-nums text-[var(--pdv-rose)]">
                       {brl(item.desconto || 0)}
                     </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-[var(--pdv-graphite)]">
+                      {brl(item.acrescimo || 0)}
+                    </td>
                     <td
                       className={cn(
                         "px-3 py-2.5 text-right font-bold tabular-nums",
                         selected ? "text-[var(--pdv-rose)]" : "text-[var(--pdv-graphite)]",
                       )}
                     >
-                      {brl(item.total - (item.desconto || 0))}
+                      {brl(item.total - (item.desconto || 0) + (item.acrescimo || 0))}
                     </td>
                     <td className="px-2 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
@@ -148,6 +173,12 @@ export function PDVItemsTable({
                                 onClick={() => onDesconto(item.id)}
                               >
                                 <Tag className="h-4 w-4" /> Aplicar desconto
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer gap-2"
+                                onClick={() => onAcrescimo(item.id)}
+                              >
+                                <PlusCircle className="h-4 w-4" /> Aplicar acréscimo
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="cursor-pointer gap-2 text-[var(--pdv-danger)] focus:text-[var(--pdv-danger)]"

@@ -38,6 +38,7 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { CustomerSelectorModal } from "@/components/pos/CustomerSelectorModal";
 import { SellerSelectorModal } from "@/components/pos/SellerSelectorModal";
 import { DiscountModal } from "@/components/pos/DiscountModal";
+import { AcrescimoModal } from "@/components/pos/AcrescimoModal";
 import { PaymentModal } from "@/components/pos/PaymentModal";
 import { SaleSuccessModal, type LastSaleSummary } from "@/components/pos/SaleSuccessModal";
 import { CashOpenCloseModal } from "@/components/pos/CashOpenCloseModal";
@@ -189,6 +190,7 @@ export function PDVPage() {
   const [selectedVendedorId, setSelectedVendedorId] = useState<string | null>(null);
   const [observacaoVenda, setObservacaoVenda] = useState("");
   const [desconto, setDesconto] = useState(0);
+  const [acrescimo, setAcrescimo] = useState(0);
   const [pagamentos, setPagamentos] = useState<{ id: string; forma: string; valor: number }[]>([]);
   const [currentConsignacaoId, setCurrentConsignacaoId] = useState<string | null>(null);
   const [cupomFiscal, setCupomFiscal] = useState("");
@@ -203,6 +205,7 @@ export function PDVPage() {
   const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
   const [clienteSearchTerm, setClienteSearchTerm] = useState("");
   const [discountTarget, setDiscountTarget] = useState<{ itemId: string | null } | null>(null);
+  const [acrescimoTarget, setAcrescimoTarget] = useState<{ itemId: string | null } | null>(null);
   const [quantityTargetId, setQuantityTargetId] = useState<string | null>(null);
   const [isPriceCheckOpen, setIsPriceCheckOpen] = useState(false);
   const [priceCheckTerm, setPriceCheckTerm] = useState("");
@@ -540,11 +543,22 @@ export function PDVPage() {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, desconto: valor } : i)));
   };
 
-  const subtotal = items.reduce(
-    (acc, item) => acc + (item.cancelado ? 0 : item.total - (item.desconto || 0)),
+  const applyItemAcrescimo = (id: string, valor: number) => {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, acrescimo: valor } : i)));
+  };
+
+  const subtotal = items.reduce((acc, item) => acc + (item.cancelado ? 0 : item.total), 0);
+  const descontoItens = items.reduce(
+    (acc, item) => acc + (item.cancelado ? 0 : item.desconto || 0),
     0,
   );
-  const total = Math.max(0, subtotal - desconto);
+  const acrescimoItens = items.reduce(
+    (acc, item) => acc + (item.cancelado ? 0 : item.acrescimo || 0),
+    0,
+  );
+  const descontoTotal = descontoItens + desconto;
+  const acrescimoTotal = acrescimoItens + acrescimo;
+  const total = Math.max(0, subtotal - descontoTotal + acrescimoTotal);
   const totalPago = pagamentos.reduce((acc, p) => acc + p.valor, 0);
   const valorFaltante = total - totalPago;
   const trocoCalculado = calculateChange(total, pagamentos, finalizadorasAtivas);
@@ -622,6 +636,7 @@ export function PDVPage() {
     setItems([]);
     setSelectedItemId(null);
     setDesconto(0);
+    setAcrescimo(0);
     setPagamentos([]);
     setSelectedClienteId("");
     setSelectedVendedorId(null);
@@ -681,7 +696,8 @@ export function PDVPage() {
         produto_id: item.produto_id,
         quantidade: item.quantidade,
         valor_unitario: item.valor,
-        valor_total: item.total - (item.desconto || 0),
+        valor_total: item.total - (item.desconto || 0) + (item.acrescimo || 0),
+        acrescimo: item.acrescimo || 0,
       }));
 
       const formasDistintas = Array.from(new Set(pagamentos.map((p) => p.forma)));
@@ -714,6 +730,7 @@ export function PDVPage() {
           }),
           p_vendedor_id: selectedVendedorId,
           p_caixa_id: caixaAtual.id,
+          p_acrescimo: acrescimo,
         },
       );
 
@@ -772,10 +789,12 @@ export function PDVPage() {
           codigo: it.codigo,
           quantidade: it.quantidade,
           valor: it.valor,
-          total: it.total - (it.desconto || 0),
+          total: it.total - (it.desconto || 0) + (it.acrescimo || 0),
+          acrescimo: it.acrescimo || 0,
         })),
         subtotal,
-        desconto,
+        desconto: descontoTotal,
+        acrescimo: acrescimoTotal,
         total,
         pagamentos: pagamentos.map((p) => ({ forma: p.forma, valor: p.valor })),
         totalPago,
@@ -1019,6 +1038,7 @@ export function PDVPage() {
       setIsScannerOpen(false);
       setIsPriceCheckOpen(false);
       setDiscountTarget(null);
+      setAcrescimoTarget(null);
       setQuantityTargetId(null);
       setIsFunctionsPanelOpen(false);
     },
@@ -1044,6 +1064,15 @@ export function PDVPage() {
     discountTarget?.itemId != null
       ? (items.find((i) => i.id === discountTarget.itemId)?.desconto ?? 0)
       : desconto;
+
+  const acrescimoReferenceValue =
+    acrescimoTarget?.itemId != null
+      ? (items.find((i) => i.id === acrescimoTarget.itemId)?.total ?? 0)
+      : subtotal;
+  const acrescimoCurrentValue =
+    acrescimoTarget?.itemId != null
+      ? (items.find((i) => i.id === acrescimoTarget.itemId)?.acrescimo ?? 0)
+      : acrescimo;
 
   const quantityTargetItem = items.find((i) => i.id === quantityTargetId) ?? null;
   const quantityTargetProduto = quantityTargetItem
@@ -1136,6 +1165,7 @@ export function PDVPage() {
             onScan={() => setIsScannerOpen(true)}
             onSelecionarCliente={() => setIsCustomerModalOpen(true)}
             onDesconto={() => setDiscountTarget({ itemId: selectedItemId })}
+            onAcrescimo={() => setAcrescimoTarget({ itemId: selectedItemId })}
             onToggleFunctions={() => setIsFunctionsPanelOpen((v) => !v)}
           />
 
@@ -1145,6 +1175,7 @@ export function PDVPage() {
             onSelectRow={setSelectedItemId}
             onAlterarQuantidade={setQuantityTargetId}
             onDesconto={(id) => setDiscountTarget({ itemId: id })}
+            onAcrescimo={(id) => setAcrescimoTarget({ itemId: id })}
             onCancelar={cancelItem}
             onRestaurar={restoreItem}
             onLimparTodos={handleCancelarVenda}
@@ -1158,8 +1189,8 @@ export function PDVPage() {
           onSelecionarVendedor={() => setIsSellerModalOpen(true)}
           quantidadeItens={activeItemsCount}
           subtotal={subtotal}
-          desconto={desconto}
-          acrescimo={0}
+          desconto={descontoTotal}
+          acrescimo={acrescimoTotal}
           total={total}
           disabled={!caixaAtual || activeItemsCount === 0}
           onPagamentoRapido={abrirPagamentoRapido}
@@ -1210,6 +1241,18 @@ export function PDVPage() {
         onApply={(valor) => {
           if (discountTarget?.itemId != null) applyItemDiscount(discountTarget.itemId, valor);
           else setDesconto(valor);
+        }}
+      />
+
+      <AcrescimoModal
+        open={!!acrescimoTarget}
+        onClose={() => setAcrescimoTarget(null)}
+        title={acrescimoTarget?.itemId != null ? "Acréscimo no item" : "Acréscimo na venda"}
+        valorReferencia={acrescimoReferenceValue}
+        valorAtual={acrescimoCurrentValue}
+        onApply={(valor) => {
+          if (acrescimoTarget?.itemId != null) applyItemAcrescimo(acrescimoTarget.itemId, valor);
+          else setAcrescimo(valor);
         }}
       />
 

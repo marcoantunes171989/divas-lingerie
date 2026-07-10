@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { Barcode, LayoutGrid, Percent, Search, User } from "lucide-react";
+import { Barcode, LayoutGrid, Percent, PlusCircle, Search, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { brl } from "@/lib/format";
@@ -14,6 +14,7 @@ interface PDVActionBarProps {
   onScan: () => void;
   onSelecionarCliente: () => void;
   onDesconto: () => void;
+  onAcrescimo: () => void;
   onToggleFunctions: () => void;
 }
 
@@ -27,6 +28,7 @@ export const PDVActionBar = forwardRef<HTMLInputElement, PDVActionBarProps>(func
     onScan,
     onSelecionarCliente,
     onDesconto,
+    onAcrescimo,
     onToggleFunctions,
   },
   ref,
@@ -99,6 +101,14 @@ export const PDVActionBar = forwardRef<HTMLInputElement, PDVActionBarProps>(func
             className="h-11 gap-1.5 rounded-xl"
           >
             <Percent className="h-4 w-4 text-[var(--pdv-rose)]" /> Aplicar desconto
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onAcrescimo}
+            className="h-11 gap-1.5 rounded-xl"
+          >
+            <PlusCircle className="h-4 w-4 text-[var(--pdv-rose)]" /> Aplicar acréscimo
           </Button>
           <Button
             type="button"

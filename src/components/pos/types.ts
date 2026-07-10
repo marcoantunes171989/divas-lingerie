@@ -20,6 +20,7 @@ export interface ItemVenda {
   cancelado?: boolean;
   motivo_cancelamento?: string;
   desconto?: number;
+  acrescimo?: number;
 }
 
 export interface PagamentoItem {
