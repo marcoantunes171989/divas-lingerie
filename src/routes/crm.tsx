@@ -289,12 +289,20 @@ function CRMPage() {
     pageSize,
   ]);
 
+  // Radix Tabs mantem todo TabsContent montado (so oculta via CSS), entao cada aba
+  // precisa do seu proprio array paginado — nunca compartilhar uma unica variavel
+  // "generica" entre Vendas/Produtos/Clientes, ou a aba oculta acessa campos da
+  // outra forma (ex.: prod.valor em um objeto de venda) e quebra o render.
   const dadosAtivos: any[] =
     activeTab === "vendas" ? vendasFiltradas : activeTab === "produtos" ? produtosRanking : clientesRanking;
   const totalRegistros = dadosAtivos.length;
   const totalPaginas = Math.max(1, Math.ceil(totalRegistros / pageSize));
   const paginaAtual = Math.min(page, totalPaginas);
-  const dadosPaginados = dadosAtivos.slice((paginaAtual - 1) * pageSize, paginaAtual * pageSize);
+
+  const paginar = <T,>(arr: T[]) => arr.slice((paginaAtual - 1) * pageSize, paginaAtual * pageSize);
+  const vendasPaginadas = paginar(vendasFiltradas);
+  const produtosPaginados = paginar(produtosRanking);
+  const clientesPaginados = paginar(clientesRanking);
 
   const limparFiltros = () => {
     setFiltroClienteId("");
@@ -413,9 +421,9 @@ function CRMPage() {
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                   {stat.title}
                 </p>
-                <p className="text-xl font-black text-slate-900">
+                <div className="text-xl font-black text-slate-900">
                   {isLoading ? <Skeleton className="h-7 w-20" /> : stat.value}
-                </p>
+                </div>
               </div>
             </div>
           </Card>
@@ -515,14 +523,14 @@ function CRMPage() {
                       </TableCell>
                     </TableRow>
                   ))
-                ) : dadosPaginados.length === 0 ? (
+                ) : vendasPaginadas.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5}>
                       <EmptyState texto="Nenhuma venda encontrada para os filtros aplicados." />
                     </TableCell>
                   </TableRow>
                 ) : (
-                  dadosPaginados.map((venda: any) => (
+                  vendasPaginadas.map((venda: any) => (
                     <TableRow
                       key={venda.id}
                       className="hover:bg-slate-50/50 transition-colors border-slate-50 group"
@@ -574,11 +582,11 @@ function CRMPage() {
         </TabsContent>
 
         <TabsContent value="produtos">
-          {!isLoading && dadosPaginados.length === 0 ? (
+          {!isLoading && produtosPaginados.length === 0 ? (
             <EmptyState texto="Nenhum produto encontrado para os filtros aplicados." />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(isLoading ? Array.from({ length: 3 }) : dadosPaginados).map((prod: any, i: number) => (
+              {(isLoading ? Array.from({ length: 3 }) : produtosPaginados).map((prod: any, i: number) => (
                 <Card
                   key={prod?.codigo || i}
                   className="p-6 rounded-3xl border-none shadow-sm bg-white hover:shadow-md transition-all group"
@@ -611,11 +619,11 @@ function CRMPage() {
         </TabsContent>
 
         <TabsContent value="clientes">
-          {!isLoading && dadosPaginados.length === 0 ? (
+          {!isLoading && clientesPaginados.length === 0 ? (
             <EmptyState texto="Nenhum cliente encontrado para os filtros aplicados." />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {dadosPaginados.map((c: any) => (
+              {clientesPaginados.map((c: any) => (
                 <Card
                   key={c.id}
                   className="p-6 rounded-3xl border-none shadow-sm bg-white hover:shadow-md transition-all group"
