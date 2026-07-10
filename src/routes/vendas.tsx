@@ -552,6 +552,7 @@ export function PDVPage() {
       quantidade: 1,
       total: valor,
       added_at: Date.now(),
+      estoqueNoMomento: produto.pro_estoque_atual,
     };
   };
 

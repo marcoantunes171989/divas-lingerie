@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { brl } from "@/lib/format";
+import { brl, estoqueLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { ItemVenda } from "@/components/pos/types";
 
@@ -122,6 +122,7 @@ export function PDVItemsTable({
                         selected ? "text-[var(--pdv-rose)]" : "text-[var(--pdv-graphite)]",
                         item.cancelado && "line-through",
                       )}
+                      title={estoqueLabel(item.estoqueNoMomento)}
                     >
                       {item.descricao}
                       {item.cancelado && (
@@ -129,6 +130,14 @@ export function PDVItemsTable({
                           Cancelado
                         </span>
                       )}
+                      {!item.cancelado &&
+                        item.estoqueNoMomento !== null &&
+                        item.estoqueNoMomento !== undefined &&
+                        item.estoqueNoMomento <= 0 && (
+                          <span className="ml-2 text-[10px] font-bold uppercase text-[var(--pdv-danger)]">
+                            Estoque zerado
+                          </span>
+                        )}
                     </td>
                     <td className="px-3 py-2.5 text-[var(--pdv-gray-text)]">UN</td>
                     <td className="px-3 py-2.5 text-right tabular-nums">

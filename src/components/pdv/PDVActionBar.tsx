@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import { Barcode, LayoutGrid, Percent, PlusCircle, Search, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { brl } from "@/lib/format";
+import { brl, estoqueLabel } from "@/lib/format";
 import type { ProdutoPDV } from "@/components/pos/types";
 
 interface PDVActionBarProps {
@@ -61,11 +61,22 @@ export const PDVActionBar = forwardRef<HTMLInputElement, PDVActionBarProps>(func
                   className="flex w-full items-center justify-between gap-4 px-4 py-2.5 text-left text-sm hover:bg-[var(--pdv-rose-bg)]"
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="font-mono text-[11px] text-[var(--pdv-gray-text)]">
-                      {p.pro_codigo}
-                    </span>{" "}
-                    <span className="font-medium text-[var(--pdv-graphite)]">
-                      {p.pro_descricao}
+                    <span className="block">
+                      <span className="font-mono text-[11px] text-[var(--pdv-gray-text)]">
+                        {p.pro_codigo}
+                      </span>{" "}
+                      <span className="font-medium text-[var(--pdv-graphite)]">
+                        {p.pro_descricao}
+                      </span>
+                    </span>
+                    <span
+                      className={
+                        (p.pro_estoque_atual ?? 0) <= 0
+                          ? "text-[11px] font-semibold text-[var(--pdv-danger)]"
+                          : "text-[11px] text-[var(--pdv-gray-text)]"
+                      }
+                    >
+                      {estoqueLabel(p.pro_estoque_atual)}
                     </span>
                   </span>
                   <span className="shrink-0 font-semibold text-[var(--pdv-rose-dark)]">

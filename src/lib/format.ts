@@ -20,6 +20,13 @@ export const normalizeSearch = (value: unknown): string =>
     .toLowerCase()
     .trim();
 
+// Rotulo informativo de estoque no PDV: nao bloqueia a venda, so avisa o operador
+export const estoqueLabel = (estoque: number | null | undefined): string => {
+  if (estoque === null || estoque === undefined) return "Estoque: não informado";
+  if (estoque <= 0) return "Estoque zerado";
+  return `Estoque: ${estoque} un`;
+};
+
 export const dateBR = (s: string) => {
   if (!s) return "";
   // Aceita tanto "YYYY-MM-DD" quanto timestamp ISO "YYYY-MM-DDTHH:mm:ss±hh:mm"

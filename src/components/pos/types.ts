@@ -21,6 +21,7 @@ export interface ItemVenda {
   motivo_cancelamento?: string;
   desconto?: number;
   acrescimo?: number;
+  estoqueNoMomento?: number | null;
 }
 
 export interface PagamentoItem {
