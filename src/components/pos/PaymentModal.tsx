@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { brl } from "@/lib/format";
+import { brl, formatCurrencyInput, parseCurrencyToNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { FinalizadoraRow, PagamentoItem } from "./types";
 
@@ -104,11 +104,10 @@ export function PaymentModal({
                   {p.forma}
                 </span>
                 <Input
-                  type="number"
-                  step="0.01"
-                  min={0}
-                  value={p.valor || ""}
-                  onChange={(e) => onUpdatePagamentoValor(p.id, Number(e.target.value) || 0)}
+                  type="text"
+                  inputMode="decimal"
+                  value={formatCurrencyInput(Math.round((p.valor || 0) * 100))}
+                  onChange={(e) => onUpdatePagamentoValor(p.id, parseCurrencyToNumber(e.target.value))}
                   className="h-10 rounded-xl"
                 />
               </div>
