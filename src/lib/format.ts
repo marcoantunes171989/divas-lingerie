@@ -1,5 +1,17 @@
 export const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+// Mascara de centavos: trata os digitos digitados como centavos (ex.: "6998" -> R$ 69,98)
+export const formatCurrencyInput = (raw: string | number): string => {
+  const digits = String(raw).replace(/\D/g, "");
+  const cents = digits ? parseInt(digits, 10) : 0;
+  return brl(cents / 100);
+};
+
+export const parseCurrencyToNumber = (raw: string): number => {
+  const digits = raw.replace(/\D/g, "");
+  return digits ? parseInt(digits, 10) / 100 : 0;
+};
+
 export const dateBR = (s: string) => {
   if (!s) return "";
   // Aceita tanto "YYYY-MM-DD" quanto timestamp ISO "YYYY-MM-DDTHH:mm:ss±hh:mm"

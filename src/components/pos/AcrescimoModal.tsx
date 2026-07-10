@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { brl } from "@/lib/format";
+import { brl, formatCurrencyInput, parseCurrencyToNumber } from "@/lib/format";
 
 interface AcrescimoModalProps {
   open: boolean;
@@ -29,13 +29,13 @@ export function AcrescimoModal({
   valorAtual,
   onApply,
 }: AcrescimoModalProps) {
-  const [valor, setValor] = useState(String(valorAtual || ""));
+  const [valor, setValor] = useState(() => formatCurrencyInput(Math.round((valorAtual || 0) * 100)));
 
   useEffect(() => {
-    if (open) setValor(valorAtual ? String(valorAtual) : "");
+    if (open) setValor(formatCurrencyInput(Math.round((valorAtual || 0) * 100)));
   }, [open, valorAtual]);
 
-  const numero = Math.max(0, Number(valor.replace(",", ".")) || 0);
+  const numero = parseCurrencyToNumber(valor);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -49,12 +49,11 @@ export function AcrescimoModal({
           <Label htmlFor="acrescimo-valor">Acréscimo (R$)</Label>
           <Input
             id="acrescimo-valor"
-            type="number"
-            min={0}
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             autoFocus
             value={valor}
-            onChange={(e) => setValor(e.target.value)}
+            onChange={(e) => setValor(formatCurrencyInput(e.target.value))}
             className="h-12 rounded-xl text-lg"
           />
         </div>
